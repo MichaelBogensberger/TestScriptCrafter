@@ -1,5 +1,7 @@
 <script setup lang="ts">
 import type { TestAction } from '~/types/fhir-testscript'
+import { TrashIcon } from 'lucide-vue-next'
+
 
 const props = defineProps<{
   action: TestAction
@@ -17,7 +19,7 @@ const emit = defineEmits(['remove'])
       class="absolute top-2 right-2"
       @click="emit('remove', props.index)"
     >
-      <XIcon class="h-4 w-4" />
+      <TrashIcon class="h-4 w-4" />
     </Button>
 
     <TestOperation 

@@ -32,12 +32,12 @@
     </Card>
 
     <!-- Validierungsfehler -->
-    <Card v-if="store.validationErrors.length > 0">
+    <Card v-if="store.validationErrors.value.length > 0">
       <CardHeader>
         <CardTitle>Validierungsfehler</CardTitle>
       </CardHeader>
       <CardContent>
-        <div v-for="(error, index) in store.validationErrors" 
+        <div v-for="(error, index) in store.validationErrors.value" 
              :key="index" 
              class="text-destructive">
           • {{ error }}
