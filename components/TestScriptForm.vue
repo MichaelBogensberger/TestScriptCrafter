@@ -84,95 +84,13 @@
             </div>
 
             <div v-else class="space-y-4 mt-4">
-              <div v-for="(action, actionIndex) in test.action" :key="actionIndex" class="border rounded-md p-4 relative">
-                <Button 
-                  variant="outline" 
-                  size="icon" 
-                  class="absolute top-2 right-2"
-                  @click="store.removeAction(testIndex, actionIndex)"
-                >
-                  <XIcon class="h-4 w-4" />
-                </Button>
-
-                <!-- Operation -->
-                <div v-if="action.operation" class="space-y-3">
-                  <h4 class="font-medium">Operation</h4>
-                  
-                  <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    <div>
-                      <Label>HTTP-Methode</Label>
-                      <Select v-model="action.operation.method">
-                        <SelectTrigger>
-                          <SelectValue placeholder="HTTP-Methode" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="GET">GET</SelectItem>
-                          <SelectItem value="POST">POST</SelectItem>
-                          <SelectItem value="PUT">PUT</SelectItem>
-                          <SelectItem value="DELETE">DELETE</SelectItem>
-                          <SelectItem value="PATCH">PATCH</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    
-                    <div>
-                      <Label>URL</Label>
-                      <Input v-model="action.operation.url" placeholder="/Patient/${id}" />
-                    </div>
-                  </div>
-                  
-                  <div class="flex items-center space-x-2">
-                    <Switch v-model="action.operation.encodeRequestUrl" id="encode-url" />
-                    <Label for="encode-url">URL codieren</Label>
-                  </div>
-                </div>
-
-                <!-- Assertion -->
-                <div v-if="action.assert" class="space-y-3">
-                  <h4 class="font-medium">Assertion</h4>
-                  
-                  <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    <div>
-                      <Label>Pfad</Label>
-                      <Input v-model="action.assert.path" placeholder="Patient.name.given" />
-                    </div>
-                    
-                    <div>
-                      <Label>Operator</Label>
-                      <Select v-model="action.assert.operator">
-                        <SelectTrigger>
-                          <SelectValue placeholder="Operator wählen" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="equals">equals</SelectItem>
-                          <SelectItem value="notEquals">notEquals</SelectItem>
-                          <SelectItem value="contains">contains</SelectItem>
-                          <SelectItem value="notContains">notContains</SelectItem>
-                          <SelectItem value="empty">empty</SelectItem>
-                          <SelectItem value="notEmpty">notEmpty</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                  
-                  <div v-if="!['empty', 'notEmpty'].includes(action.assert.operator)">
-                    <Label>Erwarteter Wert</Label>
-                    <Input v-model="action.assert.value" placeholder="Erwarteter Wert" />
-                  </div>
-                  
-                  <div class="flex flex-col space-y-2">
-                    <div class="flex items-center space-x-2">
-                      <Switch v-model="action.assert.warningOnly" id="warning-only" />
-                      <Label for="warning-only">Nur als Warnung</Label>
-                    </div>
-                    
-                    <div class="flex items-center space-x-2">
-                      <Switch v-model="action.assert.stopTestOnFail" id="stop-on-fail" />
-                      <Label for="stop-on-fail">Test bei Fehler abbrechen</Label>
-                    </div>
-                  </div>
-                </div>
-              </div>
+              <TestAction 
+                v-for="(action, actionIndex) in test.action" 
+                :key="actionIndex"
+                :action="action"
+                :index="actionIndex"
+                @remove="store.removeAction(testIndex, actionIndex)"
+              />
             </div>
 
             <div class="flex space-x-2 mt-4">
@@ -194,7 +112,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
-import { PlusIcon, TrashIcon, XIcon } from 'lucide-vue-next'
+import { PlusIcon, TrashIcon } from 'lucide-vue-next'
 import { useTestScriptStore } from '~/composables/useTestScriptStore'
 
 const store = useTestScriptStore()
