@@ -29,7 +29,7 @@ export function TestScriptFilteredView({ testScript }: TestScriptFilteredViewPro
   const [showOperations, setShowOperations] = useState(true)
   
   // Gefilterte Daten
-  const filteredData = useMemo(() => {
+  const filteredContent = useMemo(() => {
     let result: any = { resourceType: "TestScript" }
 
     // Grundlegende Eigenschaften immer beibehalten
@@ -216,14 +216,14 @@ export function TestScriptFilteredView({ testScript }: TestScriptFilteredViewPro
     let actions = 0
     
     // Setup-Aktionen zählen
-    if (filteredData.setup?.action) {
-      actions += filteredData.setup.action.length
+    if (filteredContent.setup?.action) {
+      actions += filteredContent.setup.action.length
     }
     
     // Test-Aktionen zählen
-    if (filteredData.test) {
-      tests = filteredData.test.length
-      filteredData.test.forEach((test: any) => {
+    if (filteredContent.test) {
+      tests = filteredContent.test.length
+      filteredContent.test.forEach((test: any) => {
         if (test.action) {
           actions += test.action.length
         }
@@ -231,13 +231,13 @@ export function TestScriptFilteredView({ testScript }: TestScriptFilteredViewPro
     }
     
     // Teardown-Aktionen zählen
-    if (filteredData.teardown?.action) {
-      actions += filteredData.teardown.action.length
+    if (filteredContent.teardown?.action) {
+      actions += filteredContent.teardown.action.length
     }
     
     // Common-Aktionen zählen
-    if (filteredData.common) {
-      filteredData.common.forEach((common: any) => {
+    if (filteredContent.common) {
+      filteredContent.common.forEach((common: any) => {
         if (common.action) {
           actions += common.action.length
         }
@@ -247,7 +247,13 @@ export function TestScriptFilteredView({ testScript }: TestScriptFilteredViewPro
     return { tests, actions }
   }
   
-  const counts = countFilteredElements()
+  const counts = useMemo(() => ({
+    setup: countFilteredElements().tests,
+    test: countFilteredElements().tests,
+    teardown: countFilteredElements().tests,
+    common: countFilteredElements().tests,
+    actions: countFilteredElements().actions
+  }), [filteredContent])
   
   return (
     <div className="p-4">
@@ -345,7 +351,7 @@ export function TestScriptFilteredView({ testScript }: TestScriptFilteredViewPro
             {/* Filter-Statistik */}
             <div className="flex flex-wrap gap-2 mt-2">
               <Badge variant="outline" className="flex items-center gap-1">
-                <Check className="h-3 w-3" /> Tests: {counts.tests}
+                <Check className="h-3 w-3" /> Tests: {counts.setup}
               </Badge>
               <Badge variant="outline" className="flex items-center gap-1">
                 <Check className="h-3 w-3" /> Aktionen: {counts.actions}
@@ -370,7 +376,7 @@ export function TestScriptFilteredView({ testScript }: TestScriptFilteredViewPro
         <TabsContent value="json" className="mt-4">
           <SyntaxHighlighter
             language="json"
-            code={formatToJson(filteredData, 2)}
+            code={formatToJson(filteredContent, 2)}
             showLineNumbers={true}
             className="border rounded-md"
           />
@@ -381,11 +387,11 @@ export function TestScriptFilteredView({ testScript }: TestScriptFilteredViewPro
             <CardContent className="pt-6">
               <div className="space-y-4">
                 {/* Zusammenfassung der Setup-Aktionen */}
-                {filteredData.setup?.action && filteredData.setup.action.length > 0 && (
+                {filteredContent.setup?.action && filteredContent.setup.action.length > 0 && (
                   <div>
                     <h3 className="text-lg font-medium mb-2">Setup</h3>
                     <ul className="list-disc list-inside space-y-1 text-sm">
-                      {filteredData.setup.action.map((action: any, index: number) => (
+                      {filteredContent.setup.action.map((action: any, index: number) => (
                         <li key={`setup-${index}`}>
                           {action.operation && (
                             <span className="text-blue-600">
@@ -404,10 +410,10 @@ export function TestScriptFilteredView({ testScript }: TestScriptFilteredViewPro
                 )}
                 
                 {/* Zusammenfassung der Test-Aktionen */}
-                {filteredData.test && filteredData.test.length > 0 && (
+                {filteredContent.test && filteredContent.test.length > 0 && (
                   <div>
                     <h3 className="text-lg font-medium mb-2">Tests</h3>
-                    {filteredData.test.map((test: any, testIndex: number) => (
+                    {filteredContent.test.map((test: any, testIndex: number) => (
                       <div key={`test-${testIndex}`} className="mb-3">
                         <h4 className="font-medium text-md">{test.name || `Test ${testIndex + 1}`}</h4>
                         {test.description && (
@@ -437,11 +443,11 @@ export function TestScriptFilteredView({ testScript }: TestScriptFilteredViewPro
                 )}
                 
                 {/* Zusammenfassung der Teardown-Aktionen */}
-                {filteredData.teardown?.action && filteredData.teardown.action.length > 0 && (
+                {filteredContent.teardown?.action && filteredContent.teardown.action.length > 0 && (
                   <div>
                     <h3 className="text-lg font-medium mb-2">Teardown</h3>
                     <ul className="list-disc list-inside space-y-1 text-sm">
-                      {filteredData.teardown.action.map((action: any, index: number) => (
+                      {filteredContent.teardown.action.map((action: any, index: number) => (
                         <li key={`teardown-${index}`}>
                           {action.operation && (
                             <span className="text-blue-600">
@@ -455,10 +461,10 @@ export function TestScriptFilteredView({ testScript }: TestScriptFilteredViewPro
                 )}
                 
                 {/* Zusammenfassung der Common-Aktionen */}
-                {filteredData.common && filteredData.common.length > 0 && (
+                {filteredContent.common && filteredContent.common.length > 0 && (
                   <div>
                     <h3 className="text-lg font-medium mb-2">Common</h3>
-                    {filteredData.common.map((common: any, commonIndex: number) => (
+                    {filteredContent.common.map((common: any, commonIndex: number) => (
                       <div key={`common-${commonIndex}`} className="mb-3">
                         <h4 className="font-medium text-md">{common.name || `Common ${common.key}`}</h4>
                         {common.description && (

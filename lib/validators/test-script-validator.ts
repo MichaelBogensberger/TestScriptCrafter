@@ -1,11 +1,11 @@
-import { TestScript } from "@/types/test-script"
+import { TestScript, Operation, Assertion } from "@/types/test-script"
 
 /**
  * Validierungsergebnis für ein TestScript
  */
-interface ValidationResult {
-  valid: boolean
-  errors: string[]
+export interface ValidationResult {
+  valid: boolean;
+  errors: string[];
 }
 
 /**
@@ -15,88 +15,115 @@ interface ValidationResult {
  * @returns ValidationResult mit Status und Fehlermeldungen
  */
 export function validateTestScript(testScript: TestScript): ValidationResult {
-  const errors: string[] = []
+  const errors: string[] = [];
   
-  // Prüfung auf erforderliche Felder
+  // Grundlegende Prüfung
   if (!testScript) {
-    return { valid: false, errors: ["Kein TestScript vorhanden"] }
+    return { valid: false, errors: ["Kein TestScript vorhanden"] };
   }
   
-  // Prüfung auf den ResourceType
+  // ResourceType prüfen
   if (testScript.resourceType !== "TestScript") {
-    errors.push("ResourceType muss 'TestScript' sein")
+    errors.push("ResourceType muss 'TestScript' sein");
   }
   
-  // Prüfung auf Name (erforderliches Feld)
+  // Pflichtfelder prüfen
   if (!testScript.name) {
-    errors.push("TestScript muss einen Namen haben")
+    errors.push("TestScript muss einen Namen haben");
   }
   
-  // Prüfung auf Status (erforderliches Feld)
   if (!testScript.status) {
-    errors.push("TestScript muss einen Status haben")
+    errors.push("TestScript muss einen Status haben");
   }
   
-  // Prüfung auf Metadata (erforderliches Feld laut Schema)
-  if (!testScript.metadata) {
-    errors.push("TestScript muss Metadata enthalten")
-  } else if (!testScript.metadata.capability || testScript.metadata.capability.length === 0) {
-    errors.push("Metadata muss mindestens eine Capability enthalten")
-  }
-  
-  // Prüfung auf leere Tests
-  if (testScript.test && testScript.test.length === 0) {
-    errors.push("TestScript enthält einen leeren Test-Array")
-  }
-  
-  // Prüfung auf Setup ohne Aktionen
-  if (testScript.setup && (!testScript.setup.action || testScript.setup.action.length === 0)) {
-    errors.push("Setup ist definiert, enthält aber keine Aktionen")
-  }
-  
-  // Prüfung auf Teardown ohne Aktionen
-  if (testScript.teardown && (!testScript.teardown.action || testScript.teardown.action.length === 0)) {
-    errors.push("Teardown ist definiert, enthält aber keine Aktionen")
-  }
-  
-  // Prüfung auf widersprüchliche Assertions
-  if (testScript.setup?.action) {
-    checkAssertionsForContradictions(testScript.setup.action, errors)
-  }
-  
-  if (testScript.test) {
-    testScript.test.forEach(test => {
-      if (test.action) {
-        checkAssertionsForContradictions(test.action, errors)
+  // Setup validieren
+  if (testScript.setup && testScript.setup.action) {
+    testScript.setup.action.forEach((action, index) => {
+      const prefix = `Setup Aktion #${index + 1}`;
+      
+      if (action.operation) {
+        validateOperation(action.operation, errors, prefix, index);
       }
-    })
+      
+      if (action.assert) {
+        validateAssertion(action.assert, errors, prefix);
+      }
+    });
   }
   
-  return { 
-    valid: errors.length === 0,
-    errors 
+  // Tests validieren
+  if (testScript.test) {
+    testScript.test.forEach((test, testIndex) => {
+      const testPrefix = `Test #${testIndex + 1}`;
+      
+      if (test.action) {
+        test.action.forEach((action, actionIndex) => {
+          const prefix = `${testPrefix} Aktion #${actionIndex + 1}`;
+          
+          if (action.operation) {
+            validateOperation(action.operation, errors, prefix, actionIndex);
+          }
+          
+          if (action.assert) {
+            validateAssertion(action.assert, errors, prefix);
+          }
+        });
+      }
+    });
   }
+  
+  // Teardown validieren
+  if (testScript.teardown && testScript.teardown.action) {
+    testScript.teardown.action.forEach((action, index) => {
+      const prefix = `Teardown Aktion #${index + 1}`;
+      
+      if (action.operation) {
+        validateOperation(action.operation, errors, prefix, index);
+      }
+    });
+  }
+  
+  return {
+    valid: errors.length === 0,
+    errors
+  };
 }
 
 /**
- * Prüft Assertions auf Widersprüche
+ * Validiert eine Operation und fügt eventuelle Fehler zum errors-Array hinzu
  */
-function checkAssertionsForContradictions(actions: any[], errors: string[]): void {
-  actions.forEach((action, index) => {
-    if (action.assert) {
-      const assertion = action.assert
-      
-      // Prüfung auf compareToSourceId ohne Expression oder Path
-      if (assertion.compareToSourceId && 
-          !assertion.compareToSourceExpression && 
-          !assertion.compareToSourcePath) {
-        errors.push(`Assertion #${index + 1}: compareToSourceId ohne Expression oder Path angegeben`)
-      }
-      
-      // Prüfung auf widersprüchliche Response/Request-Werte
-      if (assertion.response && assertion.requestMethod) {
-        errors.push(`Assertion #${index + 1}: Enthält sowohl response als auch requestMethod`)
-      }
-    }
-  })
+function validateOperation(operation: Operation, errors: string[], prefix: string, index: number): void {
+  // URL oder Resource muss vorhanden sein
+  if (!operation.url && !operation.resource) {
+    errors.push(`${prefix}: Weder URL noch Resource angegeben`);
+  }
+  
+  // Methode validieren
+  if (operation.method && !['get', 'post', 'put', 'delete', 'patch', 'head', 'options'].includes(operation.method.toLowerCase())) {
+    errors.push(`${prefix}: Ungültige HTTP-Methode: ${operation.method}`);
+  }
+  
+  // Validierung für fehlende IDs in Operations
+  if (!operation.requestId && operation.method === "post") {
+    errors.push(`${prefix}: POST-Operation ohne requestId`);
+  }
+  
+  // Weitere Validierungsregeln...
+}
+
+/**
+ * Validiert eine Assertion und fügt eventuelle Fehler zum errors-Array hinzu
+ */
+function validateAssertion(assertion: Assertion, errors: string[], prefix: string): void {
+  // Operator validieren
+  if (assertion.operator && !['equals', 'notEquals', 'in', 'notIn', 'greaterThan', 'lessThan', 'empty', 'notEmpty', 'contains', 'notContains', 'eval', 'manualEval'].includes(assertion.operator)) {
+    errors.push(`${prefix}: Ungültiger Operator: ${assertion.operator}`);
+  }
+  
+  // CompareToSource validieren
+  if (assertion.compareToSourceId && !assertion.compareToSourceExpression && !assertion.compareToSourcePath) {
+    errors.push(`${prefix}: Bei compareToSourceId muss entweder compareToSourceExpression oder compareToSourcePath angegeben werden`);
+  }
+  
+  // Weitere Validierungsregeln...
 } 

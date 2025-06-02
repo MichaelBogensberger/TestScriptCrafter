@@ -1,13 +1,15 @@
-import { Fragment } from "react"
+import React from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
-import { TestScript, TestScriptTest, Assertion, Operation } from "@/types/test-script"
+import { TestScript, TestScriptTest, TestScriptSetup, TestScriptTeardown, Assertion, Operation } from "@/types/test-script"
 import { Separator } from "@/components/ui/separator"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { ScrollArea } from "@/components/ui/scroll-area"
 
 interface StructuredViewProps {
-  testScript: TestScript
-  focusArea?: "all" | "setup" | "test" | "teardown" | "common"
+  testScript: TestScript;
+  focusArea?: "all" | "setup" | "test" | "teardown" | "common";
 }
 
 /**
@@ -15,328 +17,280 @@ interface StructuredViewProps {
  */
 export function StructuredView({ testScript, focusArea = "all" }: StructuredViewProps) {
   return (
-    <div className="p-4 space-y-6">
-      {/* Grundlegende Informationen */}
-      <div className="space-y-4">
-        <div>
-          <h2 className="text-2xl font-bold">{testScript.name}</h2>
-          {testScript.description && (
-            <p className="text-muted-foreground">{testScript.description}</p>
-          )}
+    <div className="space-y-6">
+      <Tabs defaultValue={focusArea === "all" ? "overview" : focusArea} className="w-full">
+        <TabsList className="grid grid-cols-5 w-full">
+          <TabsTrigger value="overview">Übersicht</TabsTrigger>
+          <TabsTrigger value="setup">Setup</TabsTrigger>
+          <TabsTrigger value="test">Tests</TabsTrigger>
+          <TabsTrigger value="teardown">Teardown</TabsTrigger>
+          <TabsTrigger value="common">Common</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="overview">
+          <OverviewSection testScript={testScript} />
+        </TabsContent>
+        
+        <TabsContent value="setup">
+          <SetupSection setup={testScript.setup} />
+        </TabsContent>
+        
+        <TabsContent value="test">
+          <TestSection tests={testScript.test} />
+        </TabsContent>
+        
+        <TabsContent value="teardown">
+          <TeardownSection teardown={testScript.teardown} />
+        </TabsContent>
+        
+        <TabsContent value="common">
+          <CommonSection common={testScript.common} />
+        </TabsContent>
+      </Tabs>
+    </div>
+  )
+}
+
+/**
+ * Übersichtskomponente für TestScript
+ */
+function OverviewSection({ testScript }: { testScript: TestScript }) {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center justify-between">
+          <span>{testScript.name}</span>
+          <Badge variant={getStatusVariant(testScript.status)}>{testScript.status}</Badge>
+        </CardTitle>
+        {testScript.description && <CardDescription>{testScript.description}</CardDescription>}
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="grid grid-cols-2 gap-4">
+          <InfoField label="URL" value={testScript.url} />
+          <InfoField label="Version" value={testScript.version} />
+          <InfoField label="Publisher" value={testScript.publisher} />
+          <InfoField label="Datum" value={formatDate(testScript.date)} />
         </div>
         
-        <div className="flex flex-wrap gap-2">
-          {testScript.status && (
-            <Badge variant={testScript.status === "active" ? "default" : "outline"}>
-              {testScript.status}
-            </Badge>
-          )}
-          {testScript.version && (
-            <Badge variant="outline">Version: {testScript.version}</Badge>
-          )}
-          {testScript.experimental && (
-            <Badge variant="secondary">Experimentell</Badge>
-          )}
+        <Separator />
+        
+        <div className="space-y-2">
+          <h3 className="font-medium">Statistik</h3>
+          <div className="grid grid-cols-4 gap-4">
+            <StatCard 
+              title="Setup-Aktionen" 
+              value={testScript.setup?.action?.length || 0} 
+            />
+            <StatCard 
+              title="Tests" 
+              value={testScript.test?.length || 0} 
+            />
+            <StatCard 
+              title="Test-Aktionen" 
+              value={countTestActions(testScript.test)} 
+            />
+            <StatCard 
+              title="Teardown-Aktionen" 
+              value={testScript.teardown?.action?.length || 0} 
+            />
+          </div>
         </div>
-      </div>
-
-      <Separator />
-      
-      {/* Metadata-Bereich */}
-      {(focusArea === "all" || focusArea === "metadata") && testScript.metadata && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Metadata</CardTitle>
-            <CardDescription>Benötigte Capabilities und Links</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Accordion type="single" collapsible>
-              {/* Links */}
-              {testScript.metadata.link && testScript.metadata.link.length > 0 && (
-                <AccordionItem value="links">
-                  <AccordionTrigger>Links ({testScript.metadata.link.length})</AccordionTrigger>
-                  <AccordionContent>
-                    <ul className="space-y-2">
-                      {testScript.metadata.link.map((link, index) => (
-                        <li key={index}>
-                          <a 
-                            href={link.url} 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            className="text-blue-500 hover:underline"
-                          >
-                            {link.description || link.url}
-                          </a>
-                        </li>
-                      ))}
-                    </ul>
-                  </AccordionContent>
-                </AccordionItem>
-              )}
-              
-              {/* Capabilities */}
-              {testScript.metadata.capability && testScript.metadata.capability.length > 0 && (
-                <AccordionItem value="capabilities">
-                  <AccordionTrigger>Capabilities ({testScript.metadata.capability.length})</AccordionTrigger>
-                  <AccordionContent>
-                    <div className="space-y-4">
-                      {testScript.metadata.capability.map((cap, index) => (
-                        <div key={index} className="p-3 border rounded-md">
-                          <div className="flex flex-wrap gap-2 mb-2">
-                            <Badge variant={cap.required ? "default" : "outline"}>
-                              {cap.required ? "Erforderlich" : "Optional"}
-                            </Badge>
-                            <Badge variant={cap.validated ? "secondary" : "outline"}>
-                              {cap.validated ? "Validiert" : "Nicht validiert"}
-                            </Badge>
-                          </div>
-                          
-                          {cap.description && (
-                            <p className="text-sm">{cap.description}</p>
-                          )}
-                          
-                          {cap.capabilities && (
-                            <p className="text-xs text-muted-foreground mt-2">
-                              Capabilities: {cap.capabilities}
-                            </p>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  </AccordionContent>
-                </AccordionItem>
-              )}
-            </Accordion>
-          </CardContent>
-        </Card>
-      )}
-      
-      {/* Setup-Bereich */}
-      {(focusArea === "all" || focusArea === "setup") && testScript.setup && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Setup</CardTitle>
-            <CardDescription>Vorbereitende Aktionen vor dem Test</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {testScript.setup.action && testScript.setup.action.length > 0 ? (
-              <SetupActionsView actions={testScript.setup.action} />
-            ) : (
-              <p className="text-muted-foreground">Keine Setup-Aktionen definiert</p>
-            )}
-          </CardContent>
-        </Card>
-      )}
-      
-      {/* Test-Bereich */}
-      {(focusArea === "all" || focusArea === "test") && testScript.test && testScript.test.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Tests ({testScript.test.length})</CardTitle>
-            <CardDescription>Testfälle zur Überprüfung der Konformität</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Accordion type="single" collapsible>
-              {testScript.test.map((test, index) => (
-                <AccordionItem key={index} value={`test-${index}`}>
-                  <AccordionTrigger>
-                    <div className="flex items-center">
-                      <span>{test.name || `Test ${index + 1}`}</span>
-                      <Badge className="ml-2" variant="outline">{test.action?.length || 0} Aktionen</Badge>
-                    </div>
-                  </AccordionTrigger>
-                  <AccordionContent>
-                    <TestView test={test} />
-                  </AccordionContent>
-                </AccordionItem>
-              ))}
-            </Accordion>
-          </CardContent>
-        </Card>
-      )}
-      
-      {/* Teardown-Bereich */}
-      {(focusArea === "all" || focusArea === "teardown") && testScript.teardown && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Teardown</CardTitle>
-            <CardDescription>Aufräumaktionen nach dem Test</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {testScript.teardown.action && testScript.teardown.action.length > 0 ? (
-              <TeardownActionsView actions={testScript.teardown.action} />
-            ) : (
-              <p className="text-muted-foreground">Keine Teardown-Aktionen definiert</p>
-            )}
-          </CardContent>
-        </Card>
-      )}
-      
-      {/* Common-Bereich */}
-      {(focusArea === "all" || focusArea === "common") && testScript.common && testScript.common.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Common Actions ({testScript.common.length})</CardTitle>
-            <CardDescription>Wiederverwendbare Aktionen</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Accordion type="single" collapsible>
-              {testScript.common.map((common, index) => (
-                <AccordionItem key={index} value={`common-${index}`}>
-                  <AccordionTrigger>
-                    <div className="flex items-center">
-                      <span>{common.name || `Common ${common.key}`}</span>
-                      <Badge className="ml-2" variant="outline">{common.action?.length || 0} Aktionen</Badge>
-                    </div>
-                  </AccordionTrigger>
-                  <AccordionContent>
-                    <CommonActionsView common={common} />
-                  </AccordionContent>
-                </AccordionItem>
-              ))}
-            </Accordion>
-          </CardContent>
-        </Card>
-      )}
-    </div>
+      </CardContent>
+    </Card>
   )
 }
 
-// Hilfsfunktionen für die Darstellung verschiedener Komponenten
+/**
+ * Setup-Abschnitt des TestScripts
+ */
+function SetupSection({ setup }: { setup: TestScriptSetup | undefined }) {
+  if (!setup || !setup.action || setup.action.length === 0) {
+    return <EmptyStateCard message="Keine Setup-Aktionen definiert" />
+  }
 
-function SetupActionsView({ actions }) {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Setup</CardTitle>
+        <CardDescription>Vorbereitende Aktionen für die Tests</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <ActionList actions={setup.action} prefix="Setup" />
+      </CardContent>
+    </Card>
+  )
+}
+
+/**
+ * Test-Abschnitt des TestScripts
+ */
+function TestSection({ tests }: { tests: TestScriptTest[] | undefined }) {
+  if (!tests || tests.length === 0) {
+    return <EmptyStateCard message="Keine Tests definiert" />
+  }
+
   return (
     <div className="space-y-4">
-      {actions.map((action, index) => (
-        <div key={index} className="p-3 border rounded-md">
-          <h4 className="font-medium mb-2">Aktion {index + 1}</h4>
-          
-          {action.operation && <OperationView operation={action.operation} />}
-          {action.assert && <AssertionView assertion={action.assert} />}
-          {action.common && (
-            <div className="mt-2">
-              <Badge>Common</Badge>
-              <span className="ml-2">{action.common.keyRef}</span>
-            </div>
-          )}
-        </div>
+      {tests.map((test, index) => (
+        <Card key={`test-${index}`}>
+          <CardHeader>
+            <CardTitle className="text-lg">Test #{index + 1}: {test.name}</CardTitle>
+            {test.description && <CardDescription>{test.description}</CardDescription>}
+          </CardHeader>
+          <CardContent>
+            {test.action && test.action.length > 0 ? (
+              <ActionList actions={test.action} prefix={`Test ${index + 1}`} />
+            ) : (
+              <p className="text-muted-foreground">Keine Aktionen definiert</p>
+            )}
+          </CardContent>
+        </Card>
       ))}
     </div>
   )
 }
 
-function TestView({ test }: { test: TestScriptTest }) {
+/**
+ * Teardown-Abschnitt des TestScripts
+ */
+function TeardownSection({ teardown }: { teardown: TestScriptTeardown | undefined }) {
+  if (!teardown || !teardown.action || teardown.action.length === 0) {
+    return <EmptyStateCard message="Keine Teardown-Aktionen definiert" />
+  }
+
   return (
-    <div className="space-y-4">
-      {test.description && (
-        <p className="text-sm text-muted-foreground">{test.description}</p>
-      )}
-      
-      {test.action && test.action.length > 0 && (
-        <div className="space-y-3">
-          {test.action.map((action, index) => (
-            <div key={index} className="p-3 border rounded-md">
-              <h4 className="font-medium mb-2">Aktion {index + 1}</h4>
-              
-              {action.operation && <OperationView operation={action.operation} />}
-              {action.assert && <AssertionView assertion={action.assert} />}
-              {action.common && (
-                <div className="mt-2">
-                  <Badge>Common</Badge>
-                  <span className="ml-2">{action.common.keyRef}</span>
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
+    <Card>
+      <CardHeader>
+        <CardTitle>Teardown</CardTitle>
+        <CardDescription>Aufräumaktionen nach Testausführung</CardDescription>
+      </CardHeader>
+      <CardContent>
+        <ActionList actions={teardown.action} prefix="Teardown" />
+      </CardContent>
+    </Card>
   )
 }
 
-function TeardownActionsView({ actions }) {
+/**
+ * Common-Abschnitt des TestScripts
+ */
+function CommonSection({ common }: { common: any[] | undefined }) {
+  if (!common || common.length === 0) {
+    return <EmptyStateCard message="Keine gemeinsamen Aktionen definiert" />
+  }
+
   return (
     <div className="space-y-4">
-      {actions.map((action, index) => (
-        <div key={index} className="p-3 border rounded-md">
-          <h4 className="font-medium mb-2">Aktion {index + 1}</h4>
-          
-          {action.operation && <OperationView operation={action.operation} />}
-          {action.common && (
-            <div className="mt-2">
-              <Badge>Common</Badge>
-              <span className="ml-2">{action.common.keyRef}</span>
-            </div>
-          )}
-        </div>
+      {common.map((item, index) => (
+        <Card key={`common-${index}`}>
+          <CardHeader>
+            <CardTitle className="text-lg">
+              {item.name || `Common #${index + 1}`} {item.key && <span className="text-sm text-muted-foreground">({item.key})</span>}
+            </CardTitle>
+            {item.description && <CardDescription>{item.description}</CardDescription>}
+          </CardHeader>
+          <CardContent>
+            {item.action && item.action.length > 0 ? (
+              <ActionList actions={item.action} prefix={`Common ${index + 1}`} />
+            ) : (
+              <p className="text-muted-foreground">Keine Aktionen definiert</p>
+            )}
+          </CardContent>
+        </Card>
       ))}
     </div>
   )
 }
 
-function CommonActionsView({ common }) {
+/**
+ * Generische Komponente zur Anzeige von Aktionen
+ */
+function ActionList({ actions, prefix }: { actions: any[]; prefix: string }) {
   return (
-    <div className="space-y-4">
-      {common.description && (
-        <p className="text-sm text-muted-foreground">{common.description}</p>
-      )}
-      
-      {common.action && common.action.length > 0 && (
-        <div className="space-y-3">
-          {common.action.map((action, index) => (
-            <div key={index} className="p-3 border rounded-md">
-              <h4 className="font-medium mb-2">Aktion {index + 1}</h4>
-              
-              {action.operation && <OperationView operation={action.operation} />}
-              {action.assert && <AssertionView assertion={action.assert} />}
+    <Accordion type="multiple" className="space-y-2">
+      {actions.map((action, index) => (
+        <AccordionItem key={`${prefix}-action-${index}`} value={`${prefix}-action-${index}`}>
+          <AccordionTrigger className="hover:bg-muted/50 px-4 rounded-md">
+            <div className="flex items-center justify-between w-full">
+              <span>{prefix} Aktion #{index + 1}</span>
+              <ActionTypeBadge action={action} />
             </div>
-          ))}
-        </div>
-      )}
-    </div>
+          </AccordionTrigger>
+          <AccordionContent className="px-4 pt-2">
+            {action.operation && <OperationDetails operation={action.operation} />}
+            {action.assert && <AssertionDetails assertion={action.assert} />}
+          </AccordionContent>
+        </AccordionItem>
+      ))}
+    </Accordion>
   )
 }
 
-function OperationView({ operation }: { operation: Operation }) {
+/**
+ * Badge für den Aktionstyp (Operation/Assert)
+ */
+function ActionTypeBadge({ action }: { action: any }) {
+  if (action.operation) {
+    return <Badge variant="outline" className="bg-blue-100">Operation</Badge>
+  }
+  
+  if (action.assert) {
+    return <Badge variant="outline" className="bg-green-100">Assertion</Badge>
+  }
+  
+  return <Badge variant="outline" className="bg-gray-100">Unbekannt</Badge>
+}
+
+/**
+ * Komponentendetails einer Operation
+ */
+function OperationDetails({ operation }: { operation: Operation }) {
   return (
-    <div>
-      <div className="flex items-center gap-2 mb-2">
-        <Badge variant="secondary">Operation</Badge>
+    <div className="space-y-2 text-sm">
+      {operation.label && <p className="font-medium">{operation.label}</p>}
+      
+      <div className="grid grid-cols-2 gap-2">
         {operation.method && (
-          <Badge variant="outline">{operation.method}</Badge>
+          <div>
+            <span className="font-medium">Methode: </span>
+            <Badge variant="outline" className="bg-blue-50">{operation.method.toUpperCase()}</Badge>
+          </div>
+        )}
+        
+        {operation.resource && (
+          <div>
+            <span className="font-medium">Resource: </span>
+            <span>{operation.resource}</span>
+          </div>
+        )}
+        
+        {operation.url && (
+          <div className="col-span-2">
+            <span className="font-medium">URL: </span>
+            <code className="bg-muted px-1 py-0.5 rounded">{operation.url}</code>
+          </div>
         )}
       </div>
       
-      {operation.label && (
-        <p className="font-medium">{operation.label}</p>
-      )}
-      
       {operation.description && (
-        <p className="text-sm text-muted-foreground">{operation.description}</p>
-      )}
-      
-      {operation.url && (
-        <div className="mt-2 text-sm">
-          <span className="font-medium">URL: </span>
-          <code className="bg-muted px-1 py-0.5 rounded">{operation.url}</code>
-        </div>
-      )}
-      
-      {operation.contentType && (
-        <div className="mt-1 text-sm">
-          <span className="font-medium">Content-Type: </span>
-          <code className="bg-muted px-1 py-0.5 rounded">{operation.contentType}</code>
-        </div>
+        <p className="text-muted-foreground">{operation.description}</p>
       )}
     </div>
   )
 }
 
-function AssertionView({ assertion }: { assertion: Assertion }) {
+/**
+ * Komponentendetails einer Assertion
+ */
+function AssertionDetails({ assertion }: { assertion: Assertion }) {
   return (
-    <div>
-      <div className="flex items-center gap-2 mb-2">
-        <Badge variant="secondary">Assertion</Badge>
+    <div className="space-y-2 text-sm">
+      <div className="flex justify-between">
+        <div>
+          {assertion.label && (
+            <p className="font-medium">{assertion.label}</p>
+          )}
+        </div>
         {assertion.warningOnly ? (
           <Badge variant="outline" className="bg-yellow-100">Nur Warnung</Badge>
         ) : (
@@ -344,16 +298,12 @@ function AssertionView({ assertion }: { assertion: Assertion }) {
         )}
       </div>
       
-      {assertion.label && (
-        <p className="font-medium">{assertion.label}</p>
-      )}
-      
       {assertion.description && (
-        <p className="text-sm text-muted-foreground">{assertion.description}</p>
+        <p className="text-muted-foreground">{assertion.description}</p>
       )}
       
       {assertion.operator && assertion.value && (
-        <div className="mt-2 text-sm">
+        <div className="mt-2">
           <span className="font-medium">Prüfung: </span>
           <code className="bg-muted px-1 py-0.5 rounded">
             {assertion.operator} {assertion.value}
@@ -362,11 +312,99 @@ function AssertionView({ assertion }: { assertion: Assertion }) {
       )}
       
       {assertion.expression && (
-        <div className="mt-2 text-sm">
+        <div className="mt-2">
           <span className="font-medium">Expression: </span>
           <code className="bg-muted px-1 py-0.5 rounded">{assertion.expression}</code>
         </div>
       )}
     </div>
   )
+}
+
+/**
+ * Leerer Zustand Card
+ */
+function EmptyStateCard({ message }: { message: string }) {
+  return (
+    <Card>
+      <CardContent className="flex flex-col items-center justify-center h-48">
+        <p className="text-muted-foreground text-center">{message}</p>
+      </CardContent>
+    </Card>
+  )
+}
+
+/**
+ * Statistikkarte
+ */
+function StatCard({ title, value }: { title: string; value: number }) {
+  return (
+    <Card>
+      <CardContent className="p-4 text-center">
+        <p className="text-muted-foreground text-sm">{title}</p>
+        <p className="text-2xl font-bold">{value}</p>
+      </CardContent>
+    </Card>
+  )
+}
+
+/**
+ * Informationsfeld für Metadaten
+ */
+function InfoField({ label, value }: { label: string; value?: string }) {
+  return (
+    <div>
+      <p className="text-sm text-muted-foreground">{label}</p>
+      <p className="font-medium">{value || "-"}</p>
+    </div>
+  )
+}
+
+/**
+ * Berechnet die Anzahl der Aktionen in allen Tests
+ */
+function countTestActions(tests: TestScriptTest[] | undefined): number {
+  if (!tests) return 0;
+  
+  return tests.reduce((total, test) => {
+    return total + (test.action?.length || 0);
+  }, 0);
+}
+
+/**
+ * Formatiert ein Datum für die Anzeige
+ */
+function formatDate(dateString?: string): string {
+  if (!dateString) return "-";
+  
+  try {
+    const date = new Date(dateString);
+    return new Intl.DateTimeFormat("de-DE", {
+      year: "numeric",
+      month: "long",
+      day: "numeric"
+    }).format(date);
+  } catch (e) {
+    return dateString;
+  }
+}
+
+/**
+ * Gibt die passende Variante für den Status zurück
+ */
+function getStatusVariant(status?: string): "default" | "secondary" | "destructive" | "outline" {
+  if (!status) return "outline";
+  
+  switch (status.toLowerCase()) {
+    case "active":
+    case "completed":
+      return "default";
+    case "draft":
+      return "secondary";
+    case "retired":
+    case "error":
+      return "destructive";
+    default:
+      return "outline";
+  }
 } 

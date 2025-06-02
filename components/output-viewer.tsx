@@ -5,7 +5,7 @@ import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Input } from "@/components/ui/input"
-import { Card, CardContent } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Download, ClipboardCopy, EyeIcon, Code, FileJson, FileX } from "lucide-react"
 import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
@@ -129,7 +129,46 @@ export default function OutputViewer({ testScript }: OutputViewerProps) {
       description: `${filename} wurde heruntergeladen`,
     })
   }
-  
+
+  // Export-Funktionen für verschiedene Formate
+  const exportAsJson = () => {
+    const jsonContent = formatToJson(testScript, indentSize);
+    const blob = new Blob([jsonContent], { type: 'application/json' });
+    downloadBlob(blob, `testscript-${testScript.name || 'export'}.json`);
+  };
+
+  const exportAsXml = () => {
+    const xmlContent = formatToXml(testScript);
+    const blob = new Blob([xmlContent], { type: 'application/xml' });
+    downloadBlob(blob, `testscript-${testScript.name || 'export'}.xml`);
+  };
+
+  const downloadBlob = (blob, filename) => {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  // Statusbadge für Validierungsergebnisse
+  const ValidationStatus = ({ validationResult }) => {
+    if (!validationResult) return null;
+    
+    if (validationResult.valid) {
+      return <Badge variant="success" className="ml-2">Gültig</Badge>;
+    } else {
+      return (
+        <Badge variant="destructive" className="ml-2">
+          {validationResult.errors.length} Fehler
+        </Badge>
+      );
+    }
+  };
+
   return (
     <div className="space-y-4">
       {/* Validierungshinweis */}
@@ -289,6 +328,36 @@ export default function OutputViewer({ testScript }: OutputViewerProps) {
             </TabsContent>
           </div>
         </Tabs>
+      </div>
+      
+      {/* Validierungsfehler anzeigen */}
+      {validationResult && validationResult.errors.length > 0 && (
+        <Card className="mt-4 border-destructive">
+          <CardHeader className="bg-destructive/10">
+            <CardTitle>Validierungsfehler</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ul className="list-disc pl-5">
+              {validationResult.errors.map((error, i) => (
+                <li key={i} className="text-destructive">{error}</li>
+              ))}
+            </ul>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Export-Buttons im Footer-Bereich hinzufügen */}
+      <div className="flex justify-between items-center mt-4">
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={exportAsJson}>
+            <Download className="h-4 w-4 mr-2" />
+            Als JSON exportieren
+          </Button>
+          <Button variant="outline" size="sm" onClick={exportAsXml}>
+            <Download className="h-4 w-4 mr-2" />
+            Als XML exportieren
+          </Button>
+        </div>
       </div>
     </div>
   )
