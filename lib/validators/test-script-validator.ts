@@ -6,6 +6,8 @@ import { TestScript, Operation, Assertion } from "@/types/test-script"
 export interface ValidationResult {
   valid: boolean;
   errors: string[];
+  warnings: string[];
+  info: string[];
 }
 
 /**
@@ -16,10 +18,17 @@ export interface ValidationResult {
  */
 export function validateTestScript(testScript: TestScript): ValidationResult {
   const errors: string[] = [];
+  const warnings: string[] = [];
+  const info: string[] = [];
   
   // Grundlegende Prüfung
   if (!testScript) {
-    return { valid: false, errors: ["Kein TestScript vorhanden"] };
+    return { 
+      valid: false, 
+      errors: ["Kein TestScript vorhanden"],
+      warnings: [],
+      info: []
+    };
   }
   
   // ResourceType prüfen
@@ -48,11 +57,11 @@ export function validateTestScript(testScript: TestScript): ValidationResult {
   // Metadata Validierung
   if (testScript.metadata) {
     if (!testScript.metadata.capability || testScript.metadata.capability.length === 0) {
-      errors.push("Metadata muss mindestens eine Capability enthalten");
+      warnings.push("Metadata sollte mindestens eine Capability enthalten");
     } else {
       testScript.metadata.capability.forEach((cap, index) => {
         if (cap.required === undefined && cap.validated === undefined) {
-          errors.push(`Capability #${index + 1}: Mindestens eines der Felder 'required' oder 'validated' muss gesetzt sein`);
+          warnings.push(`Capability #${index + 1}: Mindestens eines der Felder 'required' oder 'validated' sollte gesetzt sein`);
         }
         if (!cap.capabilities) {
           errors.push(`Capability #${index + 1}: Das Feld 'capabilities' ist erforderlich`);
@@ -73,11 +82,11 @@ export function validateTestScript(testScript: TestScript): ValidationResult {
       }
       
       if (action.operation) {
-        validateOperation(action.operation, errors, prefix, index);
+        validateOperation(action.operation, errors, warnings, info, prefix, index);
       }
       
       if (action.assert) {
-        validateAssertion(action.assert, errors, prefix);
+        validateAssertion(action.assert, errors, warnings, info, prefix);
       }
     });
   }
@@ -98,11 +107,11 @@ export function validateTestScript(testScript: TestScript): ValidationResult {
           }
           
           if (action.operation) {
-            validateOperation(action.operation, errors, prefix, actionIndex);
+            validateOperation(action.operation, errors, warnings, info, prefix, actionIndex);
           }
           
           if (action.assert) {
-            validateAssertion(action.assert, errors, prefix);
+            validateAssertion(action.assert, errors, warnings, info, prefix);
           }
         });
       }
@@ -115,21 +124,30 @@ export function validateTestScript(testScript: TestScript): ValidationResult {
       const prefix = `Teardown Aktion #${index + 1}`;
       
       if (action.operation) {
-        validateOperation(action.operation, errors, prefix, index);
+        validateOperation(action.operation, errors, warnings, info, prefix, index);
       }
     });
   }
   
   return {
     valid: errors.length === 0,
-    errors
+    errors,
+    warnings,
+    info
   };
 }
 
 /**
  * Validiert eine Operation und fügt eventuelle Fehler zum errors-Array hinzu
  */
-function validateOperation(operation: Operation, errors: string[], prefix: string, index: number): void {
+function validateOperation(
+  operation: Operation, 
+  errors: string[], 
+  warnings: string[],
+  info: string[],
+  prefix: string, 
+  index: number
+): void {
   // URL oder Resource muss vorhanden sein
   if (!operation.url && !operation.resource) {
     errors.push(`${prefix}: Weder URL noch Resource angegeben`);
@@ -142,19 +160,30 @@ function validateOperation(operation: Operation, errors: string[], prefix: strin
   
   // Validierung für fehlende IDs in Operations
   if (!operation.requestId && operation.method === "post") {
-    errors.push(`${prefix}: POST-Operation ohne requestId`);
+    warnings.push(`${prefix}: POST-Operation ohne requestId`);
   }
 
   // Prüfen, dass entweder sourceId oder (targetId oder params oder url) vorhanden ist
   if (!operation.sourceId && !operation.targetId && !operation.params && !operation.url) {
     errors.push(`${prefix}: Operation muss entweder sourceId oder (targetId oder params oder url) enthalten`);
   }
+
+  // Zusätzliche Informationen
+  if (operation.description) {
+    info.push(`${prefix}: Beschreibung vorhanden: ${operation.description}`);
+  }
 }
 
 /**
  * Validiert eine Assertion und fügt eventuelle Fehler zum errors-Array hinzu
  */
-function validateAssertion(assertion: Assertion, errors: string[], prefix: string): void {
+function validateAssertion(
+  assertion: Assertion, 
+  errors: string[], 
+  warnings: string[],
+  info: string[],
+  prefix: string
+): void {
   // Operator validieren
   if (assertion.operator && !['equals', 'notEquals', 'in', 'notIn', 'greaterThan', 'lessThan', 'empty', 'notEmpty', 'contains', 'notContains', 'eval', 'manualEval'].includes(assertion.operator)) {
     errors.push(`${prefix}: Ungültiger Operator: ${assertion.operator}`);
@@ -168,5 +197,15 @@ function validateAssertion(assertion: Assertion, errors: string[], prefix: strin
   // Prüfen, dass response und responseCode leer sind, wenn direction = 'request'
   if (assertion.direction === 'request' && (assertion.response || assertion.responseCode)) {
     errors.push(`${prefix}: Bei direction = 'request' müssen response und responseCode leer sein`);
+  }
+
+  // Zusätzliche Informationen
+  if (assertion.description) {
+    info.push(`${prefix}: Beschreibung vorhanden: ${assertion.description}`);
+  }
+
+  // Warnungen für fehlende Validierungen
+  if (!assertion.operator && !assertion.description) {
+    warnings.push(`${prefix}: Keine Validierung oder Beschreibung angegeben`);
   }
 } 

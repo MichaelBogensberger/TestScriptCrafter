@@ -7,53 +7,357 @@ import { Separator } from "@/components/ui/separator"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { TestScriptValidator } from "@/components/test-script-validator"
+import { AlertCircle, CheckCircle2, Info, XCircle } from "lucide-react"
 
 interface StructuredViewProps {
   testScript: TestScript;
-  focusArea?: "all" | "setup" | "test" | "teardown" | "common";
 }
 
 /**
  * Zeigt ein TestScript in einer strukturierten, benutzerfreundlichen Ansicht an
  */
-export function StructuredView({ testScript, focusArea = "all" }: StructuredViewProps) {
+export function StructuredView({ testScript }: StructuredViewProps) {
+  // Statistiken berechnen
+  const totalTests = testScript.test?.length || 0;
+  const totalOperations = (testScript.test?.reduce((acc, test) => acc + (test.action?.filter(a => a.operation).length || 0), 0) || 0) +
+    (testScript.setup?.action?.filter(a => a.operation).length || 0) +
+    (testScript.teardown?.action?.filter(a => a.operation).length || 0);
+  const totalAssertions = (testScript.test?.reduce((acc, test) => acc + (test.action?.filter(a => a.assert).length || 0), 0) || 0) +
+    (testScript.setup?.action?.filter(a => a.assert).length || 0);
+  const totalCapabilities = testScript.metadata?.capability?.length || 0;
+
   return (
-    <div className="space-y-6">
-      <Tabs defaultValue={focusArea === "all" ? "overview" : focusArea} className="w-full">
-        <TabsList className="grid grid-cols-6 w-full">
-          <TabsTrigger value="overview">Übersicht</TabsTrigger>
-          <TabsTrigger value="setup">Setup</TabsTrigger>
-          <TabsTrigger value="test">Tests</TabsTrigger>
-          <TabsTrigger value="teardown">Teardown</TabsTrigger>
-          <TabsTrigger value="common">Common</TabsTrigger>
-          <TabsTrigger value="validation">Validierung</TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="overview">
-          <OverviewSection testScript={testScript} />
-        </TabsContent>
-        
-        <TabsContent value="setup">
-          <SetupSection setup={testScript.setup} />
-        </TabsContent>
-        
-        <TabsContent value="test">
-          <TestSection tests={testScript.test} />
-        </TabsContent>
-        
-        <TabsContent value="teardown">
-          <TeardownSection teardown={testScript.teardown} />
-        </TabsContent>
-        
-        <TabsContent value="common">
-          <CommonSection common={testScript.common} />
-        </TabsContent>
-        
-        <TabsContent value="validation">
-          <TestScriptValidator testScript={testScript} />
-        </TabsContent>
-      </Tabs>
-    </div>
+    <ScrollArea className="h-[calc(100vh-4rem)]">
+      <div className="p-4 space-y-4">
+        {/* Dashboard */}
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Tests</CardTitle>
+              <CheckCircle2 className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{totalTests}</div>
+              <p className="text-xs text-muted-foreground">
+                Gesamtzahl der Tests
+              </p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Operationen</CardTitle>
+              <Info className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{totalOperations}</div>
+              <p className="text-xs text-muted-foreground">
+                Gesamtzahl der Operationen
+              </p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Assertions</CardTitle>
+              <AlertCircle className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{totalAssertions}</div>
+              <p className="text-xs text-muted-foreground">
+                Gesamtzahl der Assertions
+              </p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Capabilities</CardTitle>
+              <XCircle className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{totalCapabilities}</div>
+              <p className="text-xs text-muted-foreground">
+                Gesamtzahl der Capabilities
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Header */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center justify-between">
+              <span>{testScript.name}</span>
+              <Badge variant={testScript.status === 'active' ? 'default' : 'secondary'}>
+                {testScript.status}
+              </Badge>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              {testScript.description && (
+                <p className="text-sm text-muted-foreground">{testScript.description}</p>
+              )}
+              {testScript.url && (
+                <p className="text-sm text-muted-foreground">URL: {testScript.url}</p>
+              )}
+              {testScript.version && (
+                <p className="text-sm text-muted-foreground">Version: {testScript.version}</p>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Metadata */}
+        {testScript.metadata && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Metadaten</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Accordion type="single" collapsible>
+                {testScript.metadata.capability?.map((capability, index) => (
+                  <AccordionItem key={index} value={`capability-${index}`}>
+                    <AccordionTrigger>
+                      <div className="flex items-center gap-2">
+                        <span>Capability {index + 1}</span>
+                        {capability.required && (
+                          <Badge variant="outline">Erforderlich</Badge>
+                        )}
+                        {capability.validated && (
+                          <Badge variant="outline">Validiert</Badge>
+                        )}
+                      </div>
+                    </AccordionTrigger>
+                    <AccordionContent>
+                      <div className="space-y-2">
+                        {capability.description && (
+                          <p className="text-sm">{capability.description}</p>
+                        )}
+                        {capability.link && (
+                          <p className="text-sm text-muted-foreground">
+                            Link: {capability.link}
+                          </p>
+                        )}
+                        {capability.capabilities && (
+                          <p className="text-sm text-muted-foreground">
+                            Capabilities: {capability.capabilities}
+                          </p>
+                        )}
+                      </div>
+                    </AccordionContent>
+                  </AccordionItem>
+                ))}
+              </Accordion>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Setup */}
+        {testScript.setup && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Setup</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Accordion type="single" collapsible>
+                {testScript.setup.action?.map((action, index) => (
+                  <AccordionItem key={index} value={`setup-${index}`}>
+                    <AccordionTrigger>
+                      <div className="flex items-center gap-2">
+                        <span>Setup Aktion {index + 1}</span>
+                        {action.operation && (
+                          <Badge variant="outline">{action.operation.method || 'Operation'}</Badge>
+                        )}
+                        {action.assert && (
+                          <Badge variant="outline">Assert</Badge>
+                        )}
+                      </div>
+                    </AccordionTrigger>
+                    <AccordionContent>
+                      <div className="space-y-2">
+                        {action.operation && (
+                          <div className="space-y-1">
+                            <p className="text-sm font-medium">Operation</p>
+                            {action.operation.description && (
+                              <p className="text-sm text-muted-foreground">
+                                {action.operation.description}
+                              </p>
+                            )}
+                            {action.operation.url && (
+                              <p className="text-sm text-muted-foreground">
+                                URL: {action.operation.url}
+                              </p>
+                            )}
+                            {action.operation.resource && (
+                              <p className="text-sm text-muted-foreground">
+                                Resource: {action.operation.resource}
+                              </p>
+                            )}
+                          </div>
+                        )}
+                        {action.assert && (
+                          <div className="space-y-1">
+                            <p className="text-sm font-medium">Assertion</p>
+                            {action.assert.description && (
+                              <p className="text-sm text-muted-foreground">
+                                {action.assert.description}
+                              </p>
+                            )}
+                            {action.assert.operator && (
+                              <p className="text-sm text-muted-foreground">
+                                Operator: {action.assert.operator}
+                              </p>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </AccordionContent>
+                  </AccordionItem>
+                ))}
+              </Accordion>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Tests */}
+        {testScript.test && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Tests</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Accordion type="single" collapsible>
+                {testScript.test.map((test, testIndex) => (
+                  <AccordionItem key={testIndex} value={`test-${testIndex}`}>
+                    <AccordionTrigger>
+                      <div className="flex items-center gap-2">
+                        <span>Test {testIndex + 1}</span>
+                        {test.name && (
+                          <Badge variant="outline">{test.name}</Badge>
+                        )}
+                      </div>
+                    </AccordionTrigger>
+                    <AccordionContent>
+                      <div className="space-y-4">
+                        {test.description && (
+                          <p className="text-sm text-muted-foreground">{test.description}</p>
+                        )}
+                        {test.action && (
+                          <Accordion type="single" collapsible>
+                            {test.action.map((action, actionIndex) => (
+                              <AccordionItem key={actionIndex} value={`test-${testIndex}-action-${actionIndex}`}>
+                                <AccordionTrigger>
+                                  <div className="flex items-center gap-2">
+                                    <span>Aktion {actionIndex + 1}</span>
+                                    {action.operation && (
+                                      <Badge variant="outline">{action.operation.method || 'Operation'}</Badge>
+                                    )}
+                                    {action.assert && (
+                                      <Badge variant="outline">Assert</Badge>
+                                    )}
+                                  </div>
+                                </AccordionTrigger>
+                                <AccordionContent>
+                                  <div className="space-y-2">
+                                    {action.operation && (
+                                      <div className="space-y-1">
+                                        <p className="text-sm font-medium">Operation</p>
+                                        {action.operation.description && (
+                                          <p className="text-sm text-muted-foreground">
+                                            {action.operation.description}
+                                          </p>
+                                        )}
+                                        {action.operation.url && (
+                                          <p className="text-sm text-muted-foreground">
+                                            URL: {action.operation.url}
+                                          </p>
+                                        )}
+                                        {action.operation.resource && (
+                                          <p className="text-sm text-muted-foreground">
+                                            Resource: {action.operation.resource}
+                                          </p>
+                                        )}
+                                      </div>
+                                    )}
+                                    {action.assert && (
+                                      <div className="space-y-1">
+                                        <p className="text-sm font-medium">Assertion</p>
+                                        {action.assert.description && (
+                                          <p className="text-sm text-muted-foreground">
+                                            {action.assert.description}
+                                          </p>
+                                        )}
+                                        {action.assert.operator && (
+                                          <p className="text-sm text-muted-foreground">
+                                            Operator: {action.assert.operator}
+                                          </p>
+                                        )}
+                                      </div>
+                                    )}
+                                  </div>
+                                </AccordionContent>
+                              </AccordionItem>
+                            ))}
+                          </Accordion>
+                        )}
+                      </div>
+                    </AccordionContent>
+                  </AccordionItem>
+                ))}
+              </Accordion>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Teardown */}
+        {testScript.teardown && (
+          <Card>
+            <CardHeader>
+              <CardTitle>Teardown</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Accordion type="single" collapsible>
+                {testScript.teardown.action?.map((action, index) => (
+                  <AccordionItem key={index} value={`teardown-${index}`}>
+                    <AccordionTrigger>
+                      <div className="flex items-center gap-2">
+                        <span>Teardown Aktion {index + 1}</span>
+                        {action.operation && (
+                          <Badge variant="outline">{action.operation.method || 'Operation'}</Badge>
+                        )}
+                      </div>
+                    </AccordionTrigger>
+                    <AccordionContent>
+                      <div className="space-y-2">
+                        {action.operation && (
+                          <div className="space-y-1">
+                            <p className="text-sm font-medium">Operation</p>
+                            {action.operation.description && (
+                              <p className="text-sm text-muted-foreground">
+                                {action.operation.description}
+                              </p>
+                            )}
+                            {action.operation.url && (
+                              <p className="text-sm text-muted-foreground">
+                                URL: {action.operation.url}
+                              </p>
+                            )}
+                            {action.operation.resource && (
+                              <p className="text-sm text-muted-foreground">
+                                Resource: {action.operation.resource}
+                              </p>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </AccordionContent>
+                  </AccordionItem>
+                ))}
+              </Accordion>
+            </CardContent>
+          </Card>
+        )}
+      </div>
+    </ScrollArea>
   )
 }
 

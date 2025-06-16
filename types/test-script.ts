@@ -226,4 +226,22 @@ export interface TestScript {
   teardown?: TestScriptTeardown;
   common?: TestScriptCommon[];
 }
+
+export interface ValidationIssue {
+  severity: 'fatal' | 'error' | 'warning' | 'information';
+  code?: string;
+  details?: {
+    text: string;
+    code?: string;
+    expression?: string;
+  };
+  location?: string[];
+  line?: number;
+  column?: number;
+}
+
+export interface ValidationResult {
+  resourceType: "OperationOutcome";
+  issue: ValidationIssue[];
+}
   

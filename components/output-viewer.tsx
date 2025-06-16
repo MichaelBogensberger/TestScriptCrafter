@@ -18,6 +18,10 @@ import { TestScript } from "@/types/test-script"
 import { validateTestScript } from "@/lib/validators/test-script-validator"
 import { TestScriptFilteredView } from "@/components/test-script-filtered-view"
 import { Badge } from "@/components/ui/badge"
+import { JsonView } from "@/components/json-view"
+import { XmlView } from "@/components/xml-view"
+import { FilteredView } from "./filtered-view"
+import { ValidationTab } from "@/components/validation-tab"
 
 interface OutputViewerProps {
   testScript: TestScript
@@ -38,327 +42,27 @@ interface OutputViewerProps {
  * - Anpassung der Einrückung
  * - Ein-/Ausblenden von Zeilennummern
  */
-export default function OutputViewer({ testScript }: OutputViewerProps) {
-  // Verschiedene Anzeige-States
-  const [viewMode, setViewMode] = useState<"json" | "xml" | "structured" | "filtered">("json")
-  const [indentSize, setIndentSize] = useState<number>(2)
-  const [showLineNumbers, setShowLineNumbers] = useState<boolean>(true)
-  const [focusArea, setFocusArea] = useState<"all" | "setup" | "test" | "teardown" | "common">("all")
-  
-  // Validierung des TestScripts
-  const validationResult = validateTestScript(testScript)
-  
-  /**
-   * Filtert das TestScript nach dem ausgewählten Bereich
-   */
-  function getFilteredTestScript(): any {
-    if (focusArea === "all") return testScript
-    
-    const filtered = { ...testScript }
-    
-    // Nur die ausgewählten Bereiche beibehalten
-    if (focusArea !== "setup") delete filtered.setup
-    if (focusArea !== "test") delete filtered.test
-    if (focusArea !== "teardown") delete filtered.teardown
-    if (focusArea !== "common") delete filtered.common
-    
-    return filtered
-  }
-  
-  /**
-   * Formatiert das TestScript entsprechend des ausgewählten Formats
-   */
-  function getFormattedContent(): string {
-    try {
-      const filtered = getFilteredTestScript()
-      
-      if (viewMode === "json") {
-        return formatToJson(filtered, indentSize)
-      } else {
-        return formatToXml(filtered)
-      }
-    } catch (error) {
-      console.error("Formatierungsfehler:", error)
-      return `Fehler bei der Formatierung: ${error.message}`
-    }
-  }
-  
-  /**
-   * Kopiert den formatierten Inhalt in die Zwischenablage
-   */
-  function copyToClipboard(): void {
-    const content = getFormattedContent()
-    
-    navigator.clipboard.writeText(content)
-      .then(() => {
-        toast.success("In die Zwischenablage kopiert", {
-          description: `TestScript ${viewMode.toUpperCase()} wurde kopiert`,
-        })
-      })
-      .catch((error) => {
-        toast.error("Fehler beim Kopieren", {
-          description: error.message,
-        })
-      })
-  }
-  
-  /**
-   * Lädt den formatierten Inhalt als Datei herunter
-   */
-  function downloadContent(): void {
-    const content = getFormattedContent()
-    const extension = viewMode === "json" ? "json" : "xml"
-    const filename = `testscript_${testScript.id || "export"}.${extension}`
-    
-    const blob = new Blob([content], { type: `application/${extension}` })
-    const url = URL.createObjectURL(blob)
-    
-    const a = document.createElement("a")
-    a.href = url
-    a.download = filename
-    document.body.appendChild(a)
-    a.click()
-    
-    // Aufräumen
-    setTimeout(() => {
-      document.body.removeChild(a)
-      URL.revokeObjectURL(url)
-    }, 100)
-    
-    toast.success("Datei heruntergeladen", {
-      description: `${filename} wurde heruntergeladen`,
-    })
-  }
-
-  // Export-Funktionen für verschiedene Formate
-  const exportAsJson = () => {
-    const jsonContent = formatToJson(testScript, indentSize);
-    const blob = new Blob([jsonContent], { type: 'application/json' });
-    downloadBlob(blob, `testscript-${testScript.name || 'export'}.json`);
-  };
-
-  const exportAsXml = () => {
-    const xmlContent = formatToXml(testScript);
-    const blob = new Blob([xmlContent], { type: 'application/xml' });
-    downloadBlob(blob, `testscript-${testScript.name || 'export'}.xml`);
-  };
-
-  const downloadBlob = (blob, filename) => {
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  };
-
-  // Statusbadge für Validierungsergebnisse
-  const ValidationStatus = ({ validationResult }) => {
-    if (!validationResult) return null;
-    
-    if (validationResult.valid) {
-      return <Badge variant="success" className="ml-2">Gültig</Badge>;
-    } else {
-      return (
-        <Badge variant="destructive" className="ml-2">
-          {validationResult.errors.length} Fehler
-        </Badge>
-      );
-    }
-  };
-
+export function OutputViewer({ testScript }: OutputViewerProps) {
   return (
-    <div className="space-y-4">
-      {/* Validierungshinweis */}
-      {!validationResult.valid && (
-        <div className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 mb-4 rounded">
-          <div className="flex items-start">
-            <div className="ml-3">
-              <p className="font-medium">Validierungswarnung</p>
-              <ul className="mt-1 list-disc list-inside">
-                {validationResult.errors.map((error, index) => (
-                  <li key={index}>{error}</li>
-                ))}
-              </ul>
-            </div>
-          </div>
-        </div>
-      )}
-      
-      {/* TestScript Metadaten */}
-      <Card>
-        <CardContent className="pt-6">
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-            <div>
-              <h2 className="text-2xl font-bold">{testScript.name}</h2>
-              {testScript.description && (
-                <p className="text-muted-foreground mt-1">{testScript.description}</p>
-              )}
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {testScript.status && (
-                <Badge variant={testScript.status === "active" ? "default" : "outline"}>
-                  {testScript.status}
-                </Badge>
-              )}
-              {testScript.experimental && (
-                <Badge variant="secondary">Experimentell</Badge>
-              )}
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-      
-      {/* Ansicht-Steuerelemente */}
-      <div className="flex flex-wrap gap-4 items-center justify-between">
-        <Tabs defaultValue="json" value={viewMode} onValueChange={(v) => setViewMode(v as any)} className="w-full">
-          <TabsList className="grid grid-cols-4 w-full md:w-auto">
-            <TabsTrigger value="json" className="flex items-center gap-2">
-              <FileJson className="h-4 w-4" />
-              <span className="hidden sm:inline">JSON</span>
-            </TabsTrigger>
-            <TabsTrigger value="xml" className="flex items-center gap-2">
-              <FileX className="h-4 w-4" />
-              <span className="hidden sm:inline">XML</span>
-            </TabsTrigger>
-            <TabsTrigger value="structured" className="flex items-center gap-2">
-              <EyeIcon className="h-4 w-4" />
-              <span className="hidden sm:inline">Strukturiert</span>
-            </TabsTrigger>
-            <TabsTrigger value="filtered" className="flex items-center gap-2">
-              <Code className="h-4 w-4" />
-              <span className="hidden sm:inline">Gefiltert</span>
-            </TabsTrigger>
-          </TabsList>
-          
-          {/* Formatierungssteuerung für Code-Ansichten */}
-          {(viewMode === "json" || viewMode === "xml") && (
-            <div className="flex flex-wrap gap-4 mt-4">
-              {viewMode === "json" && (
-                <div className="flex items-center gap-2">
-                  <Label htmlFor="indent-size">Einrückung:</Label>
-                  <Input
-                    id="indent-size"
-                    type="number"
-                    min={0}
-                    max={8}
-                    value={indentSize}
-                    onChange={(e) => setIndentSize(parseInt(e.target.value) || 2)}
-                    className="w-16"
-                  />
-                </div>
-              )}
-              
-              <div className="flex items-center gap-2">
-                <Switch
-                  id="line-numbers"
-                  checked={showLineNumbers}
-                  onCheckedChange={setShowLineNumbers}
-                />
-                <Label htmlFor="line-numbers">Zeilennummern</Label>
-              </div>
-              
-              <div className="flex items-center gap-2">
-                <Label htmlFor="focus-area">Fokus:</Label>
-                <Select value={focusArea} onValueChange={(v) => setFocusArea(v as any)}>
-                  <SelectTrigger id="focus-area" className="w-[180px]">
-                    <SelectValue placeholder="Bereich auswählen" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Gesamtes TestScript</SelectItem>
-                    <SelectItem value="setup">Setup</SelectItem>
-                    <SelectItem value="test">Tests</SelectItem>
-                    <SelectItem value="teardown">Teardown</SelectItem>
-                    <SelectItem value="common">Common</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          )}
-          
-          {/* Aktionsbuttons */}
-          <div className="flex gap-2 mt-4">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={copyToClipboard}
-              className="flex items-center gap-2"
-            >
-              <ClipboardCopy className="h-4 w-4" />
-              <span>Kopieren</span>
-            </Button>
-            
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={downloadContent}
-              className="flex items-center gap-2"
-            >
-              <Download className="h-4 w-4" />
-              <span>Herunterladen</span>
-            </Button>
-          </div>
-          
-          {/* Ansichtsbereich für das TestScript */}
-          <div className="mt-4 border rounded-md overflow-hidden">
-            <TabsContent value="json" className="m-0">
-              <SyntaxHighlighter
-                language="json"
-                code={getFormattedContent()}
-                showLineNumbers={showLineNumbers}
-              />
-            </TabsContent>
-            
-            <TabsContent value="xml" className="m-0">
-              <SyntaxHighlighter
-                language="xml"
-                code={getFormattedContent()}
-                showLineNumbers={showLineNumbers}
-              />
-            </TabsContent>
-            
-            <TabsContent value="structured" className="m-0 p-0">
-              <StructuredView testScript={testScript} focusArea={focusArea} />
-            </TabsContent>
-            
-            <TabsContent value="filtered" className="m-0 p-0">
-              <TestScriptFilteredView testScript={testScript} />
-            </TabsContent>
-          </div>
-        </Tabs>
-      </div>
-      
-      {/* Validierungsfehler anzeigen */}
-      {validationResult && validationResult.errors.length > 0 && (
-        <Card className="mt-4 border-destructive">
-          <CardHeader className="bg-destructive/10">
-            <CardTitle>Validierungsfehler</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ul className="list-disc pl-5">
-              {validationResult.errors.map((error, i) => (
-                <li key={i} className="text-destructive">{error}</li>
-              ))}
-            </ul>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Export-Buttons im Footer-Bereich hinzufügen */}
-      <div className="flex justify-between items-center mt-4">
-        <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={exportAsJson}>
-            <Download className="h-4 w-4 mr-2" />
-            Als JSON exportieren
-          </Button>
-          <Button variant="outline" size="sm" onClick={exportAsXml}>
-            <Download className="h-4 w-4 mr-2" />
-            Als XML exportieren
-          </Button>
-        </div>
-      </div>
-    </div>
+    <Tabs defaultValue="json" className="w-full">
+      <TabsList>
+        <TabsTrigger value="json">JSON</TabsTrigger>
+        <TabsTrigger value="xml">XML</TabsTrigger>
+        <TabsTrigger value="structured">Strukturiert</TabsTrigger>
+        <TabsTrigger value="validation">Validierung</TabsTrigger>
+      </TabsList>
+      <TabsContent value="json">
+        <JsonView testScript={testScript} />
+      </TabsContent>
+      <TabsContent value="xml">
+        <XmlView testScript={testScript} />
+      </TabsContent>
+      <TabsContent value="structured">
+        <StructuredView testScript={testScript} />
+      </TabsContent>
+      <TabsContent value="validation">
+        <ValidationTab testScript={testScript} />
+      </TabsContent>
+    </Tabs>
   )
 }

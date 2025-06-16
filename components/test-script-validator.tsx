@@ -12,34 +12,34 @@ import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { validateTestScript } from "@/lib/validators/test-script-validator";
+import { Label } from "@/components/ui/label";
 
 interface TestScriptValidatorProps {
   testScript: TestScript;
 }
 
 export function TestScriptValidator({ testScript }: TestScriptValidatorProps) {
-  const [serverUrl, setServerUrl] = useState<string>("https://hapi.fhir.org/baseR4");
-  const { isValidating, validationResult, validate, setValidationResult } = useFhirValidation();
+  const { isValidating, validationResult, validate } = useFhirValidation();
 
   const handleValidate = async () => {
-    // Lokale Validierung durchführen
+    if (!testScript) return;
+
+    // Lokale Validierung
     const localValidation = validateTestScript(testScript);
     if (!localValidation.valid) {
-      setValidationResult({
-        valid: false,
-        message: "Lokale Validierungsfehler gefunden",
+      validate(testScript, {
         issues: localValidation.errors.map(error => ({
           severity: "error",
           code: "invalid",
           diagnostics: error,
-          location: ["TestScript"] // Füge den Pfad hinzu, wo der Fehler auftritt
+          location: ["TestScript"]
         }))
       });
       return;
     }
 
-    // Wenn lokale Validierung erfolgreich, FHIR-Server-Validierung durchführen
-    await validate(testScript, { serverUrl });
+    // FHIR Server Validierung
+    await validate(testScript, {});
   };
 
   const renderValidationStatus = () => {
@@ -58,12 +58,12 @@ export function TestScriptValidator({ testScript }: TestScriptValidatorProps) {
           <AlertTitle>Validierung erfolgreich</AlertTitle>
           <AlertDescription>
             <div className="mt-2">
-              <p>Das TestScript wurde erfolgreich validiert.</p>
+              <p>{validationResult.message}</p>
               <div className="mt-2 space-y-1">
                 <p className="text-sm">Zusammenfassung:</p>
                 <ul className="text-sm list-disc ml-4">
                   <li>Alle erforderlichen Felder sind vorhanden</li>
-                  <li>Die Struktur entspricht den FHIR-Anforderungen</li>
+                  <li>Die Struktur entspricht den FHIR R5 Anforderungen</li>
                   <li>Keine Validierungsfehler gefunden</li>
                 </ul>
               </div>
@@ -79,7 +79,7 @@ export function TestScriptValidator({ testScript }: TestScriptValidatorProps) {
         <AlertTitle>Validierungsfehler</AlertTitle>
         <AlertDescription>
           <div className="mt-2">
-            <p>{validationResult.message || "Das TestScript enthält Fehler."}</p>
+            <p>{validationResult.message}</p>
             <div className="mt-2 space-y-1">
               <p className="text-sm">Zusammenfassung der Probleme:</p>
               <ul className="text-sm list-disc ml-4">
@@ -135,9 +135,9 @@ export function TestScriptValidator({ testScript }: TestScriptValidatorProps) {
                 <div key={severity} className="mb-6">
                   <h4 className="font-medium mb-2">
                     {severity === 'fatal' ? 'Kritische Fehler' :
-                     severity === 'error' ? 'Fehler' :
-                     severity === 'warning' ? 'Warnungen' :
-                     'Hinweise'}
+                     severity === 'error' ? 'Validierungsfehler' :
+                     severity === 'warning' ? 'Validierungswarnungen' :
+                     'Validierungshinweise'}
                   </h4>
                   {issues.map((issue, index) => (
                     <div key={index} className="mb-4 pb-4 border-b last:border-0">
@@ -210,34 +210,33 @@ export function TestScriptValidator({ testScript }: TestScriptValidatorProps) {
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
-          <div className="flex gap-4">
-            <div className="flex-1">
-              <Input
-                value={serverUrl}
-                onChange={(e) => setServerUrl(e.target.value)}
-                placeholder="FHIR-Server URL"
-              />
-            </div>
-            <Button 
-              onClick={handleValidate} 
-              disabled={isValidating || !testScript}
+          <div className="flex justify-end">
+            <Button
+              onClick={handleValidate}
+              disabled={isValidating}
             >
               {isValidating ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   Validiere...
                 </>
-              ) : "Validieren"}
+              ) : (
+                <>
+                  <CheckCircle2 className="mr-2 h-4 w-4" />
+                  Validieren
+                </>
+              )}
             </Button>
           </div>
-          
-          {renderValidationStatus()}
-          {renderIssues()}
+
+          {validationResult && (
+            <div className="mt-4">
+              {renderValidationStatus()}
+              {renderIssues()}
+            </div>
+          )}
         </div>
       </CardContent>
-      <CardFooter className="border-t pt-4 text-xs text-muted-foreground">
-        Die Validierung erfolgt gegen den angegebenen FHIR-Server. Standardmäßig wird {serverUrl} verwendet.
-      </CardFooter>
     </Card>
   );
 } 

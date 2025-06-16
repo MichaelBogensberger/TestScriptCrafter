@@ -4,7 +4,7 @@ import { useState } from "react"
 import { Card } from "@/components/ui/card"
 import { Code } from "lucide-react"
 import FormBuilder from "@/components/form-builder/form-builder"
-import OutputViewer from "@/components/output-viewer"
+import { OutputViewer } from "@/components/output-viewer"
 import type { TestScript } from "@/types/test-script"
 import { initialTestScript } from "@/lib/initial-data"
 
