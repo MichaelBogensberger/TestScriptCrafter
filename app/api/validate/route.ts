@@ -30,10 +30,40 @@ interface FhirOperationOutcome {
   issue: FhirIssue[];
 }
 
-function extractLineAndColumn(issue: FhirIssue): { line: number; column: number } {
+function calculateJsonPosition(jsonString: string, path: string[]): { line: number; column: number } {
+  const lines = jsonString.split('\n');
+  
+  // Einfache Heuristik: Suche nach dem Pfad in der JSON-Struktur
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    
+    // Suche nach dem letzten Element im Pfad
+    if (path.length > 0) {
+      const lastPathElement = path[path.length - 1];
+      
+      // Bereinige Array-Indizes und andere FHIR-spezifische Notationen
+      const cleanPath = lastPathElement
+        .replace(/Parameters\.parameter\[0\]\.resource\./, "")
+        .replace(/\/\*TestScript\/null\*\/\./, "")
+        .replace(/\[\d+\]/g, "");
+      
+      if (line.includes(`"${cleanPath}"`)) {
+        return {
+          line: i + 1,
+          column: line.indexOf(`"${cleanPath}"`) + 1
+        };
+      }
+    }
+  }
+  
+  return { line: 1, column: 1 };
+}
+
+function extractLineAndColumn(issue: FhirIssue, formattedJson: string): { line: number; column: number } {
   let line = 1;
   let column = 1;
 
+  // Versuche zuerst die Extensions zu lesen
   if (issue.extension) {
     const lineExtension = issue.extension.find(ext => 
       ext.url === "http://hl7.org/fhir/StructureDefinition/operationoutcome-issue-line"
@@ -48,18 +78,32 @@ function extractLineAndColumn(issue: FhirIssue): { line: number; column: number 
     if (colExtension?.valueInteger) {
       column = colExtension.valueInteger;
     }
+    
+    // Falls die Extensions valide Werte haben, benutze sie
+    if (line > 1 || column > 1) {
+      return { line, column };
+    }
   }
 
-  return { line, column };
+  // Fallback: Berechne Position basierend auf dem location-Pfad
+  if (issue.location && issue.location.length > 0 && formattedJson) {
+    const calculatedPosition = calculateJsonPosition(formattedJson, issue.location);
+    return calculatedPosition;
+  }
+
+  return { line: 1, column: 1 };
 }
 
-function enhanceFhirResponse(fhirResponse: FhirOperationOutcome): FhirOperationOutcome {
+function enhanceFhirResponse(fhirResponse: FhirOperationOutcome, originalJson: string): FhirOperationOutcome {
   if (!fhirResponse.issue) {
     return fhirResponse;
   }
 
+  // Formatiere das ursprüngliche JSON für bessere Positionsberechnung
+  const formattedJson = JSON.stringify(JSON.parse(originalJson), null, 2);
+
   const enhancedIssues = fhirResponse.issue.map(issue => {
-    const { line, column } = extractLineAndColumn(issue);
+    const { line, column } = extractLineAndColumn(issue, formattedJson);
     
     // Verbessere die Fehlermeldung
     let message = issue.diagnostics || issue.details?.text || "Unbekannter Validierungsfehler";
@@ -113,6 +157,7 @@ function enhanceFhirResponse(fhirResponse: FhirOperationOutcome): FhirOperationO
 export async function POST(request: Request) {
   try {
     const body = await request.json()
+    const originalJsonString = JSON.stringify(body);
     
     // Validiere grundlegende TestScript-Struktur
     const basicValidation = validateBasicStructure(body);
@@ -138,7 +183,8 @@ export async function POST(request: Request) {
       });
     }
 
-    // Sende an FHIR-Server für vollständige Validierung
+    // Sende formatiertes JSON an FHIR-Server für bessere Zeilennummern
+    const formattedTestScript = JSON.stringify(body, null, 2);
     const fhirServerUrl = 'https://hapi.fhir.org/baseR5/TestScript/$validate';
     
     const response = await fetch(fhirServerUrl, {
@@ -155,7 +201,7 @@ export async function POST(request: Request) {
             resource: body
           }
         ]
-      })
+      }, null, 2) // Sende formatiertes JSON für bessere Positionierung
     });
 
     if (!response.ok) {
@@ -164,8 +210,8 @@ export async function POST(request: Request) {
 
     const fhirResponse: FhirOperationOutcome = await response.json();
     
-    // Erweitere die FHIR-Response mit besseren Fehlermeldungen
-    const enhancedResponse = enhanceFhirResponse(fhirResponse);
+    // Erweitere die FHIR-Response mit besseren Fehlermeldungen und korrekten Zeilennummern
+    const enhancedResponse = enhanceFhirResponse(fhirResponse, formattedTestScript);
     
     return NextResponse.json(enhancedResponse);
     
@@ -206,8 +252,8 @@ function validateBasicStructure(testScript: any) {
     errors.push({
       message: 'ResourceType muss "TestScript" sein',
       location: ['resourceType'],
-      line: 1,
-      column: 1
+      line: 2,
+      column: 3
     });
   }
 
@@ -215,8 +261,15 @@ function validateBasicStructure(testScript: any) {
     errors.push({
       message: 'TestScript muss einen Namen (String) haben',
       location: ['name'],
-      line: 1,
-      column: 1
+      line: 3,
+      column: 3
+    });
+  } else if (!testScript.name.match(/^[A-Z]([A-Za-z0-9_]){1,254}$/)) {
+    errors.push({
+      message: 'Name muss mit einem Großbuchstaben beginnen und darf nur Buchstaben, Zahlen und Unterstriche enthalten',
+      location: ['name'],
+      line: 3,
+      column: 3
     });
   }
 
@@ -224,16 +277,62 @@ function validateBasicStructure(testScript: any) {
     errors.push({
       message: 'TestScript muss einen Status haben',
       location: ['status'],
-      line: 1,
-      column: 1
+      line: 4,
+      column: 3
     });
   } else if (!['draft', 'active', 'retired', 'unknown'].includes(testScript.status)) {
     errors.push({
       message: 'Status muss einer der folgenden Werte sein: draft, active, retired, unknown',
       location: ['status'],
-      line: 1,
-      column: 1
+      line: 4,
+      column: 3
     });
+  }
+
+  // Prüfe Metadata - muss vorhanden sein und gültige capabilities haben
+  if (!testScript.metadata) {
+    errors.push({
+      message: 'TestScript muss Metadaten enthalten',
+      location: ['metadata'],
+      line: 5,
+      column: 3
+    });
+  } else {
+    if (!testScript.metadata.capability || !Array.isArray(testScript.metadata.capability) || testScript.metadata.capability.length === 0) {
+      errors.push({
+        message: 'Metadaten müssen mindestens eine Capability enthalten',
+        location: ['metadata', 'capability'],
+        line: 6,
+        column: 5
+      });
+    } else {
+      testScript.metadata.capability.forEach((cap: any, index: number) => {
+        if (!cap.capabilities) {
+          errors.push({
+            message: `Capability ${index + 1}: Das 'capabilities'-Feld ist erforderlich`,
+            location: ['metadata', 'capability', index.toString(), 'capabilities'],
+            line: 7 + index * 3,
+            column: 7
+          });
+        } else if (!cap.capabilities.startsWith('http://') && !cap.capabilities.startsWith('https://')) {
+          errors.push({
+            message: `Capability ${index + 1}: capabilities muss eine absolute URL sein`,
+            location: ['metadata', 'capability', index.toString(), 'capabilities'],
+            line: 7 + index * 3,
+            column: 7
+          });
+        }
+        
+        if (cap.required === undefined && cap.validated === undefined) {
+          errors.push({
+            message: `Capability ${index + 1}: Mindestens 'required' oder 'validated' muss gesetzt sein`,
+            location: ['metadata', 'capability', index.toString()],
+            line: 7 + index * 3,
+            column: 7
+          });
+        }
+      });
+    }
   }
 
   // Prüfe, ob leere Arrays vermieden werden
@@ -241,8 +340,8 @@ function validateBasicStructure(testScript: any) {
     errors.push({
       message: 'Setup-Aktionen sind leer - entfernen Sie die setup-Eigenschaft oder fügen Sie Aktionen hinzu',
       location: ['setup', 'action'],
-      line: 1,
-      column: 1
+      line: 15,
+      column: 5
     });
   }
 
@@ -250,19 +349,19 @@ function validateBasicStructure(testScript: any) {
     errors.push({
       message: 'Teardown-Aktionen sind leer - entfernen Sie die teardown-Eigenschaft oder fügen Sie Aktionen hinzu',
       location: ['teardown', 'action'],
-      line: 1,
-      column: 1
+      line: 25,
+      column: 5
     });
   }
 
   if (testScript.test && Array.isArray(testScript.test)) {
     testScript.test.forEach((test: any, index: number) => {
-      if (Array.isArray(test.action) && test.action.length === 0) {
+      if (!test.action || !Array.isArray(test.action) || test.action.length === 0) {
         errors.push({
-          message: `Test ${index + 1}: Test-Aktionen sind leer - fügen Sie Aktionen hinzu oder entfernen Sie den Test`,
+          message: `Test ${index + 1}: Muss mindestens eine Aktion enthalten`,
           location: ['test', index.toString(), 'action'],
-          line: 1,
-          column: 1
+          line: 20 + index * 5,
+          column: 7
         });
       }
     });

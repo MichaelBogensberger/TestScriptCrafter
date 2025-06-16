@@ -25,23 +25,27 @@ function FormBuilder({ testScript, updateTestScript, updateSection }: FormBuilde
   // Speichern, welche Akkordeon-Abschnitte geöffnet sind
   const [expandedSections, setExpandedSections] = useState<string[]>(["basic-info", "metadata"])
 
+  // Sichere Zugriffe auf möglicherweise undefined Eigenschaften
+  const tests = testScript.test || [];
+  const metadata = testScript.metadata || { capability: [] };
+
   /**
    * Fügt einen neuen Testfall zum TestScript hinzu
    */
   function addTestCase() {
     // Neuen Test erstellen
     const newTest = {
-      name: `Test Case ${testScript.test.length + 1}`,
+      name: `Test Case ${tests.length + 1}`,
       description: "New test case",
       action: [],
     }
 
     // Tests aktualisieren
-    const updatedTests = [...testScript.test, newTest]
+    const updatedTests = [...tests, newTest]
     updateSection("test", updatedTests)
 
     // Neu hinzugefügten Testfall aufklappen
-    setExpandedSections([...expandedSections, `test-${testScript.test.length}`])
+    setExpandedSections([...expandedSections, `test-${tests.length}`])
   }
 
   return (
@@ -73,7 +77,7 @@ function FormBuilder({ testScript, updateTestScript, updateSection }: FormBuilde
           </AccordionTrigger>
           <AccordionContent>
             <MetadataSection
-              metadata={testScript.metadata}
+              metadata={metadata}
               updateMetadata={(metadata) => updateSection("metadata", metadata)}
             />
           </AccordionContent>
@@ -86,14 +90,14 @@ function FormBuilder({ testScript, updateTestScript, updateSection }: FormBuilde
           </AccordionTrigger>
           <AccordionContent>
             <SetupSection 
-              setup={testScript.setup} 
+              setup={testScript.setup || { action: [] }} 
               updateSetup={(setup) => updateSection("setup", setup)} 
             />
           </AccordionContent>
         </AccordionItem>
 
         {/* Testfälle */}
-        {testScript.test.map((test, testIndex) => (
+        {tests.map((test, testIndex) => (
           <AccordionItem key={`test-${testIndex}`} value={`test-${testIndex}`}>
             <AccordionTrigger className="text-lg font-medium">
               {test.name || `Testfall ${testIndex + 1}`}
@@ -104,13 +108,13 @@ function FormBuilder({ testScript, updateTestScript, updateSection }: FormBuilde
                 testIndex={testIndex}
                 updateTest={(updatedTest) => {
                   // Aktualisiere den Testfall im Array
-                  const updatedTests = [...testScript.test]
+                  const updatedTests = [...tests]
                   updatedTests[testIndex] = updatedTest
                   updateSection("test", updatedTests)
                 }}
                 removeTest={() => {
                   // Entferne den Testfall aus dem Array
-                  const updatedTests = testScript.test.filter((_, i) => i !== testIndex)
+                  const updatedTests = tests.filter((_, i) => i !== testIndex)
                   updateSection("test", updatedTests)
                 }}
               />
@@ -125,7 +129,7 @@ function FormBuilder({ testScript, updateTestScript, updateSection }: FormBuilde
           </AccordionTrigger>
           <AccordionContent>
             <TeardownSection
-              teardown={testScript.teardown}
+              teardown={testScript.teardown || { action: [] }}
               updateTeardown={(teardown) => updateSection("teardown", teardown)}
             />
           </AccordionContent>
