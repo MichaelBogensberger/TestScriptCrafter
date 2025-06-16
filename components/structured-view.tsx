@@ -6,7 +6,7 @@ import { TestScript, TestScriptTest, TestScriptSetup, TestScriptTeardown, Assert
 import { Separator } from "@/components/ui/separator"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { TestScriptValidator } from "@/components/test-script-validator"
+import { ValidationTab } from "@/components/validation-tab"
 import { AlertCircle, CheckCircle2, Info, XCircle } from "lucide-react"
 
 interface StructuredViewProps {
