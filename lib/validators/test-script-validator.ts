@@ -30,16 +30,47 @@ export function validateTestScript(testScript: TestScript): ValidationResult {
   // Pflichtfelder prüfen
   if (!testScript.name) {
     errors.push("TestScript muss einen Namen haben");
+  } else if (!testScript.name.match(/^[A-Z]([A-Za-z0-9_]){1,254}$/)) {
+    errors.push("Der Name muss mit einem Großbuchstaben beginnen und darf nur Buchstaben, Zahlen und Unterstriche enthalten");
   }
   
   if (!testScript.status) {
     errors.push("TestScript muss einen Status haben");
+  } else if (!['draft', 'active', 'retired', 'unknown'].includes(testScript.status)) {
+    errors.push("Status muss einer der folgenden Werte sein: draft, active, retired, unknown");
   }
-  
+
+  // URL Validierung
+  if (testScript.url && (testScript.url.includes('|') || testScript.url.includes('#'))) {
+    errors.push("URL darf keine | oder # Zeichen enthalten");
+  }
+
+  // Metadata Validierung
+  if (testScript.metadata) {
+    if (!testScript.metadata.capability || testScript.metadata.capability.length === 0) {
+      errors.push("Metadata muss mindestens eine Capability enthalten");
+    } else {
+      testScript.metadata.capability.forEach((cap, index) => {
+        if (cap.required === undefined && cap.validated === undefined) {
+          errors.push(`Capability #${index + 1}: Mindestens eines der Felder 'required' oder 'validated' muss gesetzt sein`);
+        }
+        if (!cap.capabilities) {
+          errors.push(`Capability #${index + 1}: Das Feld 'capabilities' ist erforderlich`);
+        }
+      });
+    }
+  }
+
   // Setup validieren
   if (testScript.setup && testScript.setup.action) {
     testScript.setup.action.forEach((action, index) => {
       const prefix = `Setup Aktion #${index + 1}`;
+      
+      // Prüfen, dass nur eine der Aktionen (common, operation, assert) vorhanden ist
+      const actionCount = [action.common, action.operation, action.assert].filter(Boolean).length;
+      if (actionCount !== 1) {
+        errors.push(`${prefix}: Muss genau eine der Aktionen (common, operation, assert) enthalten`);
+      }
       
       if (action.operation) {
         validateOperation(action.operation, errors, prefix, index);
@@ -59,6 +90,12 @@ export function validateTestScript(testScript: TestScript): ValidationResult {
       if (test.action) {
         test.action.forEach((action, actionIndex) => {
           const prefix = `${testPrefix} Aktion #${actionIndex + 1}`;
+          
+          // Prüfen, dass nur eine der Aktionen (common, operation, assert) vorhanden ist
+          const actionCount = [action.common, action.operation, action.assert].filter(Boolean).length;
+          if (actionCount !== 1) {
+            errors.push(`${prefix}: Muss genau eine der Aktionen (common, operation, assert) enthalten`);
+          }
           
           if (action.operation) {
             validateOperation(action.operation, errors, prefix, actionIndex);
@@ -107,8 +144,11 @@ function validateOperation(operation: Operation, errors: string[], prefix: strin
   if (!operation.requestId && operation.method === "post") {
     errors.push(`${prefix}: POST-Operation ohne requestId`);
   }
-  
-  // Weitere Validierungsregeln...
+
+  // Prüfen, dass entweder sourceId oder (targetId oder params oder url) vorhanden ist
+  if (!operation.sourceId && !operation.targetId && !operation.params && !operation.url) {
+    errors.push(`${prefix}: Operation muss entweder sourceId oder (targetId oder params oder url) enthalten`);
+  }
 }
 
 /**
@@ -124,6 +164,9 @@ function validateAssertion(assertion: Assertion, errors: string[], prefix: strin
   if (assertion.compareToSourceId && !assertion.compareToSourceExpression && !assertion.compareToSourcePath) {
     errors.push(`${prefix}: Bei compareToSourceId muss entweder compareToSourceExpression oder compareToSourcePath angegeben werden`);
   }
-  
-  // Weitere Validierungsregeln...
+
+  // Prüfen, dass response und responseCode leer sind, wenn direction = 'request'
+  if (assertion.direction === 'request' && (assertion.response || assertion.responseCode)) {
+    errors.push(`${prefix}: Bei direction = 'request' müssen response und responseCode leer sein`);
+  }
 } 

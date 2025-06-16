@@ -6,6 +6,7 @@ import { TestScript, TestScriptTest, TestScriptSetup, TestScriptTeardown, Assert
 import { Separator } from "@/components/ui/separator"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import { TestScriptValidator } from "@/components/test-script-validator"
 
 interface StructuredViewProps {
   testScript: TestScript;
@@ -19,12 +20,13 @@ export function StructuredView({ testScript, focusArea = "all" }: StructuredView
   return (
     <div className="space-y-6">
       <Tabs defaultValue={focusArea === "all" ? "overview" : focusArea} className="w-full">
-        <TabsList className="grid grid-cols-5 w-full">
+        <TabsList className="grid grid-cols-6 w-full">
           <TabsTrigger value="overview">Übersicht</TabsTrigger>
           <TabsTrigger value="setup">Setup</TabsTrigger>
           <TabsTrigger value="test">Tests</TabsTrigger>
           <TabsTrigger value="teardown">Teardown</TabsTrigger>
           <TabsTrigger value="common">Common</TabsTrigger>
+          <TabsTrigger value="validation">Validierung</TabsTrigger>
         </TabsList>
         
         <TabsContent value="overview">
@@ -45,6 +47,10 @@ export function StructuredView({ testScript, focusArea = "all" }: StructuredView
         
         <TabsContent value="common">
           <CommonSection common={testScript.common} />
+        </TabsContent>
+        
+        <TabsContent value="validation">
+          <TestScriptValidator testScript={testScript} />
         </TabsContent>
       </Tabs>
     </div>
