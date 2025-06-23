@@ -60,7 +60,7 @@ export function ValidationTab({ testScript }: ValidationTabProps) {
   const renderValidationStatus = () => {
     if (isValidating) {
       return (
-        <Alert className="border-blue-200 bg-blue-50">
+        <Alert className="border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-950">
           <Server className="h-4 w-4 animate-pulse" />
           <AlertTitle>Validierung läuft...</AlertTitle>
           <AlertDescription>
@@ -89,7 +89,7 @@ export function ValidationTab({ testScript }: ValidationTabProps) {
 
     if (!validationResult) {
       return (
-        <Alert className="border-gray-200 bg-gray-50">
+        <Alert className="border-muted bg-muted/50">
           <Info className="h-4 w-4" />
           <AlertTitle>Bereit für Validierung</AlertTitle>
           <AlertDescription>
@@ -111,18 +111,18 @@ export function ValidationTab({ testScript }: ValidationTabProps) {
     const infoCount = validationResult.issue?.filter(issue => issue.severity === "information").length || 0;
 
     return (
-      <Card className={`${hasErrors ? 'border-red-200' : 'border-green-200'}`}>
+      <Card className={`${hasErrors ? 'border-red-200 dark:border-red-800' : 'border-green-200 dark:border-green-800'}`}>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             {hasErrors ? (
               <>
-                <XCircle className="h-5 w-5 text-red-600" />
-                <span className="text-red-600">Validierung fehlgeschlagen</span>
+                <XCircle className="h-5 w-5 text-red-600 dark:text-red-400" />
+                <span className="text-red-600 dark:text-red-400">Validierung fehlgeschlagen</span>
               </>
             ) : (
               <>
-                <CheckCircle2 className="h-5 w-5 text-green-600" />
-                <span className="text-green-600">Validierung erfolgreich</span>
+                <CheckCircle2 className="h-5 w-5 text-green-600 dark:text-green-400" />
+                <span className="text-green-600 dark:text-green-400">Validierung erfolgreich</span>
               </>
             )}
           </CardTitle>
@@ -133,17 +133,17 @@ export function ValidationTab({ testScript }: ValidationTabProps) {
               </Badge>
             )}
             {warningCount > 0 && (
-              <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">
+              <Badge variant="secondary" className="bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200">
                 {warningCount} Warnungen
               </Badge>
             )}
             {infoCount > 0 && (
-              <Badge variant="secondary" className="bg-blue-100 text-blue-800">
+              <Badge variant="secondary" className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
                 {infoCount} Hinweise
               </Badge>
             )}
             {!hasErrors && !hasWarnings && (
-              <Badge variant="secondary" className="bg-green-100 text-green-800">
+              <Badge variant="secondary" className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
                 Keine Probleme gefunden
               </Badge>
             )}
@@ -159,10 +159,10 @@ export function ValidationTab({ testScript }: ValidationTabProps) {
   const renderIssues = () => {
     if (!validationResult?.issue || validationResult.issue.length === 0) {
       return (
-        <div className="text-center py-4 text-green-600">
+        <div className="text-center py-4 text-green-600 dark:text-green-400">
           <CheckCircle2 className="h-8 w-8 mx-auto mb-2" />
           <p className="font-medium">Keine Validierungsprobleme gefunden!</p>
-          <p className="text-sm text-gray-600">Ihr TestScript entspricht der FHIR-Spezifikation.</p>
+          <p className="text-sm text-muted-foreground">Ihr TestScript entspricht der FHIR-Spezifikation.</p>
         </div>
       );
     }
@@ -177,8 +177,8 @@ export function ValidationTab({ testScript }: ValidationTabProps) {
       <div className="space-y-4">
         <Accordion type="multiple" className="w-full">
           {fatalIssues.length > 0 && (
-            <AccordionItem value="fatal" className="border-red-200">
-              <AccordionTrigger className="text-red-700 hover:text-red-800">
+            <AccordionItem value="fatal" className="border-red-200 dark:border-red-800">
+              <AccordionTrigger className="text-red-700 hover:text-red-800 dark:text-red-300 dark:hover:text-red-200">
                 <div className="flex items-center gap-2">
                   <XCircle className="h-5 w-5" />
                   <span className="font-semibold">Fatale Fehler ({fatalIssues.length})</span>
@@ -187,25 +187,25 @@ export function ValidationTab({ testScript }: ValidationTabProps) {
               <AccordionContent>
                 <div className="space-y-3">
                   {fatalIssues.map((issue, index) => (
-                    <Card key={index} className="border-red-200 bg-red-50">
+                    <Card key={index} className="border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-950">
                       <CardContent className="p-4">
                         <div className="flex items-start gap-3">
-                          <XCircle className="h-5 w-5 text-red-600 mt-0.5 flex-shrink-0" />
+                          <XCircle className="h-5 w-5 text-red-600 dark:text-red-400 mt-0.5 flex-shrink-0" />
                           <div className="flex-1 min-w-0">
-                            <p className="font-medium text-red-800 mb-2">
+                            <p className="font-medium text-red-800 dark:text-red-200 mb-2">
                               {formatValidationMessage(issue.details?.text || "Unbekannter Fehler")}
                             </p>
                             
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                               <div>
-                                <Label className="text-red-700 font-medium">Position:</Label>
-                                <p className="text-red-600 mt-1">
+                                <Label className="text-red-700 dark:text-red-300 font-medium">Position:</Label>
+                                <p className="text-red-600 dark:text-red-400 mt-1">
                                   Zeile {issue.line}, Spalte {issue.column}
                                 </p>
                               </div>
                               <div>
-                                <Label className="text-red-700 font-medium">Code:</Label>
-                                <p className="text-red-600 mt-1 font-mono">
+                                <Label className="text-red-700 dark:text-red-300 font-medium">Code:</Label>
+                                <p className="text-red-600 dark:text-red-400 mt-1 font-mono">
                                   {issue.code || "Unbekannt"}
                                 </p>
                               </div>
@@ -213,8 +213,8 @@ export function ValidationTab({ testScript }: ValidationTabProps) {
                             
                             {issue.location && issue.location.length > 0 && (
                               <div className="mt-3">
-                                <Label className="text-red-700 font-medium">Pfad:</Label>
-                                <p className="text-red-600 mt-1 font-mono text-xs break-all">
+                                <Label className="text-red-700 dark:text-red-300 font-medium">Pfad:</Label>
+                                <p className="text-red-600 dark:text-red-400 mt-1 font-mono text-xs break-all">
                                   {getLocationDisplayPath(issue.location)}
                                 </p>
                               </div>
@@ -230,8 +230,8 @@ export function ValidationTab({ testScript }: ValidationTabProps) {
           )}
 
           {errorIssues.length > 0 && (
-            <AccordionItem value="error" className="border-red-200">
-              <AccordionTrigger className="text-red-600 hover:text-red-700">
+            <AccordionItem value="error" className="border-red-200 dark:border-red-800">
+              <AccordionTrigger className="text-red-600 hover:text-red-700 dark:text-red-300 dark:hover:text-red-200">
                 <div className="flex items-center gap-2">
                   <XCircle className="h-5 w-5" />
                   <span className="font-semibold">Fehler ({errorIssues.length})</span>
@@ -240,25 +240,25 @@ export function ValidationTab({ testScript }: ValidationTabProps) {
               <AccordionContent>
                 <div className="space-y-3">
                   {errorIssues.map((issue, index) => (
-                    <Card key={index} className="border-red-200 bg-red-50">
+                    <Card key={index} className="border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-950">
                       <CardContent className="p-4">
                         <div className="flex items-start gap-3">
-                          <XCircle className="h-5 w-5 text-red-600 mt-0.5 flex-shrink-0" />
+                          <XCircle className="h-5 w-5 text-red-600 dark:text-red-400 mt-0.5 flex-shrink-0" />
                           <div className="flex-1 min-w-0">
-                            <p className="font-medium text-red-800 mb-2">
+                            <p className="font-medium text-red-800 dark:text-red-200 mb-2">
                               {formatValidationMessage(issue.details?.text || "Unbekannter Fehler")}
                             </p>
                             
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                               <div>
-                                <Label className="text-red-700 font-medium">Position:</Label>
-                                <p className="text-red-600 mt-1">
+                                <Label className="text-red-700 dark:text-red-300 font-medium">Position:</Label>
+                                <p className="text-red-600 dark:text-red-400 mt-1">
                                   Zeile {issue.line}, Spalte {issue.column}
                                 </p>
                               </div>
                               <div>
-                                <Label className="text-red-700 font-medium">Code:</Label>
-                                <p className="text-red-600 mt-1 font-mono">
+                                <Label className="text-red-700 dark:text-red-300 font-medium">Code:</Label>
+                                <p className="text-red-600 dark:text-red-400 mt-1 font-mono">
                                   {issue.code || "Unbekannt"}
                                 </p>
                               </div>
@@ -266,8 +266,8 @@ export function ValidationTab({ testScript }: ValidationTabProps) {
                             
                             {issue.location && issue.location.length > 0 && (
                               <div className="mt-3">
-                                <Label className="text-red-700 font-medium">Pfad:</Label>
-                                <p className="text-red-600 mt-1 font-mono text-xs break-all">
+                                <Label className="text-red-700 dark:text-red-300 font-medium">Pfad:</Label>
+                                <p className="text-red-600 dark:text-red-400 mt-1 font-mono text-xs break-all">
                                   {getLocationDisplayPath(issue.location)}
                                 </p>
                               </div>
@@ -283,8 +283,8 @@ export function ValidationTab({ testScript }: ValidationTabProps) {
           )}
 
           {warningIssues.length > 0 && (
-            <AccordionItem value="warning" className="border-yellow-200">
-              <AccordionTrigger className="text-yellow-700 hover:text-yellow-800">
+            <AccordionItem value="warning" className="border-yellow-200 dark:border-yellow-800">
+              <AccordionTrigger className="text-yellow-700 hover:text-yellow-800 dark:text-yellow-300 dark:hover:text-yellow-200">
                 <div className="flex items-center gap-2">
                   <AlertTriangle className="h-5 w-5" />
                   <span className="font-semibold">Warnungen ({warningIssues.length})</span>
@@ -293,25 +293,25 @@ export function ValidationTab({ testScript }: ValidationTabProps) {
               <AccordionContent>
                 <div className="space-y-3">
                   {warningIssues.map((issue, index) => (
-                    <Card key={index} className="border-yellow-200 bg-yellow-50">
+                    <Card key={index} className="border-yellow-200 bg-yellow-50 dark:border-yellow-800 dark:bg-yellow-950">
                       <CardContent className="p-4">
                         <div className="flex items-start gap-3">
-                          <AlertTriangle className="h-5 w-5 text-yellow-600 mt-0.5 flex-shrink-0" />
+                          <AlertTriangle className="h-5 w-5 text-yellow-600 dark:text-yellow-400 mt-0.5 flex-shrink-0" />
                           <div className="flex-1 min-w-0">
-                            <p className="font-medium text-yellow-800 mb-2">
+                            <p className="font-medium text-yellow-800 dark:text-yellow-200 mb-2">
                               {formatValidationMessage(issue.details?.text || "Unbekannte Warnung")}
                             </p>
                             
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                               <div>
-                                <Label className="text-yellow-700 font-medium">Position:</Label>
-                                <p className="text-yellow-600 mt-1">
+                                <Label className="text-yellow-700 dark:text-yellow-300 font-medium">Position:</Label>
+                                <p className="text-yellow-600 dark:text-yellow-400 mt-1">
                                   Zeile {issue.line}, Spalte {issue.column}
                                 </p>
                               </div>
                               <div>
-                                <Label className="text-yellow-700 font-medium">Code:</Label>
-                                <p className="text-yellow-600 mt-1 font-mono">
+                                <Label className="text-yellow-700 dark:text-yellow-300 font-medium">Code:</Label>
+                                <p className="text-yellow-600 dark:text-yellow-400 mt-1 font-mono">
                                   {issue.code || "Unbekannt"}
                                 </p>
                               </div>
@@ -319,8 +319,8 @@ export function ValidationTab({ testScript }: ValidationTabProps) {
                             
                             {issue.location && issue.location.length > 0 && (
                               <div className="mt-3">
-                                <Label className="text-yellow-700 font-medium">Pfad:</Label>
-                                <p className="text-yellow-600 mt-1 font-mono text-xs break-all">
+                                <Label className="text-yellow-700 dark:text-yellow-300 font-medium">Pfad:</Label>
+                                <p className="text-yellow-600 dark:text-yellow-400 mt-1 font-mono text-xs break-all">
                                   {getLocationDisplayPath(issue.location)}
                                 </p>
                               </div>
@@ -336,8 +336,8 @@ export function ValidationTab({ testScript }: ValidationTabProps) {
           )}
 
           {infoIssues.length > 0 && (
-            <AccordionItem value="info" className="border-blue-200">
-              <AccordionTrigger className="text-blue-700 hover:text-blue-800">
+            <AccordionItem value="info" className="border-blue-200 dark:border-blue-800">
+              <AccordionTrigger className="text-blue-700 hover:text-blue-800 dark:text-blue-300 dark:hover:text-blue-200">
                 <div className="flex items-center gap-2">
                   <Info className="h-5 w-5" />
                   <span className="font-semibold">Informationen ({infoIssues.length})</span>
@@ -346,25 +346,25 @@ export function ValidationTab({ testScript }: ValidationTabProps) {
               <AccordionContent>
                 <div className="space-y-3">
                   {infoIssues.map((issue, index) => (
-                    <Card key={index} className="border-blue-200 bg-blue-50">
+                    <Card key={index} className="border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-950">
                       <CardContent className="p-4">
                         <div className="flex items-start gap-3">
-                          <Info className="h-5 w-5 text-blue-600 mt-0.5 flex-shrink-0" />
+                          <Info className="h-5 w-5 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />
                           <div className="flex-1 min-w-0">
-                            <p className="font-medium text-blue-800 mb-2">
+                            <p className="font-medium text-blue-800 dark:text-blue-200 mb-2">
                               {issue.details?.text || "Unbekannte Information"}
                             </p>
                             
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                               <div>
-                                <Label className="text-blue-700 font-medium">Position:</Label>
-                                <p className="text-blue-600 mt-1">
+                                <Label className="text-blue-700 dark:text-blue-300 font-medium">Position:</Label>
+                                <p className="text-blue-600 dark:text-blue-400 mt-1">
                                   Zeile {issue.line}, Spalte {issue.column}
                                 </p>
                               </div>
                               <div>
-                                <Label className="text-blue-700 font-medium">Code:</Label>
-                                <p className="text-blue-600 mt-1 font-mono">
+                                <Label className="text-blue-700 dark:text-blue-300 font-medium">Code:</Label>
+                                <p className="text-blue-600 dark:text-blue-400 mt-1 font-mono">
                                   {issue.code || "Unbekannt"}
                                 </p>
                               </div>
@@ -372,8 +372,8 @@ export function ValidationTab({ testScript }: ValidationTabProps) {
                             
                             {issue.location && issue.location.length > 0 && (
                               <div className="mt-3">
-                                <Label className="text-blue-700 font-medium">Pfad:</Label>
-                                <p className="text-blue-600 mt-1 font-mono text-xs break-all">
+                                <Label className="text-blue-700 dark:text-blue-300 font-medium">Pfad:</Label>
+                                <p className="text-blue-600 dark:text-blue-400 mt-1 font-mono text-xs break-all">
                                   {getLocationDisplayPath(issue.location)}
                                 </p>
                               </div>
@@ -403,7 +403,7 @@ export function ValidationTab({ testScript }: ValidationTabProps) {
           </Button>
           
           {showPayload && (
-            <Card className="mt-3 border-gray-200">
+            <Card className="mt-3">
               <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-sm">Gesendetes TestScript (JSON)</CardTitle>
@@ -417,7 +417,7 @@ export function ValidationTab({ testScript }: ValidationTabProps) {
                 </div>
               </CardHeader>
               <CardContent>
-                <pre className="text-xs bg-gray-50 p-3 rounded-md overflow-auto max-h-64 border">
+                <pre className="text-xs bg-muted p-3 rounded-md overflow-auto max-h-64 border">
                   {JSON.stringify(testScript, null, 2)}
                 </pre>
               </CardContent>
