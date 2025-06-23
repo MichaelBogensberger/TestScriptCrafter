@@ -29,7 +29,7 @@ export default function Home() {
             <div className="flex items-center space-x-3">
               <div className="hidden sm:flex items-center space-x-2 text-sm text-muted-foreground">
                 <Activity className="w-4 h-4 text-green-500" />
-                <span>Ready</span>
+                <span>Version 1.0</span>
               </div>
               <Separator orientation="vertical" className="h-6 hidden sm:block" />
               <ThemeToggle />
