@@ -3,13 +3,15 @@ import { useFhirValidation } from "@/hooks/use-fhir-validation";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { CheckCircle2, AlertTriangle, Info, XCircle, Server, AlertCircle, Code2, Copy } from "lucide-react";
+import { CheckCircle2, AlertTriangle, Info, XCircle, Server, AlertCircle, Code2, Copy, Loader2 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { useState } from "react";
+import { Progress } from "@/components/ui/progress";
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
+import { useState, useEffect } from "react";
 
 interface ValidationTabProps {
   testScript: TestScript;
@@ -26,6 +28,25 @@ export function ValidationTab({ testScript }: ValidationTabProps) {
   } = useFhirValidation();
   
   const [showPayload, setShowPayload] = useState(false);
+  const [progress, setProgress] = useState(0);
+
+  // Progress animation während der Validierung
+  useEffect(() => {
+    if (isValidating) {
+      setProgress(0);
+      const interval = setInterval(() => {
+        setProgress((prev) => {
+          if (prev >= 90) return prev;
+          return prev + Math.random() * 15;
+        });
+      }, 200);
+
+      return () => clearInterval(interval);
+    } else {
+      setProgress(100);
+      setTimeout(() => setProgress(0), 1000);
+    }
+  }, [isValidating]);
 
   const handleValidate = async () => {
     await validate(testScript);
@@ -60,13 +81,30 @@ export function ValidationTab({ testScript }: ValidationTabProps) {
   const renderValidationStatus = () => {
     if (isValidating) {
       return (
-        <Alert className="border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-950">
-          <Server className="h-4 w-4 animate-pulse" />
-          <AlertTitle>Validierung läuft...</AlertTitle>
-          <AlertDescription>
-            Bitte warten Sie, während das TestScript gegen den FHIR-Server validiert wird.
-          </AlertDescription>
-        </Alert>
+        <Card className="border-blue-200 dark:border-blue-800">
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
+                <CardTitle className="text-lg">Validierung läuft...</CardTitle>
+              </div>
+              <Badge variant="secondary" className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+                In Bearbeitung
+              </Badge>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              <p className="text-sm text-muted-foreground">
+                TestScript wird gegen FHIR-Server validiert...
+              </p>
+              <Progress value={progress} className="w-full" />
+              <p className="text-xs text-muted-foreground">
+                {Math.round(progress)}% abgeschlossen
+              </p>
+            </div>
+          </CardContent>
+        </Card>
       );
     }
 
@@ -430,43 +468,78 @@ export function ValidationTab({ testScript }: ValidationTabProps) {
 
   return (
     <div className="space-y-6">
-      <Card>
+      <Card className="bg-gradient-to-r from-background to-muted/30">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Server className="h-5 w-5" />
-            FHIR-Validierung
-          </CardTitle>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
+                <Server className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <CardTitle className="text-xl">FHIR-Validierung</CardTitle>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Validiere dein TestScript gegen einen FHIR-Server
+                </p>
+              </div>
+            </div>
+            <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 dark:bg-green-950 dark:text-green-400 dark:border-green-800">
+              HL7 FHIR R5
+            </Badge>
+          </div>
         </CardHeader>
         <CardContent>
           <div className="flex gap-4">
             <div className="flex-1">
-              <Label htmlFor="server-url" className="text-sm font-medium">
-                FHIR-Server URL
-              </Label>
+              <div className="flex items-center gap-2 mb-2">
+                <Label htmlFor="server-url" className="text-sm font-medium">
+                  FHIR-Server URL
+                </Label>
+                <HoverCard>
+                  <HoverCardTrigger asChild>
+                    <Button variant="ghost" size="sm" className="h-4 w-4 p-0">
+                      <Info className="h-3 w-3" />
+                    </Button>
+                  </HoverCardTrigger>
+                  <HoverCardContent className="w-80">
+                    <div className="space-y-2">
+                      <h4 className="text-sm font-semibold">Empfohlene FHIR-Server:</h4>
+                      <div className="space-y-1 text-xs">
+                        <p><code className="bg-muted px-1 rounded">https://hapi.fhir.org/baseR5</code> - HAPI FHIR R5</p>
+                        <p><code className="bg-muted px-1 rounded">https://vonk.fire.ly</code> - Firely Vonk</p>
+                        <p><code className="bg-muted px-1 rounded">http://localhost:8080/fhir</code> - Lokaler Server</p>
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        Stelle sicher, dass der Server CORS aktiviert hat und TestScript-Validierung unterstützt.
+                      </p>
+                    </div>
+                  </HoverCardContent>
+                </HoverCard>
+              </div>
               <Input
                 id="server-url"
                 type="text"
                 value={serverUrl}
                 onChange={(e) => setServerUrl(e.target.value)}
                 placeholder="https://hapi.fhir.org/baseR5"
-                className="mt-1"
+                className="font-mono text-sm"
               />
             </div>
             <div className="flex items-end">
               <Button 
                 onClick={handleValidate}
                 disabled={isValidating}
-                className="min-w-[120px]"
+                className="min-w-[140px] bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800"
+                size="lg"
               >
                 {isValidating ? (
                   <>
-                    <Server className="h-4 w-4 mr-2 animate-pulse" />
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                     Validiere...
                   </>
                 ) : (
                   <>
                     <CheckCircle2 className="h-4 w-4 mr-2" />
-                    Validieren
+                    Jetzt validieren
                   </>
                 )}
               </Button>

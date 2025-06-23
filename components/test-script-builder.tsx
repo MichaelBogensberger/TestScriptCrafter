@@ -1,8 +1,9 @@
 "use client"
 
 import { useState } from "react"
-import { Card } from "@/components/ui/card"
-import { Code } from "lucide-react"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
+import { Code, Settings } from "lucide-react"
 import FormBuilder from "@/components/form-builder/form-builder"
 import { OutputViewer } from "@/components/output-viewer"
 import type { TestScript } from "@/types/test-script"
@@ -36,25 +37,55 @@ export default function TestScriptBuilder() {
   }
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
       {/* Left column: TestScript Builder */}
-      <Card className="p-4">
-        <div className="mb-4">
-          <h2 className="text-xl font-semibold">TestScript Builder</h2>
-        </div>
-
-        {/* Form Builder component */}
-        <FormBuilder testScript={testScript} updateTestScript={updateTestScript} updateSection={updateSection} />
-      </Card>
+      <div className="space-y-6">
+        <Card className="bg-gradient-to-br from-background to-muted/20 border-l-4 border-l-primary">
+          <CardHeader className="pb-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
+                <Settings className="h-5 w-5 text-primary" />
+              </div>
+              <div>
+                <CardTitle className="text-xl">TestScript Builder</CardTitle>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Konfiguriere dein FHIR TestScript Schritt für Schritt
+                </p>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <FormBuilder testScript={testScript} updateTestScript={updateTestScript} updateSection={updateSection} />
+          </CardContent>
+        </Card>
+      </div>
 
       {/* Right column: Output Viewer */}
-      <Card className="p-4">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-semibold">Output</h2>
-          <Code className="h-5 w-5" />
-        </div>
-        <OutputViewer testScript={testScript} />
-      </Card>
+      <div className="space-y-6">
+        <Card className="bg-gradient-to-br from-background to-muted/20 border-l-4 border-l-green-500">
+          <CardHeader className="pb-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-green-500/10 rounded-lg flex items-center justify-center">
+                  <Code className="h-5 w-5 text-green-600" />
+                </div>
+                <div>
+                  <CardTitle className="text-xl">Live Vorschau</CardTitle>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Echtzeit-Vorschau deines TestScripts
+                  </p>
+                </div>
+              </div>
+              <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 dark:bg-green-950 dark:text-green-400 dark:border-green-800">
+                Live Update
+              </Badge>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <OutputViewer testScript={testScript} />
+          </CardContent>
+        </Card>
+      </div>
     </div>
   )
 }
