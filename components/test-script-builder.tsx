@@ -29,7 +29,7 @@ export default function TestScriptBuilder() {
    * @param section - The section to update (e.g., 'metadata', 'setup')
    * @param data - The new data for the section
    */
-  const updateSection = (section: keyof TestScript, data: any) => {
+  const updateSection = (section: keyof TestScript, data: unknown) => {
     setTestScript((prev) => ({
       ...prev,
       [section]: data,

@@ -1,11 +1,8 @@
 import TestScriptBuilder from "@/components/test-script-builder";
-import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/theme-toggle";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { FileText, Zap, Shield, Code, Settings, Activity } from "lucide-react";
-import Image from "next/image";
+import { FileText, Activity } from "lucide-react";
 
 export default function Home() {
   return (

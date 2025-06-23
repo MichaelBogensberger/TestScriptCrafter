@@ -358,7 +358,7 @@ export function TestScriptFilteredView({ testScript }: TestScriptFilteredViewPro
               </Badge>
               {searchTerm && (
                 <Badge variant="secondary" className="flex items-center gap-1">
-                  <Search className="h-3 w-3" /> Suche: "{searchTerm}"
+                  <Search className="h-3 w-3" /> Suche: &quot;{searchTerm}&quot;
                 </Badge>
               )}
             </div>

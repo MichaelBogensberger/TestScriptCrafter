@@ -131,7 +131,7 @@ export function ValidationTab({ testScript }: ValidationTabProps) {
           <Info className="h-4 w-4" />
           <AlertTitle>Bereit für Validierung</AlertTitle>
           <AlertDescription>
-            Klicken Sie auf "Validieren", um Ihr TestScript zu überprüfen.
+            Klicken Sie auf &quot;Validieren&quot;, um Ihr TestScript zu überprüfen.
           </AlertDescription>
         </Alert>
       );
@@ -504,9 +504,9 @@ export function ValidationTab({ testScript }: ValidationTabProps) {
                     <div className="space-y-2">
                       <h4 className="text-sm font-semibold">Empfohlene FHIR-Server:</h4>
                       <div className="space-y-1 text-xs">
-                        <p><code className="bg-muted px-1 rounded">https://hapi.fhir.org/baseR5</code> - HAPI FHIR R5</p>
-                        <p><code className="bg-muted px-1 rounded">https://vonk.fire.ly</code> - Firely Vonk</p>
-                        <p><code className="bg-muted px-1 rounded">http://localhost:8080/fhir</code> - Lokaler Server</p>
+                                                 <p><code className="bg-muted px-1 rounded">https://hapi.fhir.org/baseR5</code> - HAPI FHIR R5</p>
+                         <p><code className="bg-muted px-1 rounded">https://vonk.fire.ly</code> - Firely Vonk</p>
+                         <p><code className="bg-muted px-1 rounded">http://localhost:8080/fhir</code> - Lokaler Server</p>
                       </div>
                       <p className="text-xs text-muted-foreground">
                         Stelle sicher, dass der Server CORS aktiviert hat und TestScript-Validierung unterstützt.
