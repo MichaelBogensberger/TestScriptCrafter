@@ -1,90 +1,99 @@
 "use client"
 
-import { useState } from "react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Code, Settings } from "lucide-react"
+import { useState, useCallback, useMemo } from "react"
 import FormBuilder from "@/components/form-builder/form-builder"
-import { OutputViewer } from "@/components/output-viewer"
-import type { TestScript } from "@/types/test-script"
+import { HeaderSection } from "./test-script-builder/header-section"
+import { OutputSection } from "./test-script-builder/output-section"
+import type { TestScript, TestScriptStatus } from "@/types/fhir-enhanced"
 import { initialTestScript } from "@/lib/initial-data"
 
 /**
  * Main TestScript Builder component that manages the overall state and layout
+ * Optimized with modern React patterns and better type safety
  */
 export default function TestScriptBuilder() {
-  // State for the TestScript data
+  // State for the TestScript data with proper typing
   const [testScript, setTestScript] = useState<TestScript>(initialTestScript)
 
   /**
-   * Updates the TestScript data with new values
+   * Updates the TestScript data with new values using functional updates
    * @param newData - Partial TestScript data to merge with the current state
    */
-  const updateTestScript = (newData: Partial<TestScript>) => {
+  const updateTestScript = useCallback((newData: Partial<TestScript>) => {
     setTestScript((prev) => ({ ...prev, ...newData }))
-  }
+  }, [])
 
   /**
-   * Updates a specific section of the TestScript
+   * Updates a specific section of the TestScript with type safety
    * @param section - The section to update (e.g., 'metadata', 'setup')
    * @param data - The new data for the section
    */
-  const updateSection = (section: keyof TestScript, data: unknown) => {
+  const updateSection = useCallback(<K extends keyof TestScript>(
+    section: K, 
+    data: TestScript[K]
+  ) => {
     setTestScript((prev) => ({
       ...prev,
       [section]: data,
     }))
-  }
+  }, [])
+
+  /**
+   * Resets the TestScript to initial state
+   */
+  const resetTestScript = useCallback(() => {
+    setTestScript(initialTestScript)
+  }, [])
+
+  /**
+   * Validates the current TestScript state
+   */
+  const isValidTestScript = useMemo(() => {
+    return !!(
+      testScript.resourceType === "TestScript" &&
+      testScript.name &&
+      testScript.status &&
+      testScript.url
+    )
+  }, [testScript])
+
+  /**
+   * Gets the status badge variant based on the current status
+   */
+  const getStatusBadgeVariant = useCallback((status: TestScriptStatus) => {
+    switch (status) {
+      case 'active':
+        return 'default' as const
+      case 'draft':
+        return 'secondary' as const
+      case 'retired':
+        return 'destructive' as const
+      case 'unknown':
+        return 'outline' as const
+      default:
+        return 'outline' as const
+    }
+  }, [])
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
       {/* Left column: TestScript Builder */}
       <div className="space-y-6">
-        <Card className="bg-gradient-to-br from-background to-muted/20 border-l-4 border-l-primary">
-          <CardHeader className="pb-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
-                <Settings className="h-5 w-5 text-primary" />
-              </div>
-              <div>
-                <CardTitle className="text-xl">TestScript Builder</CardTitle>
-                <p className="text-sm text-muted-foreground mt-1">
-                  Konfiguriere dein FHIR TestScript Schritt für Schritt
-                </p>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <FormBuilder testScript={testScript} updateTestScript={updateTestScript} updateSection={updateSection} />
-          </CardContent>
-        </Card>
+        <HeaderSection 
+          testScript={testScript}
+          isValidTestScript={isValidTestScript}
+          getStatusBadgeVariant={getStatusBadgeVariant}
+        />
+        <FormBuilder 
+          testScript={testScript} 
+          updateTestScript={updateTestScript} 
+          updateSection={updateSection} 
+        />
       </div>
 
       {/* Right column: Output Viewer */}
       <div className="space-y-6">
-        <Card className="bg-gradient-to-br from-background to-muted/20 border-l-4 border-l-green-500">
-          <CardHeader className="pb-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-green-500/10 rounded-lg flex items-center justify-center">
-                  <Code className="h-5 w-5 text-green-600" />
-                </div>
-                <div>
-                  <CardTitle className="text-xl">Live Vorschau</CardTitle>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    Echtzeit-Vorschau deines TestScripts
-                  </p>
-                </div>
-              </div>
-              <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200 dark:bg-green-950 dark:text-green-400 dark:border-green-800">
-                Live Update
-              </Badge>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <OutputViewer testScript={testScript} />
-          </CardContent>
-        </Card>
+        <OutputSection testScript={testScript} />
       </div>
     </div>
   )

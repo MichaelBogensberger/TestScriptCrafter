@@ -1,10 +1,11 @@
 "use client"
 
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
-import { Plus } from "lucide-react"
-import type { TestScript } from "@/types/test-script"
+import { useState, useCallback, useMemo } from "react"
+import { Accordion } from "@/components/ui/accordion"
+import type { TestScript, TestScriptTest } from "@/types/fhir-enhanced"
+import { SectionAccordionItem } from "./sections/section-accordion-item"
+import { ProgressIndicator } from "./progress-indicator"
+import { TestCaseManager } from "./test-case-manager"
 import BasicInfoSection from "./sections/basic-info-section"
 import MetadataSection from "./sections/metadata-section"
 import SetupSection from "./sections/setup-section"
@@ -14,43 +15,99 @@ import TeardownSection from "./sections/teardown-section"
 interface FormBuilderProps {
   testScript: TestScript
   updateTestScript: (newData: Partial<TestScript>) => void
-  updateSection: (section: keyof TestScript, data: any) => void
+  updateSection: <K extends keyof TestScript>(section: K, data: TestScript[K]) => void
 }
 
 /**
  * FormBuilder-Komponente, die alle Formularabschnitte rendert
- * Diese Komponente verwaltet, welche Abschnitte erweitert sind, und ermöglicht das Hinzufügen neuer Testfälle
+ * Refaktorisiert mit sauberer Trennung der Verantwortlichkeiten
  */
 function FormBuilder({ testScript, updateTestScript, updateSection }: FormBuilderProps) {
-  // Speichern, welche Akkordeon-Abschnitte geöffnet sind
+  // State für erweiterte Accordion-Abschnitte
   const [expandedSections, setExpandedSections] = useState<string[]>(["basic-info", "metadata"])
 
   // Sichere Zugriffe auf möglicherweise undefined Eigenschaften
-  const tests = testScript.test || [];
-  const metadata = testScript.metadata || { capability: [] };
+  const tests = testScript.test || []
+  const metadata = testScript.metadata || { capability: [] }
 
   /**
    * Fügt einen neuen Testfall zum TestScript hinzu
    */
-  function addTestCase() {
-    // Neuen Test erstellen
-    const newTest = {
+  const addTestCase = useCallback(() => {
+    const newTest: TestScriptTest = {
       name: `Test Case ${tests.length + 1}`,
       description: "New test case",
       action: [],
     }
 
-    // Tests aktualisieren
     const updatedTests = [...tests, newTest]
     updateSection("test", updatedTests)
+  }, [tests.length, updateSection])
 
-    // Neu hinzugefügten Testfall aufklappen
-    setExpandedSections([...expandedSections, `test-${tests.length}`])
-  }
+  /**
+   * Entfernt einen Testfall
+   */
+  const removeTestCase = useCallback((index: number) => {
+    const updatedTests = tests.filter((_, i) => i !== index)
+    updateSection("test", updatedTests)
+  }, [tests, updateSection])
+
+  /**
+   * Aktualisiert einen spezifischen Testfall
+   */
+  const updateTestCase = useCallback((index: number, updatedTest: TestScriptTest) => {
+    const updatedTests = [...tests]
+    updatedTests[index] = updatedTest
+    updateSection("test", updatedTests)
+  }, [tests, updateSection])
+
+  /**
+   * Erweitert einen Accordion-Abschnitt
+   */
+  const expandSection = useCallback((section: string) => {
+    setExpandedSections(prev => [...prev, section])
+  }, [])
+
+  /**
+   * Berechnet die Vollständigkeit der Sektionen
+   */
+  const sectionCompleteness = useMemo(() => {
+    return {
+      basicInfo: !!(testScript.name && testScript.status && testScript.url),
+      metadata: !!(metadata.capability && metadata.capability.length > 0),
+      setup: !!(testScript.setup && testScript.setup.action && testScript.setup.action.length > 0),
+      tests: tests.length > 0,
+      teardown: !!(testScript.teardown && testScript.teardown.action && testScript.teardown.action.length > 0)
+    }
+  }, [testScript, metadata, tests])
+
+  /**
+   * Berechnet den Gesamtfortschritt
+   */
+  const overallProgress = useMemo(() => {
+    const sections = Object.values(sectionCompleteness)
+    const completed = sections.filter(Boolean).length
+    return Math.round((completed / sections.length) * 100)
+  }, [sectionCompleteness])
 
   return (
     <div className="space-y-6">
-      {/* Akkordeon für alle Formularabschnitte */}
+      {/* Fortschrittsanzeige */}
+      <ProgressIndicator 
+        overallProgress={overallProgress}
+        sectionCompleteness={sectionCompleteness}
+      />
+
+      {/* Testfall-Verwaltung */}
+      <TestCaseManager
+        tests={tests}
+        onAddTest={addTestCase}
+        onRemoveTest={removeTestCase}
+        onUpdateTest={updateTestCase}
+        onExpandSection={expandSection}
+      />
+
+      {/* Hauptformular-Akkordeon */}
       <Accordion 
         type="multiple" 
         value={expandedSections} 
@@ -58,94 +115,70 @@ function FormBuilder({ testScript, updateTestScript, updateSection }: FormBuilde
         className="w-full"
       >
         {/* Grundlegende Informationen */}
-        <AccordionItem value="basic-info">
-          <AccordionTrigger className="text-lg font-medium">
-            Grundlegende Informationen
-          </AccordionTrigger>
-          <AccordionContent>
-            <BasicInfoSection 
-              testScript={testScript} 
-              updateTestScript={updateTestScript} 
-            />
-          </AccordionContent>
-        </AccordionItem>
+        <SectionAccordionItem
+          value="basic-info"
+          title="Grundlegende Informationen"
+          isComplete={sectionCompleteness.basicInfo}
+        >
+          <BasicInfoSection 
+            testScript={testScript} 
+            updateTestScript={updateTestScript} 
+          />
+        </SectionAccordionItem>
 
         {/* Metadaten */}
-        <AccordionItem value="metadata">
-          <AccordionTrigger className="text-lg font-medium">
-            Metadaten
-          </AccordionTrigger>
-          <AccordionContent>
-            <MetadataSection
-              metadata={metadata}
-              updateMetadata={(metadata) => updateSection("metadata", metadata)}
-            />
-          </AccordionContent>
-        </AccordionItem>
+        <SectionAccordionItem
+          value="metadata"
+          title="Metadaten"
+          isComplete={sectionCompleteness.metadata}
+        >
+          <MetadataSection
+            metadata={metadata}
+            updateMetadata={(metadata) => updateSection("metadata", metadata)}
+          />
+        </SectionAccordionItem>
 
         {/* Setup */}
-        <AccordionItem value="setup">
-          <AccordionTrigger className="text-lg font-medium">
-            Setup
-          </AccordionTrigger>
-          <AccordionContent>
-            <SetupSection 
-              setup={testScript.setup || { action: [] }} 
-              updateSetup={(setup) => updateSection("setup", setup)} 
-            />
-          </AccordionContent>
-        </AccordionItem>
+        <SectionAccordionItem
+          value="setup"
+          title="Setup"
+          isComplete={sectionCompleteness.setup}
+        >
+          <SetupSection 
+            setup={testScript.setup || { action: [] }} 
+            updateSetup={(setup) => updateSection("setup", setup)} 
+          />
+        </SectionAccordionItem>
 
         {/* Testfälle */}
         {tests.map((test, testIndex) => (
-          <AccordionItem key={`test-${testIndex}`} value={`test-${testIndex}`}>
-            <AccordionTrigger className="text-lg font-medium">
-              {test.name || `Testfall ${testIndex + 1}`}
-            </AccordionTrigger>
-            <AccordionContent>
-              <TestCaseSection
-                test={test}
-                testIndex={testIndex}
-                updateTest={(updatedTest) => {
-                  // Aktualisiere den Testfall im Array
-                  const updatedTests = [...tests]
-                  updatedTests[testIndex] = updatedTest
-                  updateSection("test", updatedTests)
-                }}
-                removeTest={() => {
-                  // Entferne den Testfall aus dem Array
-                  const updatedTests = tests.filter((_, i) => i !== testIndex)
-                  updateSection("test", updatedTests)
-                }}
-              />
-            </AccordionContent>
-          </AccordionItem>
+          <SectionAccordionItem
+            key={`test-${testIndex}`}
+            value={`test-${testIndex}`}
+            title={test.name || `Testfall ${testIndex + 1}`}
+            isComplete={!!(test.action && test.action.length > 0)}
+          >
+            <TestCaseSection
+              test={test}
+              testIndex={testIndex}
+              updateTest={(updatedTest) => updateTestCase(testIndex, updatedTest)}
+              removeTest={() => removeTestCase(testIndex)}
+            />
+          </SectionAccordionItem>
         ))}
 
         {/* Teardown */}
-        <AccordionItem value="teardown">
-          <AccordionTrigger className="text-lg font-medium">
-            Teardown
-          </AccordionTrigger>
-          <AccordionContent>
-            <TeardownSection
-              teardown={testScript.teardown || { action: [] }}
-              updateTeardown={(teardown) => updateSection("teardown", teardown)}
-            />
-          </AccordionContent>
-        </AccordionItem>
-      </Accordion>
-
-      {/* Button zum Hinzufügen eines neuen Testfalls */}
-      <div className="flex gap-2">
-        <Button 
-          variant="outline" 
-          className="flex items-center gap-1" 
-          onClick={addTestCase}
+        <SectionAccordionItem
+          value="teardown"
+          title="Teardown"
+          isComplete={sectionCompleteness.teardown}
         >
-          <Plus className="h-4 w-4" /> Testfall hinzufügen
-        </Button>
-      </div>
+          <TeardownSection
+            teardown={testScript.teardown || { action: [] }}
+            updateTeardown={(teardown) => updateSection("teardown", teardown)}
+          />
+        </SectionAccordionItem>
+      </Accordion>
     </div>
   )
 }

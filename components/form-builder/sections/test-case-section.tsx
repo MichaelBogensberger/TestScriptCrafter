@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { Plus, Trash2 } from "lucide-react"
-import type { TestScriptTest } from "@/types/test-script"
+import type { TestScriptTest } from "@/types/fhir-enhanced"
 import ActionComponent from "../shared/action-component"
 
 interface TestCaseSectionProps {

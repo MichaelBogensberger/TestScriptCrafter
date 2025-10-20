@@ -1,4 +1,4 @@
-import { TestScript } from "@/types/test-script";
+import { TestScript } from "@/types/fhir-enhanced";
 import { useFhirValidation } from "@/hooks/use-fhir-validation";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";

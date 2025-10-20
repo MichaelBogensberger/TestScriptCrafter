@@ -1,4 +1,4 @@
-import { TestScript } from "@/types/test-script";
+import { TestScript } from "@/types/fhir-enhanced";
 import SyntaxHighlighter from "./syntax-highlighter";
 import { Button } from "./ui/button";
 import { ClipboardCopy, Download } from "lucide-react";

@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { Card } from "@/components/ui/card"
 import { Plus, Trash2 } from "lucide-react"
-import type { TestScriptMetadata, Capability } from "@/types/test-script"
+import type { TestScriptMetadata, TestScriptCapability as Capability } from "@/types/fhir-enhanced"
 
 interface MetadataSectionProps {
   metadata: TestScriptMetadata

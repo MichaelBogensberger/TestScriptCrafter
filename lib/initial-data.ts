@@ -1,4 +1,4 @@
-import type { TestScript } from "@/types/test-script"
+import type { TestScript } from "@/types/fhir-enhanced"
 
 /**
  * Minimales, aber vollständig valides TestScript basierend auf FHIR R5 JSON Schema

@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/button"
 import { Plus } from "lucide-react"
-import type { TestScriptTeardown } from "@/types/test-script"
+import type { TestScriptTeardown } from "@/types/fhir-enhanced"
 import ActionComponent from "../shared/action-component"
 
 interface TeardownSectionProps {

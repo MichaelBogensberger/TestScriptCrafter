@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/button"
 import { Plus } from "lucide-react"
-import type { TestScriptSetup } from "@/types/test-script"
+import type { TestScriptSetup } from "@/types/fhir-enhanced"
 import ActionComponent from "../shared/action-component"
 
 interface SetupSectionProps {

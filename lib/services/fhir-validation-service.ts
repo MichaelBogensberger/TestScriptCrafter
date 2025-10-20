@@ -2,7 +2,7 @@
  * Service für die Validierung von FHIR-Ressourcen gegen einen FHIR-Server
  */
 
-import { TestScript } from "@/types/test-script";
+import { TestScript } from "@/types/fhir-enhanced";
 
 export interface ValidationResult {
   valid: boolean;

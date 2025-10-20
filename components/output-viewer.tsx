@@ -2,7 +2,7 @@
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { StructuredView } from "@/components/structured-view"
-import { TestScript } from "@/types/test-script"
+import { TestScript } from "@/types/fhir-enhanced"
 import { JsonView } from "@/components/json-view"
 import { XmlView } from "@/components/xml-view"
 import { ValidationTab } from "@/components/validation-tab"

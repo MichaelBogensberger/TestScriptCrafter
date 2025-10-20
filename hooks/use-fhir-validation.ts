@@ -1,5 +1,5 @@
 import { useState } from "react";
-import type { TestScript, ValidationResult, ValidationIssue } from "@/types/test-script";
+import type { TestScript, ValidationResult, ValidationIssue } from "@/types/fhir-enhanced";
 
 export function useFhirValidation() {
   const [isValidating, setIsValidating] = useState(false);

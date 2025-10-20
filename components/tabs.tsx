@@ -1,5 +1,5 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { TestScript } from "@/types/test-script";
+import { TestScript } from "@/types/fhir-enhanced";
 import { JsonView } from "./json-view";
 import { XmlView } from "./xml-view";
 import { ValidationTab } from "./validation-tab";

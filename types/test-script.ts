@@ -1,9 +1,28 @@
 /**
  * Vollständige TypeScript-Typen für die FHIR TestScript-Ressource
  * basierend auf dem FHIR R5 Schema
+ * 
+ * MIGRATION: Diese Datei wird schrittweise zu @types/fhir migriert
+ * Siehe types/fhir-enhanced.ts für die neue Implementierung
  */
 
-// Basis-Interfaces
+// Re-export der Standard-FHIR-Typen
+export type {
+  Element,
+  Extension,
+  CodeableConcept,
+  Identifier,
+  ContactDetail,
+  UsageContext,
+  Coding,
+  Reference,
+  Narrative,
+  Resource,
+  DomainResource,
+  BackboneElement
+} from '@types/fhir';
+
+// Temporäre Kompatibilitäts-Interfaces (werden schrittweise entfernt)
 export interface Element {
   id?: string;
   extension?: Extension[];

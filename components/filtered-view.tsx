@@ -1,4 +1,4 @@
-import { TestScript } from "@/types/test-script";
+import { TestScript } from "@/types/fhir-enhanced";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Badge } from "./ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
