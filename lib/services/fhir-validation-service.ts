@@ -59,7 +59,7 @@ export async function validateTestScriptAgainstFhirServer(
     if (data.resourceType === 'OperationOutcome' && data.issue && data.issue.length > 0) {
       // Filtere nach Fehlern und Warnungen
       const issues = data.issue;
-      const hasErrors = issues.some(issue => issue.severity === 'error' || issue.severity === 'fatal');
+      const hasErrors = issues.some((issue: any) => issue.severity === 'error' || issue.severity === 'fatal');
       
       return {
         valid: !hasErrors,

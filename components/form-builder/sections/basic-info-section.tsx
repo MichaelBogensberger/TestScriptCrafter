@@ -36,7 +36,7 @@ export default function BasicInfoSection({ testScript, updateTestScript }: Basic
         <Label htmlFor="status">
           Status <span className="text-red-500">*</span>
         </Label>
-        <Select value={testScript.status} onValueChange={(value) => updateTestScript({ status: value })} required>
+        <Select value={testScript.status} onValueChange={(value) => updateTestScript({ status: value as "draft" | "active" | "retired" | "unknown" })} required>
           <SelectTrigger id="status">
             <SelectValue placeholder="Select status" />
           </SelectTrigger>
@@ -77,8 +77,8 @@ export default function BasicInfoSection({ testScript, updateTestScript }: Basic
         <Label htmlFor="title">Title</Label>
         <Input
           id="title"
-          value={testScript.title || ""}
-          onChange={(e) => updateTestScript({ title: e.target.value })}
+          value={(testScript as any).title || ""}
+          onChange={(e) => updateTestScript({ title: e.target.value } as any)}
           placeholder="Human-friendly name"
         />
         <p className="text-xs text-muted-foreground">Human-friendly name for this TestScript</p>

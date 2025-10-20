@@ -6,21 +6,16 @@
  * Siehe types/fhir-enhanced.ts für die neue Implementierung
  */
 
-// Re-export der Standard-FHIR-Typen
-export type {
-  Element,
-  Extension,
-  CodeableConcept,
-  Identifier,
-  ContactDetail,
-  UsageContext,
-  Coding,
-  Reference,
-  Narrative,
-  Resource,
-  DomainResource,
-  BackboneElement
-} from '@types/fhir';
+// Basis-Interfaces für Kompatibilität
+export interface Element {
+  id?: string;
+  extension?: Extension[];
+}
+
+export interface Extension {
+  url: string;
+  value?: any;
+}
 
 // Temporäre Kompatibilitäts-Interfaces (werden schrittweise entfernt)
 export interface Element {
