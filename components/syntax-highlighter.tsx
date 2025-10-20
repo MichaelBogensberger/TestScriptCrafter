@@ -1,12 +1,6 @@
 "use client"
 
-import { useEffect } from "react"
-import Prism from "prismjs"
-import "prismjs/components/prism-json"
-import "prismjs/components/prism-xml-doc"
-import "prismjs/plugins/line-numbers/prism-line-numbers"
-import "prismjs/plugins/line-numbers/prism-line-numbers.css"
-import "prismjs/themes/prism-tomorrow.css"
+import { useEffect, useState } from "react"
 import { cn } from "@/lib/utils"
 
 interface SyntaxHighlighterProps {
@@ -18,8 +12,8 @@ interface SyntaxHighlighterProps {
 }
 
 /**
- * Syntax-Highlighter Komponente für Code-Darstellung
- * Unterstützt verschiedene Sprachen und Zeilennummerierung
+ * Vereinfachter Syntax-Highlighter ohne Prism.js
+ * Verhindert Hydration-Probleme durch konsistente Server/Client-Rendering
  */
 export default function SyntaxHighlighter({
   language,
@@ -28,17 +22,65 @@ export default function SyntaxHighlighter({
   className,
   searchTerm,
 }: SyntaxHighlighterProps) {
+  const [isClient, setIsClient] = useState(false)
+
   useEffect(() => {
-    Prism.highlightAll()
-  }, [code, language, showLineNumbers])
+    setIsClient(true)
+  }, [])
 
   // Highlight-Funktionalität für gesuchte Begriffe
   const processedCode = searchTerm ? highlightSearchTerm(code, searchTerm) : code;
 
+  // Einfache Zeilennummerierung ohne externe Bibliothek
+  const lines = processedCode.split('\n')
+  const lineNumbers = lines.map((_, index) => index + 1)
+
   return (
-    <pre className={cn(showLineNumbers && "line-numbers", className)}>
-      <code className={`language-${language}`}>{code}</code>
-    </pre>
+    <div className={cn("relative", className)}>
+      <pre className="overflow-x-auto p-4 bg-muted rounded-md">
+        <code className={`language-${language}`}>
+          {isClient ? (
+            <div className="flex">
+              {showLineNumbers && (
+                <div className="mr-4 select-none text-muted-foreground text-sm">
+                  {lineNumbers.map((num) => (
+                    <div key={num} className="leading-6">
+                      {num}
+                    </div>
+                  ))}
+                </div>
+              )}
+              <div className="flex-1">
+                {lines.map((line, index) => (
+                  <div key={index} className="leading-6">
+                    {line || '\u00A0'}
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <div className="flex">
+              {showLineNumbers && (
+                <div className="mr-4 select-none text-muted-foreground text-sm">
+                  {lineNumbers.map((num) => (
+                    <div key={num} className="leading-6">
+                      {num}
+                    </div>
+                  ))}
+                </div>
+              )}
+              <div className="flex-1">
+                {lines.map((line, index) => (
+                  <div key={index} className="leading-6">
+                    {line || '\u00A0'}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </code>
+      </pre>
+    </div>
   )
 }
 
