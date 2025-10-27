@@ -202,11 +202,12 @@ classDiagram
         +operator: string
         +path: string
     }
-    
-    TestScript ||--o{ TestScriptTest : contains
-    TestScriptTest ||--o{ Action : has
-    Action ||--o| Operation : contains
-    Action ||--o| Assertion : contains
+
+    %% Beziehungen (Aggregation: o--)
+    TestScript "1" o-- "many" TestScriptTest : contains
+    TestScriptTest "1" o-- "many" Action : has
+    Action "1" o-- "1" Operation : contains
+    Action "1" o-- "1" Assertion : contains
 ```
 
 ## Datenmodell & Schemata
