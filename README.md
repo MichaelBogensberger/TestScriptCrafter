@@ -2,6 +2,26 @@
 
 Ein modernes Web-Tool zur visuellen Erstellung und Verwaltung von FHIR TestScript-Ressourcen. Ermöglicht die Erstellung komplexer TestScripts ohne manuelle XML/JSON-Bearbeitung.
 
+## Inhaltsverzeichnis
+
+- [Kernfunktionen](#kernfunktionen)
+- [Verzeichnisstruktur](#verzeichnisstruktur)
+- [Einleitung](#einleitung)
+- [Projektstatus](#projektstatus)
+- [Funktionalitäten](#funktionalitäten)
+- [Architekturüberblick](#architekturüberblick)
+- [Datenmodell & Schemata](#datenmodell--schemata)
+- [Code – Wo liegt was?](#code--wo-liegt-was)
+- [Setup & Installation](#setup--installation)
+- [Konfiguration](#konfiguration)
+- [Ausführen](#ausführen)
+- [Tests & Qualitätssicherung](#tests--qualitätssicherung)
+- [Deployment](#deployment)
+- [Troubleshooting](#troubleshooting)
+- [Leistungskennzahlen](#leistungskennzahlen)
+- [Roadmap](#roadmap)
+- [Lizenz & Danksagung](#lizenz--danksagung)
+
 ## Kernfunktionen
 
 - **Visueller TestScript Builder** - Formular-basierte Erstellung von FHIR TestScripts
@@ -9,6 +29,48 @@ Ein modernes Web-Tool zur visuellen Erstellung und Verwaltung von FHIR TestScrip
 - **FHIR R5 Validierung** - Integration mit FHIR-Servern für automatische Validierung
 - **Modulare Architektur** - Saubere Trennung von UI, Logik und Services
 - **Type-Safety** - Vollständige TypeScript-Unterstützung mit FHIR-Typen
+
+## Verzeichnisstruktur
+
+```
+.
+├─ app/                          # Next.js App Router
+│  ├─ api/validate/              # FHIR-Validierungs-API
+│  ├─ globals.css               # Globale Styles
+│  ├─ layout.tsx                # Root Layout
+│  └─ page.tsx                   # Hauptseite
+├─ components/                   # React-Komponenten
+│  ├─ form-builder/             # Formular-Builder Module
+│  │  ├─ sections/              # Formular-Sektionen
+│  │  ├─ shared/                # Wiederverwendbare Komponenten
+│  │  └─ form-builder.tsx       # Haupt-Form-Builder
+│  ├─ test-script-builder/      # TestScript Builder Module
+│  ├─ ui/                       # shadcn/ui Komponenten
+│  └─ *.tsx                     # Weitere Komponenten
+├─ hooks/                        # Custom React Hooks
+│  └─ use-fhir-validation.ts    # FHIR-Validierung Hook
+├─ lib/                         # Utilities und Services
+│  ├─ formatters/              # JSON/XML Formatierung
+│  ├─ services/                # FHIR-Validierungs-Service
+│  └─ utils.ts                  # Hilfsfunktionen
+├─ types/                       # TypeScript-Typen
+│  ├─ test-script.ts           # TestScript-spezifische Typen
+│  └─ validation.ts             # Validierungs-Typen
+├─ public/                      # Statische Assets
+└─ README.md
+```
+
+### Verzeichnis-Zweck
+
+**app/**: Next.js App Router mit Seiten, Layouts und API-Routes. Enthält die Hauptanwendung und FHIR-Validierungs-Endpoint.
+
+**components/**: Alle React-Komponenten der Anwendung. Form-Builder für TestScript-Erstellung, UI-Komponenten und View-Renderer.
+
+**hooks/**: Custom React Hooks für State-Management und FHIR-Validierung.
+
+**lib/**: Utility-Funktionen, Services und Formatter. Enthält FHIR-Validierungslogik und Formatierungstools.
+
+**types/**: TypeScript-Typdefinitionen für TestScripts und Validierung.
 
 ## Einleitung
 
@@ -52,48 +114,6 @@ TestScript Crafter vereinfacht die Erstellung von FHIR TestScripts durch eine in
 - Tailwind CSS 4 (Styling)
 - Radix UI (Komponenten)
 - xmlbuilder2 (XML-Generierung)
-
-## Verzeichnisstruktur
-
-```
-.
-├─ app/                          # Next.js App Router
-│  ├─ api/validate/              # FHIR-Validierungs-API
-│  ├─ globals.css               # Globale Styles
-│  ├─ layout.tsx                # Root Layout
-│  └─ page.tsx                   # Hauptseite
-├─ components/                   # React-Komponenten
-│  ├─ form-builder/             # Formular-Builder Module
-│  │  ├─ sections/              # Formular-Sektionen
-│  │  ├─ shared/                # Wiederverwendbare Komponenten
-│  │  └─ form-builder.tsx       # Haupt-Form-Builder
-│  ├─ test-script-builder/      # TestScript Builder Module
-│  ├─ ui/                       # shadcn/ui Komponenten
-│  └─ *.tsx                     # Weitere Komponenten
-├─ hooks/                        # Custom React Hooks
-│  └─ use-fhir-validation.ts    # FHIR-Validierung Hook
-├─ lib/                         # Utilities und Services
-│  ├─ formatters/              # JSON/XML Formatierung
-│  ├─ services/                # FHIR-Validierungs-Service
-│  └─ utils.ts                  # Hilfsfunktionen
-├─ types/                       # TypeScript-Typen
-│  ├─ test-script.ts           # TestScript-spezifische Typen
-│  └─ validation.ts             # Validierungs-Typen
-├─ public/                      # Statische Assets
-└─ README.md
-```
-
-### Verzeichnis-Zweck
-
-**app/**: Next.js App Router mit Seiten, Layouts und API-Routes. Enthält die Hauptanwendung und FHIR-Validierungs-Endpoint.
-
-**components/**: Alle React-Komponenten der Anwendung. Form-Builder für TestScript-Erstellung, UI-Komponenten und View-Renderer.
-
-**hooks/**: Custom React Hooks für State-Management und FHIR-Validierung.
-
-**lib/**: Utility-Funktionen, Services und Formatter. Enthält FHIR-Validierungslogik und Formatierungstools.
-
-**types/**: TypeScript-Typdefinitionen für TestScripts und Validierung.
 
 ## Funktionalitäten
 
@@ -208,6 +228,7 @@ classDiagram
     TestScriptTest "1" o-- "many" Action : has
     Action "1" o-- "1" Operation : contains
     Action "1" o-- "1" Assertion : contains
+
 ```
 
 ## Datenmodell & Schemata
