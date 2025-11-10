@@ -9,12 +9,18 @@ import type {
   TestScriptSetupAction as FhirTestScriptSetupAction,
   TestScriptSetupActionAssert as FhirTestScriptSetupActionAssert,
   TestScriptSetupActionOperation as FhirTestScriptSetupActionOperation,
+  TestScriptSetupActionAssertRequirement as FhirTestScriptSetupActionAssertRequirement,
   TestScriptTeardown as FhirTestScriptTeardown,
   TestScriptTeardownAction as FhirTestScriptTeardownAction,
   TestScriptTest as FhirTestScriptTest,
   TestScriptTestAction as FhirTestScriptTestAction,
   Parameters as FhirParameters,
   Extension as FhirExtension,
+  TestScriptOrigin as FhirTestScriptOrigin,
+  TestScriptDestination as FhirTestScriptDestination,
+  TestScriptFixture as FhirTestScriptFixture,
+  TestScriptVariable as FhirTestScriptVariable,
+  TestScriptScope as FhirTestScriptScope,
 } from "fhir/r5";
 
 /**
@@ -30,6 +36,12 @@ export type TestScriptSetup = FhirTestScriptSetup;
 export type TestScriptSetupAction = FhirTestScriptSetupAction;
 export type TestScriptTeardown = FhirTestScriptTeardown;
 export type TestScriptTeardownAction = FhirTestScriptTeardownAction;
+export type TestScriptSetupActionAssertRequirement = FhirTestScriptSetupActionAssertRequirement;
+export type TestScriptOrigin = FhirTestScriptOrigin;
+export type TestScriptDestination = FhirTestScriptDestination;
+export type TestScriptFixture = FhirTestScriptFixture;
+export type TestScriptVariable = FhirTestScriptVariable;
+export type TestScriptScope = FhirTestScriptScope;
 
 export type TestScriptMetadata = FhirTestScriptMetadata;
 export type TestScriptCapability = FhirTestScriptMetadataCapability;

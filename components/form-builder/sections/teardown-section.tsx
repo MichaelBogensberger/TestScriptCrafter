@@ -1,6 +1,8 @@
 "use client"
 
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import { Plus } from "lucide-react"
 import type { TestScriptTeardown, TestScriptTeardownAction } from "@/types/fhir-enhanced"
 import ActionComponent from "../shared/action-component"
@@ -10,76 +12,79 @@ interface TeardownSectionProps {
   updateTeardown: (teardown: TestScriptTeardown) => void
 }
 
-/**
- * Component for editing the teardown section of a TestScript
- */
 export default function TeardownSection({ teardown, updateTeardown }: TeardownSectionProps) {
-  /**
-   * Adds a new action to the teardown section
-   */
+  const actions = teardown.action ?? []
+
   const addTeardownAction = () => {
     const newAction: TestScriptTeardownAction = {
       operation: {
-        type: {
-          system: "http://terminology.hl7.org/CodeSystem/testscript-operation-codes",
-          code: "delete",
-        },
-        resource: "Patient",
-        description: "Delete test resources",
         encodeRequestUrl: true,
       },
     }
-
-    const updatedTeardown = { ...teardown }
-    updatedTeardown.action = [...(teardown.action || []), newAction]
-    updateTeardown(updatedTeardown)
+    updateTeardown({
+      ...teardown,
+      action: [...actions, newAction],
+    })
   }
 
-  /**
-   * Updates a specific action in the teardown section
-   */
-  const updateAction = (index: number, updatedAction: TestScriptTeardownAction) => {
-    const updatedTeardown = { ...teardown }
-    const actions = [...(teardown.action || [])]
-    actions[index] = updatedAction
-    updatedTeardown.action = actions
-    updateTeardown(updatedTeardown)
+  const updateAction = (index: number, action: TestScriptTeardownAction) => {
+    const next = [...actions]
+    next[index] = action
+    updateTeardown({
+      ...teardown,
+      action: next,
+    })
   }
 
-  /**
-   * Removes an action from the teardown section
-   */
   const removeAction = (index: number) => {
-    const updatedTeardown = { ...teardown }
-    updatedTeardown.action = (teardown.action || []).filter((_, i) => i !== index)
-    updateTeardown(updatedTeardown)
+    const next = actions.filter((_, idx) => idx !== index)
+    updateTeardown({
+      ...teardown,
+      action: next,
+    })
   }
 
   return (
     <div className="space-y-4 p-2">
-      <div className="flex justify-between items-center">
-        <p className="text-sm text-muted-foreground">
-          The teardown section contains actions that clean up after the test is complete.
-        </p>
-        <Button variant="outline" size="sm" className="flex items-center gap-1" onClick={addTeardownAction}>
-          <Plus className="h-4 w-4" /> Add Teardown Action
-        </Button>
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+        <div>
+          <Label htmlFor="teardown-id">Teardown ID</Label>
+          <Input
+            id="teardown-id"
+            value={teardown.id ?? ""}
+            onChange={(event) =>
+              updateTeardown({
+                ...teardown,
+                id: event.target.value || undefined,
+              })
+            }
+            placeholder="Optionaler Identifier"
+          />
+        </div>
+        <div className="flex items-end justify-end">
+          <Button variant="outline" size="sm" onClick={addTeardownAction} className="flex items-center gap-1">
+            <Plus className="h-4 w-4" />
+            Teardown-Aktion hinzufügen
+          </Button>
+        </div>
       </div>
 
-      {(teardown.action || []).map((action, index) => (
-        <ActionComponent
-          key={`teardown-action-${index}`}
-          action={action}
-          index={index}
-          sectionType="teardown"
-          updateAction={(updatedAction) => updateAction(index, updatedAction)}
-          removeAction={() => removeAction(index)}
-        />
-      ))}
-
-      {(teardown.action || []).length === 0 && (
-        <div className="text-center p-4 text-muted-foreground">
-          No teardown actions defined. Click the button above to add one.
+      {actions.length === 0 ? (
+        <div className="rounded-md border border-dashed p-4 text-center text-sm text-muted-foreground">
+          Noch keine Teardown-Aktionen definiert.
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {actions.map((action, idx) => (
+            <ActionComponent
+              key={idx}
+              action={action}
+              index={idx}
+              sectionType="teardown"
+              updateAction={(updated) => updateAction(idx, updated)}
+              removeAction={() => removeAction(idx)}
+            />
+          ))}
         </div>
       )}
     </div>

@@ -1,16 +1,23 @@
 "use client"
 
-import { useState, useCallback, useMemo } from "react"
+import { useCallback, useMemo, useState } from "react"
 import { Accordion } from "@/components/ui/accordion"
 import type { TestScript, TestScriptTest } from "@/types/fhir-enhanced"
-import { SectionAccordionItem } from "./sections/section-accordion-item"
 import { ProgressIndicator } from "./progress-indicator"
 import { TestCaseManager } from "./test-case-manager"
+import { SectionAccordionItem } from "./sections/section-accordion-item"
 import BasicInfoSection from "./sections/basic-info-section"
 import MetadataSection from "./sections/metadata-section"
 import SetupSection from "./sections/setup-section"
 import TestCaseSection from "./sections/test-case-section"
 import TeardownSection from "./sections/teardown-section"
+import { TestSystemSection } from "./sections/test-system-section"
+import { EndpointsSection } from "./sections/endpoints-section"
+import { FixturesSection } from "./sections/fixtures-section"
+import { ProfilesSection } from "./sections/profiles-section"
+import { VariablesSection } from "./sections/variables-section"
+import { ScopeSection } from "./sections/scope-section"
+import { CommonSection } from "./sections/common-section"
 
 interface FormBuilderProps {
   testScript: TestScript
@@ -18,167 +25,220 @@ interface FormBuilderProps {
   updateSection: <K extends keyof TestScript>(section: K, data: TestScript[K]) => void
 }
 
-/**
- * FormBuilder-Komponente, die alle Formularabschnitte rendert
- * Refaktorisiert mit sauberer Trennung der Verantwortlichkeiten
- */
-function FormBuilder({ testScript, updateTestScript, updateSection }: FormBuilderProps) {
-  // State für erweiterte Accordion-Abschnitte
-  const [expandedSections, setExpandedSections] = useState<string[]>(["basic-info", "metadata"])
+const DEFAULT_METADATA = { capability: [] }
 
-  // Sichere Zugriffe auf möglicherweise undefined Eigenschaften
-  const tests = useMemo(() => testScript.test ?? [], [testScript.test])
+function FormBuilder({ testScript, updateTestScript, updateSection }: FormBuilderProps) {
+  const [expandedSections, setExpandedSections] = useState<string[]>([
+    "basic-info",
+    "metadata",
+    "setup",
+  ])
+
   const metadata = useMemo(
-    () => testScript.metadata ?? { capability: [] },
+    () => testScript.metadata ?? DEFAULT_METADATA,
     [testScript.metadata],
   )
+  const tests = useMemo(() => testScript.test ?? [], [testScript.test])
 
-  /**
-   * Fügt einen neuen Testfall zum TestScript hinzu
-   */
   const addTestCase = useCallback(() => {
     const newTest: TestScriptTest = {
-      name: `Test Case ${tests.length + 1}`,
-      description: "New test case",
+      name: `Testfall ${tests.length + 1}`,
+      description: "",
       action: [],
     }
-
-    const updatedTests = [...tests, newTest]
-    updateSection("test", updatedTests)
+    updateSection("test", [...tests, newTest])
   }, [tests, updateSection])
 
-  /**
-   * Entfernt einen Testfall
-   */
-  const removeTestCase = useCallback((index: number) => {
-    const updatedTests = tests.filter((_, i) => i !== index)
-    updateSection("test", updatedTests)
-  }, [tests, updateSection])
+  const removeTestCase = useCallback(
+    (index: number) => {
+      const next = tests.filter((_, idx) => idx !== index)
+      updateSection("test", next.length > 0 ? next : undefined)
+    },
+    [tests, updateSection],
+  )
 
-  /**
-   * Aktualisiert einen spezifischen Testfall
-   */
-  const updateTestCase = useCallback((index: number, updatedTest: TestScriptTest) => {
-    const updatedTests = [...tests]
-    updatedTests[index] = updatedTest
-    updateSection("test", updatedTests)
-  }, [tests, updateSection])
+  const updateTestCase = useCallback(
+    (index: number, updated: TestScriptTest) => {
+      const next = [...tests]
+      next[index] = updated
+      updateSection("test", next)
+    },
+    [tests, updateSection],
+  )
 
-  /**
-   * Erweitert einen Accordion-Abschnitt
-   */
   const expandSection = useCallback((section: string) => {
-    setExpandedSections(prev => [...prev, section])
+    setExpandedSections((prev) =>
+      prev.includes(section) ? prev : [...prev, section],
+    )
   }, [])
 
-  /**
-   * Berechnet die Vollständigkeit der Sektionen
-   */
   const sectionCompleteness = useMemo(() => {
-    return {
-      basicInfo: !!(testScript.name && testScript.status && testScript.url),
-      metadata: !!(metadata.capability && metadata.capability.length > 0),
-      setup: !!(testScript.setup && testScript.setup.action && testScript.setup.action.length > 0),
-      tests: tests.length > 0,
-      teardown: !!(testScript.teardown && testScript.teardown.action && testScript.teardown.action.length > 0)
-    }
-  }, [testScript, metadata, tests])
+    const hasBasicInfo = Boolean(testScript.name && testScript.status)
+    const hasMetadata = Boolean(metadata.capability?.length)
+    const hasSetup = Boolean(testScript.setup?.action?.length)
+    const hasTests = tests.length > 0
+    const hasTeardown = Boolean(testScript.teardown?.action?.length)
 
-  /**
-   * Berechnet den Gesamtfortschritt
-   */
+    return {
+      basicInfo: hasBasicInfo,
+      metadata: hasMetadata,
+      systems: true,
+      fixtures: true,
+      variables: true,
+      scope: true,
+      setup: hasSetup,
+      tests: hasTests,
+      teardown: hasTeardown,
+      common: true,
+    }
+  }, [metadata.capability?.length, testScript, tests.length])
+
   const overallProgress = useMemo(() => {
-    const sections = Object.values(sectionCompleteness)
-    const completed = sections.filter(Boolean).length
-    return Math.round((completed / sections.length) * 100)
+    const relevantKeys: Array<keyof typeof sectionCompleteness> = [
+      "basicInfo",
+      "metadata",
+      "setup",
+      "tests",
+      "teardown",
+    ]
+    const completed = relevantKeys.filter((key) => sectionCompleteness[key]).length
+    return Math.round((completed / relevantKeys.length) * 100)
   }, [sectionCompleteness])
 
   return (
     <div className="space-y-6">
-      {/* Fortschrittsanzeige */}
-      <ProgressIndicator 
-        overallProgress={overallProgress}
-        sectionCompleteness={sectionCompleteness}
-      />
+      <ProgressIndicator overallProgress={overallProgress} sectionCompleteness={sectionCompleteness} />
 
-      {/* Testfall-Verwaltung */}
       <TestCaseManager
         tests={tests}
         onAddTest={addTestCase}
         onRemoveTest={removeTestCase}
-        onUpdateTest={updateTestCase}
         onExpandSection={expandSection}
       />
 
-      {/* Hauptformular-Akkordeon */}
-      <Accordion 
-        type="multiple" 
-        value={expandedSections} 
-        onValueChange={setExpandedSections} 
+      <Accordion
+        type="multiple"
+        value={expandedSections}
+        onValueChange={setExpandedSections}
         className="w-full"
       >
-        {/* Grundlegende Informationen */}
         <SectionAccordionItem
           value="basic-info"
           title="Grundlegende Informationen"
           isComplete={sectionCompleteness.basicInfo}
         >
-          <BasicInfoSection 
-            testScript={testScript} 
-            updateTestScript={updateTestScript} 
-          />
+          <BasicInfoSection testScript={testScript} updateTestScript={updateTestScript} />
         </SectionAccordionItem>
 
-        {/* Metadaten */}
         <SectionAccordionItem
           value="metadata"
           title="Metadaten"
           isComplete={sectionCompleteness.metadata}
         >
-          <MetadataSection
-            metadata={metadata}
-            updateMetadata={(metadata) => updateSection("metadata", metadata)}
+          <MetadataSection metadata={metadata} updateMetadata={(value) => updateSection("metadata", value)} />
+        </SectionAccordionItem>
+
+        <SectionAccordionItem
+          value="systems"
+          title="Systeme & Endpoints"
+          isComplete={sectionCompleteness.systems}
+        >
+          <div className="space-y-6">
+            <TestSystemSection
+              testSystems={testScript.testSystem}
+              updateTestSystems={(value) => updateSection("testSystem", value)}
+            />
+            <EndpointsSection
+              origin={testScript.origin}
+              destination={testScript.destination}
+              updateOrigin={(value) => updateSection("origin", value)}
+              updateDestination={(value) => updateSection("destination", value)}
+            />
+          </div>
+        </SectionAccordionItem>
+
+        <SectionAccordionItem
+          value="fixtures"
+          title="Fixtures & Profile"
+          isComplete={sectionCompleteness.fixtures}
+        >
+          <div className="space-y-6">
+            <FixturesSection
+              fixtures={testScript.fixture}
+              updateFixtures={(value) => updateSection("fixture", value)}
+            />
+            <ProfilesSection
+              profiles={testScript.profile}
+              updateProfiles={(value) => updateSection("profile", value)}
+            />
+          </div>
+        </SectionAccordionItem>
+
+        <SectionAccordionItem
+          value="variables"
+          title="Variablen"
+          isComplete={sectionCompleteness.variables}
+        >
+          <VariablesSection
+            variables={testScript.variable}
+            updateVariables={(value) => updateSection("variable", value)}
           />
         </SectionAccordionItem>
 
-        {/* Setup */}
+        <SectionAccordionItem
+          value="scope"
+          title="Scope"
+          isComplete={sectionCompleteness.scope}
+        >
+          <ScopeSection scopes={testScript.scope} updateScopes={(value) => updateSection("scope", value)} />
+        </SectionAccordionItem>
+
         <SectionAccordionItem
           value="setup"
           title="Setup"
           isComplete={sectionCompleteness.setup}
         >
-          <SetupSection 
-            setup={testScript.setup || { action: [] }} 
-            updateSetup={(setup) => updateSection("setup", setup)} 
+          <SetupSection
+            setup={testScript.setup ?? { action: [] }}
+            updateSetup={(value) => updateSection("setup", value)}
           />
         </SectionAccordionItem>
 
-        {/* Testfälle */}
-        {tests.map((test, testIndex) => (
+        {tests.map((test, idx) => (
           <SectionAccordionItem
-            key={`test-${testIndex}`}
-            value={`test-${testIndex}`}
-            title={test.name || `Testfall ${testIndex + 1}`}
-            isComplete={!!(test.action && test.action.length > 0)}
+            key={`test-${idx}`}
+            value={`test-${idx}`}
+            title={test.name || `Testfall ${idx + 1}`}
+            isComplete={Boolean(test.action?.length)}
           >
             <TestCaseSection
               test={test}
-              testIndex={testIndex}
-              updateTest={(updatedTest) => updateTestCase(testIndex, updatedTest)}
-              removeTest={() => removeTestCase(testIndex)}
+              testIndex={idx}
+              updateTest={(value) => updateTestCase(idx, value)}
+              removeTest={() => removeTestCase(idx)}
             />
           </SectionAccordionItem>
         ))}
 
-        {/* Teardown */}
         <SectionAccordionItem
           value="teardown"
           title="Teardown"
           isComplete={sectionCompleteness.teardown}
         >
           <TeardownSection
-            teardown={testScript.teardown || { action: [] }}
-            updateTeardown={(teardown) => updateSection("teardown", teardown)}
+            teardown={testScript.teardown ?? { action: [] }}
+            updateTeardown={(value) => updateSection("teardown", value)}
+          />
+        </SectionAccordionItem>
+
+        <SectionAccordionItem
+          value="common"
+          title="Common Aktionen"
+          isComplete={sectionCompleteness.common}
+        >
+          <CommonSection
+            common={testScript.common}
+            updateCommon={(value) => updateSection("common", value)}
           />
         </SectionAccordionItem>
       </Accordion>

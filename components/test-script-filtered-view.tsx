@@ -208,6 +208,30 @@ export function TestScriptFilteredView({ testScript }: TestScriptFilteredViewPro
         .filter((common) => (common.action?.length ?? 0) > 0)
     }
 
+    if (filterSection === "all") {
+      if (testScript.testSystem) {
+        result.testSystem = testScript.testSystem
+      }
+      if (testScript.origin) {
+        result.origin = testScript.origin
+      }
+      if (testScript.destination) {
+        result.destination = testScript.destination
+      }
+      if (testScript.fixture) {
+        result.fixture = testScript.fixture
+      }
+      if (testScript.profile) {
+        result.profile = testScript.profile
+      }
+      if (testScript.variable) {
+        result.variable = testScript.variable
+      }
+      if (testScript.scope) {
+        result.scope = testScript.scope
+      }
+    }
+
     return result
   }, [testScript, filterSection, filterOptions])
 

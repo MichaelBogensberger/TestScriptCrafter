@@ -1,6 +1,8 @@
 "use client"
 
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import { Plus } from "lucide-react"
 import type { TestScriptSetup, TestScriptSetupAction } from "@/types/fhir-enhanced"
 import ActionComponent from "../shared/action-component"
@@ -10,76 +12,79 @@ interface SetupSectionProps {
   updateSetup: (setup: TestScriptSetup) => void
 }
 
-/**
- * Component for editing the setup section of a TestScript
- */
 export default function SetupSection({ setup, updateSetup }: SetupSectionProps) {
-  /**
-   * Adds a new action to the setup section
-   */
+  const actions = setup.action ?? []
+
   const addSetupAction = () => {
     const newAction: TestScriptSetupAction = {
       operation: {
-        type: {
-          system: "http://terminology.hl7.org/CodeSystem/testscript-operation-codes",
-          code: "create",
-        },
-        resource: "Patient",
-        description: "Create a Patient resource",
         encodeRequestUrl: true,
       },
     }
-
-    const updatedSetup = { ...setup }
-    updatedSetup.action = [...(setup.action || []), newAction]
-    updateSetup(updatedSetup)
+    updateSetup({
+      ...setup,
+      action: [...actions, newAction],
+    })
   }
 
-  /**
-   * Updates a specific action in the setup section
-   */
-  const updateAction = (index: number, updatedAction: TestScriptSetupAction) => {
-    const updatedSetup = { ...setup }
-    const actions = [...(setup.action || [])]
-    actions[index] = updatedAction
-    updatedSetup.action = actions
-    updateSetup(updatedSetup)
+  const updateAction = (index: number, action: TestScriptSetupAction) => {
+    const next = [...actions]
+    next[index] = action
+    updateSetup({
+      ...setup,
+      action: next,
+    })
   }
 
-  /**
-   * Removes an action from the setup section
-   */
   const removeAction = (index: number) => {
-    const updatedSetup = { ...setup }
-    updatedSetup.action = (setup.action || []).filter((_, i) => i !== index)
-    updateSetup(updatedSetup)
+    const next = actions.filter((_, idx) => idx !== index)
+    updateSetup({
+      ...setup,
+      action: next,
+    })
   }
 
   return (
     <div className="space-y-4 p-2">
-      <div className="flex justify-between items-center">
-        <p className="text-sm text-muted-foreground">
-          The setup section contains actions that prepare the test environment.
-        </p>
-        <Button variant="outline" size="sm" className="flex items-center gap-1" onClick={addSetupAction}>
-          <Plus className="h-4 w-4" /> Add Setup Action
-        </Button>
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+        <div>
+          <Label htmlFor="setup-id">Setup ID</Label>
+          <Input
+            id="setup-id"
+            value={setup.id ?? ""}
+            onChange={(event) =>
+              updateSetup({
+                ...setup,
+                id: event.target.value || undefined,
+              })
+            }
+            placeholder="Optionaler Identifier"
+          />
+        </div>
+        <div className="flex items-end justify-end">
+          <Button variant="outline" size="sm" onClick={addSetupAction} className="flex items-center gap-1">
+            <Plus className="h-4 w-4" />
+            Setup-Aktion hinzufügen
+          </Button>
+        </div>
       </div>
 
-      {(setup.action || []).map((action, index) => (
-        <ActionComponent
-          key={`setup-action-${index}`}
-          action={action}
-          index={index}
-          sectionType="setup"
-          updateAction={(updatedAction) => updateAction(index, updatedAction)}
-          removeAction={() => removeAction(index)}
-        />
-      ))}
-
-      {(setup.action || []).length === 0 && (
-        <div className="text-center p-4 text-muted-foreground">
-          No setup actions defined. Click the button above to add one.
+      {actions.length === 0 ? (
+        <div className="rounded-md border border-dashed p-4 text-center text-sm text-muted-foreground">
+          Noch keine Setup-Aktionen definiert.
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {actions.map((action, idx) => (
+            <ActionComponent
+              key={idx}
+              action={action}
+              index={idx}
+              sectionType="setup"
+              updateAction={(updated) => updateAction(idx, updated)}
+              removeAction={() => removeAction(idx)}
+            />
+          ))}
         </div>
       )}
     </div>
