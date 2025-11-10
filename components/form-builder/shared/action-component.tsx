@@ -18,6 +18,7 @@ import type {
 } from "@/types/fhir-enhanced"
 import type { Coding } from "fhir/r5"
 import { useMemo } from "react"
+import { cn } from "@/lib/utils"
 import AssertionComponent from "./assertion-component"
 
 type SectionType = "setup" | "test" | "teardown" | "common"
@@ -138,7 +139,71 @@ export default function ActionComponent<TAction extends ScriptAction>({
     [action.operation],
   )
 
-  const requestHeaders = operation.requestHeader ?? []
+  const requestHeaders = useMemo(() => operation.requestHeader ?? [], [operation.requestHeader])
+
+  const operationErrors = useMemo(() => {
+    const errors: {
+      typeCode?: string
+      method?: string
+      resource?: string
+      url?: string
+      sourceId?: string
+      requestHeaders?: Record<number, string[]>
+    } = {}
+
+    if (!operation.type?.code?.trim()) {
+      errors.typeCode = "Operationstyp erforderlich"
+    }
+
+    if (!operation.method) {
+      errors.method = "HTTP-Methode erforderlich"
+    }
+
+    if (!operation.resource?.trim()) {
+      errors.resource = "Resource-Typ erforderlich"
+    }
+
+    if (!operation.url?.trim()) {
+      errors.url = "URL erforderlich"
+    }
+
+    if (
+      sectionType === "setup" &&
+      operation.method &&
+      ["post", "put"].includes(operation.method) &&
+      !operation.sourceId?.trim()
+    ) {
+      errors.sourceId = "Source ID wird für POST/PUT im Setup benötigt"
+    }
+
+    const headerErrors: Record<number, string[]> = {}
+    requestHeaders.forEach((header, idx) => {
+      const fieldErrors: string[] = []
+      if (!header.field?.trim()) {
+        fieldErrors.push("Feldname erforderlich")
+      }
+      if (!header.value?.trim()) {
+        fieldErrors.push("Wert erforderlich")
+      }
+      if (fieldErrors.length > 0) {
+        headerErrors[idx] = fieldErrors
+      }
+    })
+    if (Object.keys(headerErrors).length > 0) {
+      errors.requestHeaders = headerErrors
+    }
+
+    return errors
+  }, [operation, requestHeaders, sectionType])
+
+  const assertionErrors = useMemo(() => {
+    if (!action.assert) return null
+    const { description, response } = action.assert
+    return {
+      description: description?.trim() ? undefined : "Beschreibung erforderlich",
+      response: response ? undefined : "Erwartete Antwort wählen",
+    }
+  }, [action.assert])
 
   const updateOperation = (partial: Partial<TestScriptSetupActionOperation>) => {
     updateAction({
@@ -284,7 +349,12 @@ export default function ActionComponent<TAction extends ScriptAction>({
             value={operation.type?.code ?? ""}
             onChange={(event) => updateOperationTypeField("code", event.target.value)}
             placeholder="read | create | ..."
+            className={cn(operationErrors.typeCode && "border-destructive focus-visible:ring-destructive")}
+            aria-invalid={Boolean(operationErrors.typeCode)}
           />
+          {operationErrors.typeCode && (
+            <p className="text-xs text-destructive">{operationErrors.typeCode}</p>
+          )}
         </div>
         <div>
           <Label>Operation Type Display</Label>
@@ -308,12 +378,15 @@ export default function ActionComponent<TAction extends ScriptAction>({
             </SelectTrigger>
             <SelectContent>
               {HTTP_METHODS.map((method) => (
-                <SelectItem key={method} value={method ?? ""}>
+                <SelectItem key={method ?? ""} value={method ?? ""}>
                   {method?.toUpperCase()}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
+          {operationErrors.method && (
+            <p className="text-xs text-destructive">{operationErrors.method}</p>
+          )}
         </div>
         <div>
           <Label htmlFor={`action-${index}-resource`}>Resource Typ</Label>
@@ -322,7 +395,12 @@ export default function ActionComponent<TAction extends ScriptAction>({
             value={operation.resource ?? ""}
             onChange={(event) => updateOperationField("resource", event.target.value || undefined)}
             placeholder="z. B. Patient"
+            className={cn(operationErrors.resource && "border-destructive focus-visible:ring-destructive")}
+            aria-invalid={Boolean(operationErrors.resource)}
           />
+          {operationErrors.resource && (
+            <p className="text-xs text-destructive">{operationErrors.resource}</p>
+          )}
         </div>
         <div>
           <Label htmlFor={`action-${index}-url`}>URL</Label>
@@ -331,7 +409,10 @@ export default function ActionComponent<TAction extends ScriptAction>({
             value={operation.url ?? ""}
             onChange={(event) => updateOperationField("url", event.target.value || undefined)}
             placeholder="/Patient/example"
+            className={cn(operationErrors.url && "border-destructive focus-visible:ring-destructive")}
+            aria-invalid={Boolean(operationErrors.url)}
           />
+          {operationErrors.url && <p className="text-xs text-destructive">{operationErrors.url}</p>}
         </div>
       </div>
 
@@ -421,7 +502,12 @@ export default function ActionComponent<TAction extends ScriptAction>({
             id={`action-${index}-sourceId`}
             value={operation.sourceId ?? ""}
             onChange={(event) => updateOperationField("sourceId", event.target.value || undefined)}
+            className={cn(operationErrors.sourceId && "border-destructive focus-visible:ring-destructive")}
+            aria-invalid={Boolean(operationErrors.sourceId)}
           />
+          {operationErrors.sourceId && (
+            <p className="text-xs text-destructive">{operationErrors.sourceId}</p>
+          )}
         </div>
         <div>
           <Label htmlFor={`action-${index}-targetId`}>Target ID</Label>
@@ -467,6 +553,11 @@ export default function ActionComponent<TAction extends ScriptAction>({
                   value={header.field}
                   onChange={(event) => updateRequestHeader(headerIdx, "field", event.target.value)}
                   placeholder="Header Feld"
+                  className={cn(
+                    operationErrors.requestHeaders?.[headerIdx] &&
+                      operationErrors.requestHeaders[headerIdx].some((msg) => msg.includes("Feld")) &&
+                      "border-destructive focus-visible:ring-destructive",
+                  )}
                 />
                 <Input
                   value={header.value}
@@ -481,6 +572,15 @@ export default function ActionComponent<TAction extends ScriptAction>({
                 >
                   <Trash2 className="h-4 w-4" />
                 </Button>
+                {operationErrors.requestHeaders?.[headerIdx]?.length ? (
+                  <div className="col-span-3 space-y-1">
+                    {operationErrors.requestHeaders[headerIdx].map((message, messageIdx) => (
+                      <p key={messageIdx} className="text-xs text-destructive">
+                        {message}
+                      </p>
+                    ))}
+                  </div>
+                ) : null}
               </div>
             ))}
           </div>
@@ -510,6 +610,7 @@ export default function ActionComponent<TAction extends ScriptAction>({
               requestMethodOptions={REQUEST_METHOD_OPTIONS}
               onAddRequirement={(requirements) => addRequirement(requirements)}
               onRemoveRequirement={(requirements, idx) => removeRequirement(requirements, idx)}
+              errors={assertionErrors ?? undefined}
             />
           ) : (
             <p className="text-xs text-muted-foreground">

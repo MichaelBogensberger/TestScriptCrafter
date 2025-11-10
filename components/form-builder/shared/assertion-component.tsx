@@ -6,21 +6,28 @@ import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
-import { Textarea } from "@/components/ui/textarea"
-import { Plus, Trash2 } from "lucide-react"
 import type {
   TestScriptSetupActionAssert,
   TestScriptSetupActionAssertRequirement,
 } from "@/types/fhir-enhanced"
+import type {
+  TestScriptSetupActionAssertDirection,
+  TestScriptSetupActionAssertOperator,
+  TestScriptSetupActionAssertResponse,
+  TestScriptSetupActionOperationMethod,
+} from "fhir/r5"
+import { Textarea } from "@/components/ui/textarea"
+import { Plus, Trash2 } from "lucide-react"
+import { cn } from "@/lib/utils"
 
 interface AssertionComponentProps {
   assertion: TestScriptSetupActionAssert
   updateAssertion: (assertion: TestScriptSetupActionAssert) => void
   removeAssertion: () => void
-  responseOptions: Array<TestScriptSetupActionAssert["response"]>
-  directionOptions: Array<TestScriptSetupActionAssert["direction"]>
-  operatorOptions: Array<TestScriptSetupActionAssert["operator"]>
-  requestMethodOptions: Array<TestScriptSetupActionAssert["requestMethod"]>
+  responseOptions: { value: TestScriptSetupActionAssertResponse; label: string }[]
+  directionOptions: { value: TestScriptSetupActionAssertDirection; label: string }[]
+  operatorOptions: { value: TestScriptSetupActionAssertOperator; label: string }[]
+  requestMethodOptions: { value: TestScriptSetupActionOperationMethod; label: string }[]
   onAddRequirement: (
     current: TestScriptSetupActionAssertRequirement[] | undefined,
   ) => TestScriptSetupActionAssertRequirement[]
@@ -28,6 +35,10 @@ interface AssertionComponentProps {
     current: TestScriptSetupActionAssertRequirement[] | undefined,
     index: number,
   ) => TestScriptSetupActionAssertRequirement[] | undefined
+  errors?: {
+    description?: string
+    response?: string
+  }
 }
 
 export default function AssertionComponent({
@@ -40,6 +51,7 @@ export default function AssertionComponent({
   requestMethodOptions,
   onAddRequirement,
   onRemoveRequirement,
+  errors,
 }: AssertionComponentProps) {
   const updateField = <TKey extends keyof TestScriptSetupActionAssert>(
     field: TKey,
@@ -89,12 +101,16 @@ export default function AssertionComponent({
         </div>
         <div>
           <Label htmlFor="assertion-description">Beschreibung</Label>
-          <Input
+          <Textarea
             id="assertion-description"
             value={assertion.description ?? ""}
             onChange={(event) => updateField("description", event.target.value || undefined)}
-            placeholder="Tracking/Reporting Beschreibung"
+            rows={2}
+            placeholder="Beschreibung der Assertion"
+            className={cn(errors?.description && "border-destructive focus-visible:ring-destructive")}
+            aria-invalid={Boolean(errors?.description)}
           />
+          {errors?.description && <p className="text-xs text-destructive">{errors.description}</p>}
         </div>
       </div>
 
@@ -110,8 +126,8 @@ export default function AssertionComponent({
             </SelectTrigger>
             <SelectContent>
               {directionOptions.map((option) => (
-                <SelectItem key={option ?? "none"} value={option ?? ""}>
-                  {option}
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -121,19 +137,21 @@ export default function AssertionComponent({
           <Label htmlFor="assertion-response">Erwartete Antwort</Label>
           <Select
             value={assertion.response ?? ""}
-            onValueChange={(value) => updateField("response", value as typeof assertion.response)}
+            onValueChange={(value) => updateField("response", value as TestScriptSetupActionAssertResponse)}
+            aria-invalid={Boolean(errors?.response)}
           >
             <SelectTrigger id="assertion-response">
-              <SelectValue placeholder="Antwort wählen" />
+              <SelectValue placeholder="Antwort auswählen" />
             </SelectTrigger>
-            <SelectContent className="max-h-64">
+            <SelectContent>
               {responseOptions.map((option) => (
-                <SelectItem key={option ?? "none"} value={option ?? ""}>
-                  {option}
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
+          {errors?.response && <p className="text-xs text-destructive">{errors.response}</p>}
         </div>
         <div>
           <Label htmlFor="assertion-response-code">Erwarteter Statuscode</Label>
@@ -158,8 +176,8 @@ export default function AssertionComponent({
             </SelectTrigger>
             <SelectContent>
               {operatorOptions.map((option) => (
-                <SelectItem key={option ?? "none"} value={option ?? ""}>
-                  {option}
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -178,8 +196,8 @@ export default function AssertionComponent({
             </SelectTrigger>
             <SelectContent>
               {requestMethodOptions.map((option) => (
-                <SelectItem key={option ?? "none"} value={option ?? ""}>
-                  {option?.toUpperCase()}
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label?.toUpperCase()}
                 </SelectItem>
               ))}
             </SelectContent>
