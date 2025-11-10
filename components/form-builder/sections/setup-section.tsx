@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/button"
 import { Plus } from "lucide-react"
-import type { TestScriptSetup } from "@/types/fhir-enhanced"
+import type { TestScriptSetup, TestScriptSetupAction } from "@/types/fhir-enhanced"
 import ActionComponent from "../shared/action-component"
 
 interface SetupSectionProps {
@@ -18,7 +18,7 @@ export default function SetupSection({ setup, updateSetup }: SetupSectionProps) 
    * Adds a new action to the setup section
    */
   const addSetupAction = () => {
-    const newAction = {
+    const newAction: TestScriptSetupAction = {
       operation: {
         type: {
           system: "http://terminology.hl7.org/CodeSystem/testscript-operation-codes",
@@ -38,7 +38,7 @@ export default function SetupSection({ setup, updateSetup }: SetupSectionProps) 
   /**
    * Updates a specific action in the setup section
    */
-  const updateAction = (index: number, updatedAction: any) => {
+  const updateAction = (index: number, updatedAction: TestScriptSetupAction) => {
     const updatedSetup = { ...setup }
     const actions = [...(setup.action || [])]
     actions[index] = updatedAction

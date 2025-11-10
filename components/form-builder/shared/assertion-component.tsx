@@ -7,10 +7,11 @@ import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
 import { Trash2 } from "lucide-react"
+import type { TestScriptSetupActionAssert } from "@/types/fhir-enhanced"
 
 interface AssertionComponentProps {
-  assertion: any
-  updateAssertion: (assertion: any) => void
+  assertion: TestScriptSetupActionAssert
+  updateAssertion: (assertion: TestScriptSetupActionAssert) => void
   removeAssertion: () => void
 }
 
@@ -21,7 +22,10 @@ export default function AssertionComponent({ assertion, updateAssertion, removeA
   /**
    * Updates a field in the assertion
    */
-  const updateField = (field: string, value: any) => {
+  const updateField = <TKey extends keyof TestScriptSetupActionAssert>(
+    field: TKey,
+    value: TestScriptSetupActionAssert[TKey],
+  ) => {
     updateAssertion({ ...assertion, [field]: value })
   }
 
@@ -53,9 +57,11 @@ export default function AssertionComponent({ assertion, updateAssertion, removeA
             <SelectContent>
               <SelectItem value="okay">Okay</SelectItem>
               <SelectItem value="created">Created</SelectItem>
-              <SelectItem value="notFound">Not Found</SelectItem>
-              <SelectItem value="bad">Bad</SelectItem>
+              <SelectItem value="noContent">No Content</SelectItem>
+              <SelectItem value="badRequest">Bad Request</SelectItem>
               <SelectItem value="forbidden">Forbidden</SelectItem>
+              <SelectItem value="notFound">Not Found</SelectItem>
+              <SelectItem value="internalServerError">Internal Server Error</SelectItem>
             </SelectContent>
           </Select>
         </div>

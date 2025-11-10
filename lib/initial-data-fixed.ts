@@ -48,7 +48,7 @@ export const initialTestScript: TestScript = {
         description: "Basis FHIR Server Capabilities"
       }
     ]
-  } as any,
+  },
   
   // Erforderlich: test array mit mindestens einem Test
   test: [
@@ -69,17 +69,19 @@ export const initialTestScript: TestScript = {
               code: "read"
             },
             resource: "Patient",
-            url: "/Patient/example"
+            url: "/Patient/example",
+            encodeRequestUrl: true
           },
           
           // Optional: assert
           assert: {
             description: "Prüfe, dass die Antwort erfolgreich ist",
             response: "okay",
-            warningOnly: false
+            warningOnly: false,
+            stopTestOnFail: true
           }
         }
       ]
     }
   ]
-} as any
+}

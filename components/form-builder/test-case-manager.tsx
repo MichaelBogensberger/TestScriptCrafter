@@ -10,7 +10,6 @@ interface TestCaseManagerProps {
   tests: TestScriptTest[]
   onAddTest: () => void
   onRemoveTest: (index: number) => void
-  onUpdateTest: (index: number, test: TestScriptTest) => void
   onExpandSection: (section: string) => void
 }
 
@@ -18,12 +17,11 @@ interface TestCaseManagerProps {
  * Komponente zur Verwaltung von Testfällen
  * Bietet Funktionen zum Hinzufügen, Entfernen und Bearbeiten von Tests
  */
-export function TestCaseManager({ 
-  tests, 
-  onAddTest, 
-  onRemoveTest, 
-  onUpdateTest, 
-  onExpandSection 
+export function TestCaseManager({
+  tests,
+  onAddTest,
+  onRemoveTest,
+  onExpandSection
 }: TestCaseManagerProps) {
   
   const handleAddTest = useCallback(() => {

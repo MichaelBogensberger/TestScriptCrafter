@@ -1,11 +1,14 @@
 /**
- * Formatiert ein TestScript-Objekt als JSON mit anpassbarer Einrückung
+ * Formatiert beliebige Daten als JSON mit anpassbarer Einrückung
  */
-export function formatToJson(testScript: any, spaces: number = 2) {
+export function formatToJson<T>(data: T, spaces = 2): string {
   try {
-    return JSON.stringify(testScript, null, spaces)
-  } catch (error: any) {
+    return JSON.stringify(data, null, spaces)
+  } catch (error: unknown) {
     console.error("JSON-Formatierungsfehler:", error)
-    throw new Error(`Fehler bei der JSON-Formatierung: ${error instanceof Error ? error.message : String(error)}`)
+    if (error instanceof Error) {
+      throw new Error(`Fehler bei der JSON-Formatierung: ${error.message}`)
+    }
+    throw new Error(`Fehler bei der JSON-Formatierung: ${String(error)}`)
   }
 }

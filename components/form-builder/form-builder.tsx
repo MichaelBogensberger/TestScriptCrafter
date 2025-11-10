@@ -27,8 +27,11 @@ function FormBuilder({ testScript, updateTestScript, updateSection }: FormBuilde
   const [expandedSections, setExpandedSections] = useState<string[]>(["basic-info", "metadata"])
 
   // Sichere Zugriffe auf möglicherweise undefined Eigenschaften
-  const tests = testScript.test || []
-  const metadata = testScript.metadata || { capability: [] }
+  const tests = useMemo(() => testScript.test ?? [], [testScript.test])
+  const metadata = useMemo(
+    () => testScript.metadata ?? { capability: [] },
+    [testScript.metadata],
+  )
 
   /**
    * Fügt einen neuen Testfall zum TestScript hinzu
@@ -42,7 +45,7 @@ function FormBuilder({ testScript, updateTestScript, updateSection }: FormBuilde
 
     const updatedTests = [...tests, newTest]
     updateSection("test", updatedTests)
-  }, [tests.length, updateSection])
+  }, [tests, updateSection])
 
   /**
    * Entfernt einen Testfall

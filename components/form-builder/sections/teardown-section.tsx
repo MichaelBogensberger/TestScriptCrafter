@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/button"
 import { Plus } from "lucide-react"
-import type { TestScriptTeardown } from "@/types/fhir-enhanced"
+import type { TestScriptTeardown, TestScriptTeardownAction } from "@/types/fhir-enhanced"
 import ActionComponent from "../shared/action-component"
 
 interface TeardownSectionProps {
@@ -18,7 +18,7 @@ export default function TeardownSection({ teardown, updateTeardown }: TeardownSe
    * Adds a new action to the teardown section
    */
   const addTeardownAction = () => {
-    const newAction = {
+    const newAction: TestScriptTeardownAction = {
       operation: {
         type: {
           system: "http://terminology.hl7.org/CodeSystem/testscript-operation-codes",
@@ -38,7 +38,7 @@ export default function TeardownSection({ teardown, updateTeardown }: TeardownSe
   /**
    * Updates a specific action in the teardown section
    */
-  const updateAction = (index: number, updatedAction: any) => {
+  const updateAction = (index: number, updatedAction: TestScriptTeardownAction) => {
     const updatedTeardown = { ...teardown }
     const actions = [...(teardown.action || [])]
     actions[index] = updatedAction

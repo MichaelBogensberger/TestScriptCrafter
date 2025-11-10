@@ -7,52 +7,75 @@ import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
 import { Plus, Trash2 } from "lucide-react"
+import type {
+  TestScriptSetupAction,
+  TestScriptSetupActionAssert,
+  TestScriptSetupActionOperation,
+  TestScriptTeardownAction,
+  TestScriptTestAction,
+} from "@/types/fhir-enhanced"
+import type { Coding } from "fhir/r5"
 import AssertionComponent from "./assertion-component"
 
-interface ActionComponentProps {
-  action: any
+type SectionType = "setup" | "test" | "teardown"
+type ScriptAction = TestScriptSetupAction | TestScriptTestAction | TestScriptTeardownAction
+
+interface ActionComponentProps<TAction extends ScriptAction> {
+  action: TAction
   index: number
-  sectionType: "setup" | "test" | "teardown"
-  updateAction: (action: any) => void
+  sectionType: SectionType
+  updateAction: (action: TAction) => void
   removeAction: () => void
 }
 
 /**
  * Reusable component for editing an action in any section
  */
-export default function ActionComponent({
+export default function ActionComponent<TAction extends ScriptAction>({
   action,
   index,
   sectionType,
   updateAction,
   removeAction,
-}: ActionComponentProps) {
+}: ActionComponentProps<TAction>) {
   /**
    * Updates a field in the operation
    */
-  const updateOperationField = (field: string, value: any) => {
-    const updatedAction = { ...action }
-    if (!updatedAction.operation) {
-      updatedAction.operation = {}
-    }
-    updatedAction.operation[field] = value
+  const updateOperationField = <TKey extends keyof TestScriptSetupActionOperation>(
+    field: TKey,
+    value: TestScriptSetupActionOperation[TKey],
+  ) => {
+    const updatedAction = {
+      ...action,
+      operation: {
+        ...(action.operation ?? {}),
+        [field]: value,
+      },
+    } as TAction
+
     updateAction(updatedAction)
   }
 
   /**
    * Updates a field in the operation type
    */
-  const updateOperationTypeField = (field: string, value: any) => {
-    const updatedAction = { ...action }
-    if (!updatedAction.operation) {
-      updatedAction.operation = {}
+  const updateOperationTypeField = <TKey extends keyof Coding>(field: TKey, value: Coding[TKey]) => {
+    const defaultType: Coding = {
+      system: "http://terminology.hl7.org/CodeSystem/testscript-operation-codes",
+      ...(action.operation?.type ?? {}),
     }
-    if (!updatedAction.operation.type) {
-      updatedAction.operation.type = {
-        system: "http://terminology.hl7.org/CodeSystem/testscript-operation-codes",
-      }
-    }
-    updatedAction.operation.type[field] = value
+
+    const updatedAction = {
+      ...action,
+      operation: {
+        ...(action.operation ?? {}),
+        type: {
+          ...defaultType,
+          [field]: value,
+        },
+      },
+    } as TAction
+
     updateAction(updatedAction)
   }
 
@@ -60,22 +83,30 @@ export default function ActionComponent({
    * Adds an assertion to the action (only for test actions)
    */
   const addAssertion = () => {
-    const updatedAction = { ...action }
-    updatedAction.assert = {
-      description: "Confirm that the returned HTTP status is 200(OK)",
+    const newAssertion: TestScriptSetupActionAssert = {
+      description: "Confirm that the returned HTTP status is 200 (OK)",
       response: "okay",
       warningOnly: false,
       stopTestOnFail: true,
     }
+
+    const updatedAction = {
+      ...action,
+      assert: newAssertion,
+    } as TAction
+
     updateAction(updatedAction)
   }
 
   /**
    * Updates the assertion
    */
-  const updateAssertion = (assertion: any) => {
-    const updatedAction = { ...action }
-    updatedAction.assert = assertion
+  const updateAssertion = (assertion: TestScriptSetupActionAssert) => {
+    const updatedAction = {
+      ...action,
+      assert: assertion,
+    } as TAction
+
     updateAction(updatedAction)
   }
 
@@ -83,9 +114,11 @@ export default function ActionComponent({
    * Removes the assertion
    */
   const removeAssertion = () => {
-    const updatedAction = { ...action }
-    delete updatedAction.assert
-    updateAction(updatedAction)
+    if ("assert" in action) {
+      const updatedAction = { ...action } as ScriptAction & { assert?: TestScriptSetupActionAssert }
+      delete updatedAction.assert
+      updateAction(updatedAction as TAction)
+    }
   }
 
   return (
@@ -154,7 +187,7 @@ export default function ActionComponent({
           <Label htmlFor={`action-${index}-encodeRequestUrl`}>Encode Request URL</Label>
           <Switch
             id={`action-${index}-encodeRequestUrl`}
-            checked={action.operation?.encodeRequestUrl !== false}
+            checked={action.operation?.encodeRequestUrl ?? true}
             onCheckedChange={(checked) => updateOperationField("encodeRequestUrl", checked)}
           />
         </div>

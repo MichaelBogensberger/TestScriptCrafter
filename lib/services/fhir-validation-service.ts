@@ -2,7 +2,7 @@
  * Service für die Validierung von FHIR-Ressourcen gegen einen FHIR-Server
  */
 
-import { TestScript } from "@/types/fhir-enhanced";
+import { OperationOutcome, OperationOutcomeIssue, TestScript } from "@/types/fhir-enhanced";
 
 export interface ValidationResult {
   valid: boolean;
@@ -53,23 +53,28 @@ export async function validateTestScriptAgainstFhirServer(
     }
 
     // Parse die Antwort
-    const data = await response.json();
+    const data = (await response.json()) as OperationOutcome;
     
     // Extrahiere Validierungsprobleme aus der OperationOutcome-Ressource
-    if (data.resourceType === 'OperationOutcome' && data.issue && data.issue.length > 0) {
+    if (data.resourceType === 'OperationOutcome' && Array.isArray(data.issue) && data.issue.length > 0) {
       // Filtere nach Fehlern und Warnungen
-      const issues = data.issue;
-      const hasErrors = issues.some((issue: any) => issue.severity === 'error' || issue.severity === 'fatal');
+      const issues: OperationOutcomeIssue[] = data.issue;
+      const hasErrors = issues.some((issue) => issue.severity === 'error' || issue.severity === 'fatal');
       
       return {
         valid: !hasErrors,
-        issues: issues,
+        issues: issues.map((issue) => ({
+          severity: issue.severity,
+          code: issue.code,
+          diagnostics: issue.diagnostics,
+          location: issue.location,
+        })),
       };
     }
     
     // Keine Probleme gefunden
     return { valid: true };
-  } catch (error) {
+  } catch (error: unknown) {
     return {
       valid: false,
       message: `Verbindungsfehler: ${error instanceof Error ? error.message : String(error)}`,

@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import type { TestScript } from "@/types/fhir-enhanced"
+import type { TestScript, TestScriptStatus } from "@/types/fhir-enhanced"
 
 interface BasicInfoSectionProps {
   testScript: TestScript
@@ -36,7 +36,11 @@ export default function BasicInfoSection({ testScript, updateTestScript }: Basic
         <Label htmlFor="status">
           Status <span className="text-red-500">*</span>
         </Label>
-        <Select value={testScript.status} onValueChange={(value) => updateTestScript({ status: value as "draft" | "active" | "retired" | "unknown" })} required>
+        <Select
+          value={testScript.status}
+          onValueChange={(value) => updateTestScript({ status: value as TestScriptStatus })}
+          required
+        >
           <SelectTrigger id="status">
             <SelectValue placeholder="Select status" />
           </SelectTrigger>
@@ -77,8 +81,8 @@ export default function BasicInfoSection({ testScript, updateTestScript }: Basic
         <Label htmlFor="title">Title</Label>
         <Input
           id="title"
-          value={(testScript as any).title || ""}
-          onChange={(e) => updateTestScript({ title: e.target.value } as any)}
+          value={testScript.title ?? ""}
+          onChange={(e) => updateTestScript({ title: e.target.value })}
           placeholder="Human-friendly name"
         />
         <p className="text-xs text-muted-foreground">Human-friendly name for this TestScript</p>

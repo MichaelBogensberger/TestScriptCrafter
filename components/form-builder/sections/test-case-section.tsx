@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { Plus, Trash2 } from "lucide-react"
-import type { TestScriptTest } from "@/types/fhir-enhanced"
+import type { TestScriptTest, TestScriptTestAction } from "@/types/fhir-enhanced"
 import ActionComponent from "../shared/action-component"
 
 interface TestCaseSectionProps {
@@ -22,7 +22,7 @@ export default function TestCaseSection({ test, testIndex, updateTest, removeTes
   /**
    * Updates a field in the test case
    */
-  const updateField = (field: keyof TestScriptTest, value: any) => {
+  const updateField = <TKey extends keyof TestScriptTest>(field: TKey, value: TestScriptTest[TKey]) => {
     updateTest({ ...test, [field]: value })
   }
 
@@ -30,7 +30,7 @@ export default function TestCaseSection({ test, testIndex, updateTest, removeTes
    * Adds a new action to the test case
    */
   const addAction = () => {
-    const newAction = {
+    const newAction: TestScriptTestAction = {
       operation: {
         type: {
           system: "http://terminology.hl7.org/CodeSystem/testscript-operation-codes",
@@ -48,7 +48,7 @@ export default function TestCaseSection({ test, testIndex, updateTest, removeTes
   /**
    * Updates a specific action in the test case
    */
-  const updateAction = (actionIndex: number, updatedAction: any) => {
+  const updateAction = (actionIndex: number, updatedAction: TestScriptTestAction) => {
     const updatedActions = [...(test.action || [])]
     updatedActions[actionIndex] = updatedAction
     updateField("action", updatedActions)

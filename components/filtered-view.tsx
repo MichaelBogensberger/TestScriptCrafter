@@ -4,12 +4,14 @@ import { Badge } from "./ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
 import { useState } from "react";
 
+type FocusArea = "all" | "setup" | "test" | "teardown" | "common";
+
 interface FilteredViewProps {
   testScript: TestScript;
 }
 
 export function FilteredView({ testScript }: FilteredViewProps) {
-  const [focusArea, setFocusArea] = useState<"all" | "setup" | "test" | "teardown" | "common">("all");
+  const [focusArea, setFocusArea] = useState<FocusArea>("all");
 
   const getFilteredTestScript = () => {
     if (focusArea === "all") return testScript;
@@ -24,7 +26,7 @@ export function FilteredView({ testScript }: FilteredViewProps) {
     return filtered;
   };
 
-  const renderTestScriptSection = (title: string, content: any) => {
+  const renderTestScriptSection = (title: string, content: unknown) => {
     if (!content) return null;
 
     return (
@@ -42,7 +44,7 @@ export function FilteredView({ testScript }: FilteredViewProps) {
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-4">
-        <Select value={focusArea} onValueChange={(v) => setFocusArea(v as any)}>
+        <Select value={focusArea} onValueChange={(value) => setFocusArea(value as FocusArea)}>
           <SelectTrigger className="w-[180px]">
             <SelectValue placeholder="Bereich auswählen" />
           </SelectTrigger>

@@ -1,5 +1,12 @@
 import { useState } from "react";
-import type { TestScript, ValidationResult, ValidationIssue } from "@/types/fhir-enhanced";
+import type {
+  Extension,
+  OperationOutcome,
+  OperationOutcomeIssue,
+  TestScript,
+  ValidationIssue,
+  ValidationResult,
+} from "@/types/fhir-enhanced";
 
 export function useFhirValidation() {
   const [isValidating, setIsValidating] = useState(false);
@@ -7,49 +14,49 @@ export function useFhirValidation() {
   const [serverError, setServerError] = useState<string | null>(null);
   const [serverUrl, setServerUrl] = useState("https://hapi.fhir.org/baseR5");
 
-  const parseValidationResult = (data: any): ValidationResult => {
-    if (!data.issue) {
-      return data;
+  const extractPosition = (issue: OperationOutcomeIssue): { line: number; column: number } => {
+    let line = 1;
+    let column = 1;
+
+    const lineExtension = issue.extension?.find(
+      (extension: Extension) =>
+        extension.url === "http://hl7.org/fhir/StructureDefinition/operationoutcome-issue-line",
+    );
+    const columnExtension = issue.extension?.find(
+      (extension: Extension) =>
+        extension.url === "http://hl7.org/fhir/StructureDefinition/operationoutcome-issue-col",
+    );
+
+    if (typeof lineExtension?.valueInteger === "number") {
+      line = lineExtension.valueInteger;
     }
 
-    const parsedIssues: ValidationIssue[] = data.issue.map((issue: any) => {
-      let line = 1;
-      let column = 1;
+    if (typeof columnExtension?.valueInteger === "number") {
+      column = columnExtension.valueInteger;
+    }
 
-      // Parse Extensions für Zeilen- und Spaltennummern
-      if (issue.extension) {
-        const lineExtension = issue.extension.find((ext: any) => 
-          ext.url === "http://hl7.org/fhir/StructureDefinition/operationoutcome-issue-line"
-        );
-        const colExtension = issue.extension.find((ext: any) => 
-          ext.url === "http://hl7.org/fhir/StructureDefinition/operationoutcome-issue-col"
-        );
+    return { line, column };
+  };
 
-        if (lineExtension?.valueInteger) {
-          line = lineExtension.valueInteger;
-        }
-        if (colExtension?.valueInteger) {
-          column = colExtension.valueInteger;
-        }
-      }
+  const parseValidationResult = (outcome: OperationOutcome): ValidationResult => {
+    const issues: ValidationIssue[] = (outcome.issue ?? []).map((issue: OperationOutcomeIssue) => {
+      const { line, column } = extractPosition(issue);
+      const diagnostics = issue.diagnostics ?? issue.details?.text ?? "Unbekannter Fehler";
 
-      const parsedIssue: ValidationIssue = {
-        severity: issue.severity,
-        code: issue.code,
+      return {
+        ...issue,
         details: {
-          text: issue.diagnostics || issue.details?.text || "Unbekannter Fehler"
+          text: diagnostics,
         },
-        location: issue.location || [],
+        location: issue.location ?? [],
         line,
-        column
+        column,
       };
-
-      return parsedIssue;
     });
 
     return {
-      resourceType: "OperationOutcome",
-      issue: parsedIssues
+      ...outcome,
+      issue: issues,
     };
   };
 
@@ -71,19 +78,20 @@ export function useFhirValidation() {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      const data = await response.json();
+      const data = (await response.json()) as OperationOutcome;
       const parsedResult = parseValidationResult(data);
       setValidationResult(parsedResult);
-    } catch (error) {
+    } catch (error: unknown) {
       console.error("Validierungsfehler:", error);
-      setServerError(error instanceof Error ? error.message : "Unbekannter Fehler");
+      const message = error instanceof Error ? error.message : "Unbekannter Fehler";
+      setServerError(message);
       setValidationResult({
         resourceType: "OperationOutcome",
         issue: [{
           severity: "error",
           code: "processing",
           details: {
-            text: "Fehler bei der Validierung: " + (error instanceof Error ? error.message : "Unbekannter Fehler")
+            text: `Fehler bei der Validierung: ${message}`
           },
           location: [],
           line: 1,

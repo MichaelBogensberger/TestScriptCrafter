@@ -1,11 +1,8 @@
 import React from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
-import { TestScript, TestScriptTest, TestScriptSetup, TestScriptTeardown, EnhancedTestScriptAssert as Assertion, EnhancedTestScriptOperation as Operation } from "@/types/fhir-enhanced"
-import { Separator } from "@/components/ui/separator"
+import { TestScript, TestScriptSetup, TestScriptTest } from "@/types/fhir-enhanced"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { ScrollArea } from "@/components/ui/scroll-area"
 import { ValidationTab } from "@/components/validation-tab"
 import { AlertCircle, CheckCircle2, Info, XCircle } from "lucide-react"
 

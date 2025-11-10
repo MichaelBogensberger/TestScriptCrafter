@@ -1,33 +1,19 @@
 import { NextResponse } from 'next/server'
+import type {
+  Extension,
+  OperationOutcome,
+  OperationOutcomeIssue,
+  Parameters,
+  TestScript,
+  TestScriptMetadataCapability,
+  TestScriptTest,
+} from "@/types/fhir-enhanced"
 
-interface ValidationIssue {
+interface StructureIssue {
   message: string;
   location: string[];
   line?: number;
   column?: number;
-}
-
-interface FhirExtension {
-  url: string;
-  valueInteger?: number;
-  valueString?: string;
-}
-
-interface FhirIssue {
-  extension?: FhirExtension[];
-  severity: string;
-  code: string;
-  details?: {
-    text?: string;
-    coding?: any[];
-  };
-  diagnostics?: string;
-  location?: string[];
-}
-
-interface FhirOperationOutcome {
-  resourceType: string;
-  issue: FhirIssue[];
 }
 
 function calculateJsonPosition(jsonString: string, path: string[]): { line: number; column: number } {
@@ -59,16 +45,16 @@ function calculateJsonPosition(jsonString: string, path: string[]): { line: numb
   return { line: 1, column: 1 };
 }
 
-function extractLineAndColumn(issue: FhirIssue, formattedJson: string): { line: number; column: number } {
+function extractLineAndColumn(issue: OperationOutcomeIssue, formattedJson: string): { line: number; column: number } {
   let line = 1;
   let column = 1;
 
   // Versuche zuerst die Extensions zu lesen
   if (issue.extension) {
-    const lineExtension = issue.extension.find(ext => 
+    const lineExtension = issue.extension.find((ext: Extension) => 
       ext.url === "http://hl7.org/fhir/StructureDefinition/operationoutcome-issue-line"
     );
-    const colExtension = issue.extension.find(ext => 
+    const colExtension = issue.extension.find((ext: Extension) => 
       ext.url === "http://hl7.org/fhir/StructureDefinition/operationoutcome-issue-col"
     );
 
@@ -94,7 +80,7 @@ function extractLineAndColumn(issue: FhirIssue, formattedJson: string): { line: 
   return { line: 1, column: 1 };
 }
 
-function enhanceFhirResponse(fhirResponse: FhirOperationOutcome, originalJson: string): FhirOperationOutcome {
+function enhanceFhirResponse(fhirResponse: OperationOutcome, originalJson: string): OperationOutcome {
   if (!fhirResponse.issue) {
     return fhirResponse;
   }
@@ -109,7 +95,7 @@ function enhanceFhirResponse(fhirResponse: FhirOperationOutcome, originalJson: s
     let message = issue.diagnostics || issue.details?.text || "Unbekannter Validierungsfehler";
     
     // Deutsche Übersetzungen für häufige FHIR-Validierungsfehler
-    const translations: { [key: string]: string } = {
+    const translations: Record<string, string> = {
       "Array cannot be empty - the property should not be present if it has no values": 
         "Leeres Array - Entfernen Sie die Eigenschaft, wenn keine Werte vorhanden sind",
       "Canonical URLs must be absolute URLs if they are not fragment references": 
@@ -129,22 +115,22 @@ function enhanceFhirResponse(fhirResponse: FhirOperationOutcome, originalJson: s
       "Mindestens $1 erforderlich, aber nur $2 gefunden"
     );
 
+    const updatedExtensions: Extension[] = [
+      ...(issue.extension ?? []),
+      {
+        url: "http://hl7.org/fhir/StructureDefinition/operationoutcome-issue-line",
+        valueInteger: line,
+      },
+      {
+        url: "http://hl7.org/fhir/StructureDefinition/operationoutcome-issue-col",
+        valueInteger: column,
+      },
+    ];
+
     return {
       ...issue,
-      // Erweitere das Issue mit den deutschen Übersetzungen
       diagnostics: message,
-      // Stelle sicher, dass Extensions beibehalten werden
-      extension: [
-        ...(issue.extension || []),
-        {
-          url: "http://hl7.org/fhir/StructureDefinition/operationoutcome-issue-line",
-          valueInteger: line
-        },
-        {
-          url: "http://hl7.org/fhir/StructureDefinition/operationoutcome-issue-col", 
-          valueInteger: column
-        }
-      ]
+      extension: updatedExtensions,
     };
   });
 
@@ -156,8 +142,7 @@ function enhanceFhirResponse(fhirResponse: FhirOperationOutcome, originalJson: s
 
 export async function POST(request: Request) {
   try {
-    const body = await request.json()
-    const originalJsonString = JSON.stringify(body);
+    const body = (await request.json()) as TestScript;
     
     // Validiere grundlegende TestScript-Struktur
     const basicValidation = validateBasicStructure(body);
@@ -201,21 +186,21 @@ export async function POST(request: Request) {
             resource: body
           }
         ]
-      }, null, 2) // Sende formatiertes JSON für bessere Positionierung
+      } as Parameters, null, 2) // Sende formatiertes JSON für bessere Positionierung
     });
 
     if (!response.ok) {
       throw new Error(`FHIR-Server-Fehler: ${response.status} ${response.statusText}`);
     }
 
-    const fhirResponse: FhirOperationOutcome = await response.json();
+    const fhirResponse = (await response.json()) as OperationOutcome;
     
     // Erweitere die FHIR-Response mit besseren Fehlermeldungen und korrekten Zeilennummern
     const enhancedResponse = enhanceFhirResponse(fhirResponse, formattedTestScript);
     
     return NextResponse.json(enhancedResponse);
     
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('Validierungsfehler:', error);
     
     const errorMessage = error instanceof Error ? error.message : 'Unbekannter Fehler';
@@ -244,8 +229,8 @@ export async function POST(request: Request) {
   }
 }
 
-function validateBasicStructure(testScript: any) {
-  const errors: ValidationIssue[] = [];
+function validateBasicStructure(testScript: Partial<TestScript>) {
+  const errors: StructureIssue[] = [];
 
   // Grundlegende Strukturvalidierung
   if (!testScript.resourceType || testScript.resourceType !== 'TestScript') {
@@ -306,15 +291,20 @@ function validateBasicStructure(testScript: any) {
         column: 5
       });
     } else {
-      testScript.metadata.capability.forEach((cap: any, index: number) => {
-        if (!cap.capabilities) {
+      testScript.metadata.capability.forEach((rawCapability, index: number) => {
+        const capability = rawCapability as Partial<TestScriptMetadataCapability>;
+        if (!capability.capabilities) {
           errors.push({
             message: `Capability ${index + 1}: Das 'capabilities'-Feld ist erforderlich`,
             location: ['metadata', 'capability', index.toString(), 'capabilities'],
             line: 7 + index * 3,
             column: 7
           });
-        } else if (!cap.capabilities.startsWith('http://') && !cap.capabilities.startsWith('https://')) {
+        } else if (
+          typeof capability.capabilities === "string" &&
+          !capability.capabilities.startsWith('http://') &&
+          !capability.capabilities.startsWith('https://')
+        ) {
           errors.push({
             message: `Capability ${index + 1}: capabilities muss eine absolute URL sein`,
             location: ['metadata', 'capability', index.toString(), 'capabilities'],
@@ -323,7 +313,10 @@ function validateBasicStructure(testScript: any) {
           });
         }
         
-        if (cap.required === undefined && cap.validated === undefined) {
+        const hasRequiredFlag = typeof capability.required === 'boolean';
+        const hasValidatedFlag = typeof capability.validated === 'boolean';
+
+        if (!hasRequiredFlag && !hasValidatedFlag) {
           errors.push({
             message: `Capability ${index + 1}: Mindestens 'required' oder 'validated' muss gesetzt sein`,
             location: ['metadata', 'capability', index.toString()],
@@ -354,9 +347,10 @@ function validateBasicStructure(testScript: any) {
     });
   }
 
-  if (testScript.test && Array.isArray(testScript.test)) {
-    testScript.test.forEach((test: any, index: number) => {
-      if (!test.action || !Array.isArray(test.action) || test.action.length === 0) {
+  if (Array.isArray(testScript.test)) {
+    testScript.test.forEach((rawTestCase, index: number) => {
+      const testCase = rawTestCase as Partial<TestScriptTest>;
+      if (!Array.isArray(testCase.action) || testCase.action.length === 0) {
         errors.push({
           message: `Test ${index + 1}: Muss mindestens eine Aktion enthalten`,
           location: ['test', index.toString(), 'action'],

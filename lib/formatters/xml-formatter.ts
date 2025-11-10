@@ -1,34 +1,51 @@
-import { create } from 'xmlbuilder2'
+import { create, type XMLBuilder } from "xmlbuilder2"
+import type { TestScript } from "@/types/fhir-enhanced"
+
+type SerializablePrimitive = string | number | boolean | null
+type SerializableValue = SerializablePrimitive | SerializableValue[] | Record<string, SerializableValue>
+
+const isRecord = (value: unknown): value is Record<string, SerializableValue> =>
+  typeof value === "object" && value !== null && !Array.isArray(value)
+
+const appendNode = (builder: XMLBuilder, key: string, value: SerializableValue): void => {
+  if (Array.isArray(value)) {
+    value.forEach((item) => appendNode(builder, key, item))
+    return
+  }
+
+  if (isRecord(value)) {
+    const child = builder.ele(key)
+    Object.entries(value).forEach(([childKey, childValue]) => {
+      appendNode(child, childKey, childValue)
+    })
+    return
+  }
+
+  builder.ele(key).txt(String(value))
+}
 
 /**
  * Formatiert ein TestScript-Objekt als XML
  */
-export function formatToXml(testScript: any): string {
+export function formatToXml(testScript: TestScript): string {
   try {
-    // Erstelle das XML-Dokument
-    const doc = create({ version: '1.0', encoding: 'UTF-8' })
-      .ele('http://hl7.org/fhir', 'TestScript')
-    
-    // Füge die Pflichtfelder hinzu
-    doc.ele('name').att('value', testScript.name || 'Unnamed')
-    doc.ele('status').att('value', testScript.status || 'draft')
-    
-    // Füge optionale Felder hinzu, wenn sie existieren
-    if (testScript.metadata) {
-      const metadata = doc.ele('metadata')
-      if (testScript.metadata.link && Array.isArray(testScript.metadata.link)) {
-        for (const link of testScript.metadata.link) {
-          const linkEle = metadata.ele('link')
-          if (link.url) linkEle.att('url', link.url)
-          if (link.description) linkEle.att('description', link.description)
-        }
+    const document = create({ version: "1.0", encoding: "UTF-8" })
+    const root = document.ele("TestScript", { xmlns: "http://hl7.org/fhir" })
+
+    const serializable = JSON.parse(JSON.stringify(testScript)) as Record<string, SerializableValue>
+    Object.entries(serializable).forEach(([key, value]) => {
+      if (key === "resourceType") {
+        return
       }
-    }
-    
-    // XML als formatierten String zurückgeben
-    return doc.end({ prettyPrint: true })
-  } catch (error: any) {
+      appendNode(root, key, value)
+    })
+
+    return document.end({ prettyPrint: true })
+  } catch (error: unknown) {
     console.error("XML-Formatierungsfehler:", error)
-    throw new Error(`Fehler bei der XML-Formatierung: ${error instanceof Error ? error.message : String(error)}`)
+    if (error instanceof Error) {
+      throw new Error(`Fehler bei der XML-Formatierung: ${error.message}`)
+    }
+    throw new Error(`Fehler bei der XML-Formatierung: ${String(error)}`)
   }
 }

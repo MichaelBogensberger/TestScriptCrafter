@@ -39,13 +39,6 @@ export default function TestScriptBuilder() {
   }, [])
 
   /**
-   * Resets the TestScript to initial state
-   */
-  const resetTestScript = useCallback(() => {
-    setTestScript(initialTestScript)
-  }, [])
-
-  /**
    * Validates the current TestScript state
    */
   const isValidTestScript = useMemo(() => {
