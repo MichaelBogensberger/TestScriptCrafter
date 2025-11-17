@@ -1,11 +1,21 @@
 "use client"
 
-import { useCallback, useMemo, useState } from "react"
-import { Accordion } from "@/components/ui/accordion"
+import {
+  memo,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from "react"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Card } from "@/components/ui/card"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { cn } from "@/lib/utils"
+import { CheckCircle2, Circle, Plus, TestTube, Trash2 } from "lucide-react"
 import type { TestScript, TestScriptTest } from "@/types/fhir-enhanced"
 import { ProgressIndicator } from "./progress-indicator"
-import { TestCaseManager } from "./test-case-manager"
-import { SectionAccordionItem } from "./sections/section-accordion-item"
 import BasicInfoSection from "./sections/basic-info-section"
 import MetadataSection from "./sections/metadata-section"
 import SetupSection from "./sections/setup-section"
@@ -19,40 +29,127 @@ import { VariablesSection } from "./sections/variables-section"
 import { ScopeSection } from "./sections/scope-section"
 import { CommonSection } from "./sections/common-section"
 
+type SectionKey =
+  | "basic-info"
+  | "metadata"
+  | "systems"
+  | "fixtures"
+  | "variables"
+  | "scope"
+  | "setup"
+  | "tests"
+  | "teardown"
+  | "common"
+
+const SECTION_DETAILS: Record<SectionKey, { title: string; description: string }> = {
+  "basic-info": {
+    title: "Grundlegende Informationen",
+    description: "Name, Status und allgemeine Metadaten deines TestScripts.",
+  },
+  metadata: {
+    title: "Metadaten",
+    description: "Capabilities und Links, die dein TestScript voraussetzt.",
+  },
+  systems: {
+    title: "Systeme & Endpunkte",
+    description: "Definiere verfügbare Systeme sowie Origin- und Destination-Zuordnungen.",
+  },
+  fixtures: {
+    title: "Fixtures & Profile",
+    description: "Referenzen auf vorbereitete Ressourcen und verwendete Profile.",
+  },
+  variables: {
+    title: "Variablen",
+    description: "Parameter, die während der Ausführung ersetzt werden.",
+  },
+  scope: {
+    title: "Scope",
+    description: "Grenzt die Anwendungsfälle deines TestScripts ein.",
+  },
+  setup: {
+    title: "Setup",
+    description: "Vorbereitende Operationen vor den eigentlichen Tests.",
+  },
+  tests: {
+    title: "Testszenarien",
+    description: "Definiere Testfälle mit Operationen und Assertions.",
+  },
+  teardown: {
+    title: "Teardown",
+    description: "Aufräumarbeiten nach Abschluss der Tests.",
+  },
+  common: {
+    title: "Common Aktionen",
+    description: "Wiederverwendbare Aktionen, die über Schlüssel referenziert werden.",
+  },
+}
+
+const SECTION_GROUPS: Array<{
+  id: string
+  title: string
+  sections: SectionKey[]
+}> = [
+  {
+    id: "overview",
+    title: "Übersicht",
+    sections: ["basic-info", "metadata"],
+  },
+  {
+    id: "infrastructure",
+    title: "Infrastruktur",
+    sections: ["systems", "fixtures", "variables", "scope"],
+  },
+  {
+    id: "execution",
+    title: "Ausführung",
+    sections: ["setup", "tests", "teardown", "common"],
+  },
+]
+
 interface FormBuilderProps {
   testScript: TestScript
   updateTestScript: (newData: Partial<TestScript>) => void
   updateSection: <K extends keyof TestScript>(section: K, data: TestScript[K]) => void
 }
 
-const DEFAULT_METADATA = { capability: [] }
-
 function FormBuilder({ testScript, updateTestScript, updateSection }: FormBuilderProps) {
-  const [expandedSections, setExpandedSections] = useState<string[]>([
-    "basic-info",
-    "metadata",
-    "setup",
-  ])
+  const [activeSection, setActiveSection] = useState<SectionKey>("basic-info")
+  const [activeTestIndex, setActiveTestIndex] = useState(0)
 
-  const metadata = useMemo(
-    () => testScript.metadata ?? DEFAULT_METADATA,
-    [testScript.metadata],
-  )
+  const metadata = useMemo(() => testScript.metadata ?? { capability: [] }, [testScript.metadata])
   const tests = useMemo(() => testScript.test ?? [], [testScript.test])
 
+  useEffect(() => {
+    if (tests.length === 0) {
+      setActiveTestIndex(0)
+      return
+    }
+    setActiveTestIndex((prev) => Math.min(prev, tests.length - 1))
+  }, [tests.length])
+
   const addTestCase = useCallback(() => {
+    const nextIndex = tests.length
     const newTest: TestScriptTest = {
-      name: `Testfall ${tests.length + 1}`,
+      name: `Testfall ${nextIndex + 1}`,
       description: "",
       action: [],
     }
-    updateSection("test", [...tests, newTest])
+    const next = [...tests, newTest]
+    updateSection("test", next)
+    setActiveSection("tests")
+    setActiveTestIndex(nextIndex)
   }, [tests, updateSection])
 
   const removeTestCase = useCallback(
     (index: number) => {
       const next = tests.filter((_, idx) => idx !== index)
       updateSection("test", next.length > 0 ? next : undefined)
+      setActiveTestIndex((prev) => {
+        if (next.length === 0) return 0
+        if (prev === index) return Math.max(0, index - 1)
+        if (prev > index) return prev - 1
+        return prev
+      })
     },
     [tests, updateSection],
   )
@@ -66,83 +163,81 @@ function FormBuilder({ testScript, updateTestScript, updateSection }: FormBuilde
     [tests, updateSection],
   )
 
-  const expandSection = useCallback((section: string) => {
-    setExpandedSections((prev) =>
-      prev.includes(section) ? prev : [...prev, section],
-    )
-  }, [])
-
   const sectionCompleteness = useMemo(() => {
-    const hasBasicInfo = Boolean(testScript.name && testScript.status)
+    const hasBasicInfo = Boolean(testScript.name && testScript.status && testScript.url)
     const hasMetadata = Boolean(metadata.capability?.length)
+    const hasSystems = Boolean(
+      (testScript.testSystem?.length ?? 0) > 0 ||
+        (testScript.origin?.length ?? 0) > 0 ||
+        (testScript.destination?.length ?? 0) > 0,
+    )
+    const hasFixtures = Boolean(
+      (testScript.fixture?.length ?? 0) > 0 || (testScript.profile?.length ?? 0) > 0,
+    )
+    const hasVariables = Boolean(testScript.variable?.length)
+    const hasScope = Boolean(testScript.scope?.length)
     const hasSetup = Boolean(testScript.setup?.action?.length)
-    const hasTests = tests.length > 0
+    const hasTests =
+      tests.length > 0 && tests.every((test) => (test.action?.length ?? 0) > 0)
     const hasTeardown = Boolean(testScript.teardown?.action?.length)
+    const hasCommon = Boolean(testScript.common?.length)
 
     return {
-      basicInfo: hasBasicInfo,
+      "basic-info": hasBasicInfo,
       metadata: hasMetadata,
-      systems: true,
-      fixtures: true,
-      variables: true,
-      scope: true,
+      systems: hasSystems,
+      fixtures: hasFixtures,
+      variables: hasVariables,
+      scope: hasScope,
       setup: hasSetup,
       tests: hasTests,
       teardown: hasTeardown,
-      common: true,
+      common: hasCommon,
     }
-  }, [metadata.capability?.length, testScript, tests.length])
+  }, [metadata, testScript, tests])
+
+  const progressCompleteness = useMemo(
+    () => ({
+      basicInfo: sectionCompleteness["basic-info"],
+      metadata: sectionCompleteness.metadata,
+      setup: sectionCompleteness.setup,
+      tests: sectionCompleteness.tests,
+      teardown: sectionCompleteness.teardown,
+    }),
+    [sectionCompleteness],
+  )
 
   const overallProgress = useMemo(() => {
-    const relevantKeys: Array<keyof typeof sectionCompleteness> = [
+    const relevantKeys: Array<keyof typeof progressCompleteness> = [
       "basicInfo",
       "metadata",
       "setup",
       "tests",
       "teardown",
     ]
-    const completed = relevantKeys.filter((key) => sectionCompleteness[key]).length
+    const completed = relevantKeys.filter((key) => progressCompleteness[key]).length
     return Math.round((completed / relevantKeys.length) * 100)
-  }, [sectionCompleteness])
+  }, [progressCompleteness])
 
-  return (
-    <div className="space-y-6">
-      <ProgressIndicator overallProgress={overallProgress} sectionCompleteness={sectionCompleteness} />
+  const activeMeta = SECTION_DETAILS[activeSection]
+  const testsActionTotal = useMemo(
+    () => tests.reduce((sum, test) => sum + (test.action?.length ?? 0), 0),
+    [tests],
+  )
 
-      <TestCaseManager
-        tests={tests}
-        onAddTest={addTestCase}
-        onRemoveTest={removeTestCase}
-        onExpandSection={expandSection}
-      />
-
-      <Accordion
-        type="multiple"
-        value={expandedSections}
-        onValueChange={setExpandedSections}
-        className="w-full"
-      >
-        <SectionAccordionItem
-          value="basic-info"
-          title="Grundlegende Informationen"
-          isComplete={sectionCompleteness.basicInfo}
-        >
-          <BasicInfoSection testScript={testScript} updateTestScript={updateTestScript} />
-        </SectionAccordionItem>
-
-        <SectionAccordionItem
-          value="metadata"
-          title="Metadaten"
-          isComplete={sectionCompleteness.metadata}
-        >
-          <MetadataSection metadata={metadata} updateMetadata={(value) => updateSection("metadata", value)} />
-        </SectionAccordionItem>
-
-        <SectionAccordionItem
-          value="systems"
-          title="Systeme & Endpoints"
-          isComplete={sectionCompleteness.systems}
-        >
+  const renderSectionContent = (): ReactNode => {
+    switch (activeSection) {
+      case "basic-info":
+        return <BasicInfoSection testScript={testScript} updateTestScript={updateTestScript} />
+      case "metadata":
+        return (
+          <MetadataSection
+            metadata={metadata}
+            updateMetadata={(value) => updateSection("metadata", value)}
+          />
+        )
+      case "systems":
+        return (
           <div className="space-y-6">
             <TestSystemSection
               testSystems={testScript.testSystem}
@@ -155,13 +250,9 @@ function FormBuilder({ testScript, updateTestScript, updateSection }: FormBuilde
               updateDestination={(value) => updateSection("destination", value)}
             />
           </div>
-        </SectionAccordionItem>
-
-        <SectionAccordionItem
-          value="fixtures"
-          title="Fixtures & Profile"
-          isComplete={sectionCompleteness.fixtures}
-        >
+        )
+      case "fixtures":
+        return (
           <div className="space-y-6">
             <FixturesSection
               fixtures={testScript.fixture}
@@ -172,78 +263,257 @@ function FormBuilder({ testScript, updateTestScript, updateSection }: FormBuilde
               updateProfiles={(value) => updateSection("profile", value)}
             />
           </div>
-        </SectionAccordionItem>
-
-        <SectionAccordionItem
-          value="variables"
-          title="Variablen"
-          isComplete={sectionCompleteness.variables}
-        >
+        )
+      case "variables":
+        return (
           <VariablesSection
             variables={testScript.variable}
             updateVariables={(value) => updateSection("variable", value)}
           />
-        </SectionAccordionItem>
-
-        <SectionAccordionItem
-          value="scope"
-          title="Scope"
-          isComplete={sectionCompleteness.scope}
-        >
-          <ScopeSection scopes={testScript.scope} updateScopes={(value) => updateSection("scope", value)} />
-        </SectionAccordionItem>
-
-        <SectionAccordionItem
-          value="setup"
-          title="Setup"
-          isComplete={sectionCompleteness.setup}
-        >
+        )
+      case "scope":
+        return (
+          <ScopeSection
+            scopes={testScript.scope}
+            updateScopes={(value) => updateSection("scope", value)}
+          />
+        )
+      case "setup":
+        return (
           <SetupSection
             setup={testScript.setup ?? { action: [] }}
             updateSetup={(value) => updateSection("setup", value)}
           />
-        </SectionAccordionItem>
-
-        {tests.map((test, idx) => (
-          <SectionAccordionItem
-            key={`test-${idx}`}
-            value={`test-${idx}`}
-            title={test.name || `Testfall ${idx + 1}`}
-            isComplete={Boolean(test.action?.length)}
-          >
-            <TestCaseSection
-              test={test}
-              testIndex={idx}
-              updateTest={(value) => updateTestCase(idx, value)}
-              removeTest={() => removeTestCase(idx)}
-            />
-          </SectionAccordionItem>
-        ))}
-
-        <SectionAccordionItem
-          value="teardown"
-          title="Teardown"
-          isComplete={sectionCompleteness.teardown}
-        >
+        )
+      case "tests":
+        return (
+          <TestsPanel
+            tests={tests}
+            activeIndex={activeTestIndex}
+            onSelect={setActiveTestIndex}
+            onAddTest={addTestCase}
+            onRemoveTest={removeTestCase}
+            onUpdateTest={updateTestCase}
+          />
+        )
+      case "teardown":
+        return (
           <TeardownSection
             teardown={testScript.teardown ?? { action: [] }}
             updateTeardown={(value) => updateSection("teardown", value)}
           />
-        </SectionAccordionItem>
-
-        <SectionAccordionItem
-          value="common"
-          title="Common Aktionen"
-          isComplete={sectionCompleteness.common}
-        >
+        )
+      case "common":
+        return (
           <CommonSection
             common={testScript.common}
             updateCommon={(value) => updateSection("common", value)}
           />
-        </SectionAccordionItem>
-      </Accordion>
+        )
+      default:
+        return null
+    }
+  }
+
+  return (
+    <div className="space-y-6">
+      <ProgressIndicator
+        overallProgress={overallProgress}
+        sectionCompleteness={progressCompleteness}
+      />
+
+      <div className="grid gap-6 lg:grid-cols-[260px_1fr]">
+        <Card className="p-4">
+          <div className="space-y-4">
+            <div>
+              <h3 className="text-sm font-semibold">Arbeitsbereiche</h3>
+              <p className="text-xs text-muted-foreground">
+                Navigiere durch alle Bereiche des TestScripts. Nur der aktive Bereich wird gerendert, das sorgt für bessere Performance.
+              </p>
+            </div>
+
+            <ScrollArea className="h-[420px] pr-2">
+              <div className="space-y-4">
+                {SECTION_GROUPS.map((group) => (
+                  <div key={group.id} className="space-y-2">
+                    <p className="text-xs font-semibold uppercase text-muted-foreground">
+                      {group.title}
+                    </p>
+                    <div className="space-y-1">
+                      {group.sections.map((sectionKey) => {
+                        const isActive = activeSection === sectionKey
+                        const isComplete = sectionCompleteness[sectionKey]
+                        const meta = SECTION_DETAILS[sectionKey]
+                        return (
+                          <button
+                            key={sectionKey}
+                            type="button"
+                            onClick={() => setActiveSection(sectionKey)}
+                            className={cn(
+                              "w-full rounded-md border px-3 py-2 text-left text-sm transition",
+                              isActive
+                                ? "border-primary bg-primary/5 text-primary"
+                                : "border-transparent hover:bg-muted",
+                            )}
+                          >
+                            <div className="flex items-start justify-between gap-3">
+                              <div className="space-y-1">
+                                <p className="font-medium">{meta.title}</p>
+                                <p className="text-xs text-muted-foreground">
+                                  {meta.description}
+                                </p>
+                              </div>
+                              <div className="flex flex-col items-end gap-2">
+                                {sectionKey === "tests" ? (
+                                  <div className="flex gap-1">
+                                    <Badge variant="outline" className="text-[10px]">
+                                      {tests.length} Tests
+                                    </Badge>
+                                    <Badge variant="secondary" className="text-[10px]">
+                                      {testsActionTotal} Aktionen
+                                    </Badge>
+                                  </div>
+                                ) : null}
+                                {isComplete ? (
+                                  <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                                ) : (
+                                  <Circle className="h-4 w-4 text-muted-foreground" />
+                                )}
+                              </div>
+                            </div>
+                          </button>
+                        )
+                      })}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </ScrollArea>
+          </div>
+        </Card>
+
+        <Card className="space-y-6 p-6">
+          <div className="space-y-2">
+            <h2 className="text-lg font-semibold">{activeMeta.title}</h2>
+            <p className="text-sm text-muted-foreground">{activeMeta.description}</p>
+          </div>
+          <div className="space-y-6">{renderSectionContent()}</div>
+        </Card>
+      </div>
     </div>
   )
 }
+
+interface TestsPanelProps {
+  tests: TestScriptTest[]
+  activeIndex: number
+  onSelect: (index: number) => void
+  onAddTest: () => void
+  onRemoveTest: (index: number) => void
+  onUpdateTest: (index: number, test: TestScriptTest) => void
+}
+
+const TestsPanel = memo(function TestsPanel({
+  tests,
+  activeIndex,
+  onSelect,
+  onAddTest,
+  onRemoveTest,
+  onUpdateTest,
+}: TestsPanelProps) {
+  const activeTest = tests[activeIndex]
+
+  return (
+    <div className="space-y-4">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h3 className="text-sm font-medium">Testfälle verwalten</h3>
+          <p className="text-xs text-muted-foreground">
+            Erstelle neue Testfälle oder wähle einen Eintrag aus der Liste, um ihn zu bearbeiten.
+          </p>
+        </div>
+        <Button onClick={onAddTest} size="sm" className="inline-flex items-center gap-2">
+          <Plus className="h-4 w-4" />
+          Testfall hinzufügen
+        </Button>
+      </div>
+
+      {tests.length === 0 ? (
+        <Card className="border-dashed p-8 text-center text-sm text-muted-foreground">
+          Noch keine Testfälle definiert. Lege den ersten Testfall an, um Aktionen hinzufügen zu können.
+        </Card>
+      ) : (
+        <div className="grid gap-4 lg:grid-cols-[240px_1fr]">
+          <Card className="p-3">
+            <ScrollArea className="h-[360px] pr-2">
+              <div className="space-y-2">
+                {tests.map((test, idx) => {
+                  const actionCount = test.action?.length ?? 0
+                  const isActive = activeIndex === idx
+                  return (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={() => onSelect(idx)}
+                      className={cn(
+                        "w-full rounded-md border px-3 py-2 text-left text-sm transition",
+                        isActive
+                          ? "border-primary bg-primary/5 text-primary"
+                          : "border-transparent hover:bg-muted",
+                      )}
+                    >
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="font-medium">{test.name || `Testfall ${idx + 1}`}</span>
+                        <Badge variant={actionCount > 0 ? "default" : "secondary"} className="text-[10px]">
+                          {actionCount} Aktionen
+                        </Badge>
+                      </div>
+                      <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">
+                        {test.description || "Keine Beschreibung"}
+                      </p>
+                    </button>
+                  )
+                })}
+              </div>
+            </ScrollArea>
+          </Card>
+
+          <div className="space-y-3">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div className="flex items-center gap-2 text-sm font-medium">
+                <TestTube className="h-4 w-4 text-primary" />
+                <span>{activeTest?.name || `Testfall ${activeIndex + 1}`}</span>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="inline-flex items-center gap-2 text-destructive"
+                onClick={() => onRemoveTest(activeIndex)}
+              >
+                <Trash2 className="h-4 w-4" />
+                Entfernen
+              </Button>
+            </div>
+
+            <Card className="p-4">
+              {activeTest ? (
+                <TestCaseSection
+                  test={activeTest}
+                  testIndex={activeIndex}
+                  updateTest={(value) => onUpdateTest(activeIndex, value)}
+                  removeTest={() => onRemoveTest(activeIndex)}
+                />
+              ) : (
+                <p className="text-sm text-muted-foreground">
+                  Wähle links einen Testfall aus, um seine Aktionen zu bearbeiten.
+                </p>
+              )}
+            </Card>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+})
 
 export default FormBuilder

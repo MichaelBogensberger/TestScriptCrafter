@@ -11,7 +11,7 @@ Ein modernes Web-Tool zur visuellen Erstellung und Verwaltung von FHIR TestScrip
 - [Funktionalitäten](#funktionalitäten)
 - [Architekturüberblick](#architekturüberblick)
 - [Datenmodell & Schemata](#datenmodell--schemata)
-- [Code – Wo liegt was?](#code--wo-liegt-was)
+- [Code, Wo liegt was?](#code--wo-liegt-was)
 - [Setup & Installation](#setup--installation)
 - [Konfiguration](#konfiguration)
 - [Ausführen](#ausführen)
@@ -286,7 +286,7 @@ classDiagram
 }
 ```
 
-## Code – Wo liegt was?
+## Code, Wo liegt was?
 
 ### app/
 **Zweck:** Next.js App Router mit Seiten und API
