@@ -41,7 +41,7 @@ interface AssertionComponentProps {
   }
 }
 
-export default function AssertionComponent({
+export function AssertionComponent({
   assertion,
   updateAssertion,
   removeAssertion,
@@ -442,3 +442,6 @@ export default function AssertionComponent({
     </Card>
   )
 }
+
+export { AssertionComponent }
+export default AssertionComponent

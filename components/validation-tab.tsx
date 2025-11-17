@@ -1,3 +1,5 @@
+"use client";
+
 import { TestScript } from "@/types/fhir-enhanced";
 import { useFhirValidation } from "@/hooks/use-fhir-validation";
 import { Button } from "@/components/ui/button";
@@ -11,7 +13,9 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Progress } from "@/components/ui/progress";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import { useProgressAnimation } from "@/hooks/use-progress-animation";
+import { clientOnly } from "@/hooks/use-client-only";
 
 interface ValidationTabProps {
   testScript: TestScript;
@@ -28,32 +32,25 @@ export function ValidationTab({ testScript }: ValidationTabProps) {
   } = useFhirValidation();
   
   const [showPayload, setShowPayload] = useState(false);
-  const [progress, setProgress] = useState(0);
-
-  // Progress animation während der Validierung
-  useEffect(() => {
-    if (isValidating) {
-      setProgress(0);
-      const interval = setInterval(() => {
-        setProgress((prev) => {
-          if (prev >= 90) return prev;
-          return prev + Math.random() * 15;
-        });
-      }, 200);
-
-      return () => clearInterval(interval);
-    } else {
-      setProgress(100);
-      setTimeout(() => setProgress(0), 1000);
-    }
-  }, [isValidating]);
+  
+  // SSR-sichere Progress-Animation ohne Math.random()
+  const progress = useProgressAnimation({
+    isActive: isValidating,
+    duration: 200,
+    maxProgress: 90,
+    increment: 8
+  });
 
   const handleValidate = async () => {
     await validate(testScript);
   };
 
-  const copyToClipboard = (text: string) => {
-    navigator.clipboard.writeText(text);
+  const copyToClipboard = async (text: string) => {
+    try {
+      await clientOnly.clipboard.writeText(text);
+    } catch (error) {
+      console.warn('Clipboard API nicht verfügbar:', error);
+    }
   };
 
   const getLocationDisplayPath = (location: string[]): string => {

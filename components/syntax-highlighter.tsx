@@ -1,7 +1,7 @@
 "use client"
 
-import { useEffect, useState } from "react"
 import { cn } from "@/lib/utils"
+import { useClientOnly } from "@/hooks/use-client-only"
 
 interface SyntaxHighlighterProps {
   language: string
@@ -15,18 +15,14 @@ interface SyntaxHighlighterProps {
  * Vereinfachter Syntax-Highlighter ohne Prism.js
  * Verhindert Hydration-Probleme durch konsistente Server/Client-Rendering
  */
-export default function SyntaxHighlighter({
+export function SyntaxHighlighter({
   language,
   code,
   showLineNumbers = true,
   className,
   searchTerm,
 }: SyntaxHighlighterProps) {
-  const [isClient, setIsClient] = useState(false)
-
-  useEffect(() => {
-    setIsClient(true)
-  }, [])
+  const isClient = useClientOnly()
 
   // Highlight-Funktionalität für gesuchte Begriffe
   const processedCode = searchTerm ? highlightSearchTerm(code, searchTerm) : code;
@@ -39,50 +35,36 @@ export default function SyntaxHighlighter({
     <div className={cn("relative", className)}>
       <pre className="overflow-x-auto p-4 bg-muted rounded-md">
         <code className={`language-${language}`}>
-          {isClient ? (
-            <div className="flex">
-              {showLineNumbers && (
-                <div className="mr-4 select-none text-muted-foreground text-sm">
-                  {lineNumbers.map((num) => (
-                    <div key={num} className="leading-6">
-                      {num}
-                    </div>
-                  ))}
-                </div>
-              )}
-              <div className="flex-1">
-                {lines.map((line, index) => (
-                  <div key={index} className="leading-6">
-                    {line || '\u00A0'}
+          <div className="flex">
+            {showLineNumbers && (
+              <div className="mr-4 select-none text-muted-foreground text-sm">
+                {lineNumbers.map((num) => (
+                  <div key={num} className="leading-6">
+                    {num}
                   </div>
                 ))}
               </div>
-            </div>
-          ) : (
-            <div className="flex">
-              {showLineNumbers && (
-                <div className="mr-4 select-none text-muted-foreground text-sm">
-                  {lineNumbers.map((num) => (
-                    <div key={num} className="leading-6">
-                      {num}
-                    </div>
-                  ))}
+            )}
+            <div className="flex-1">
+              {lines.map((line, index) => (
+                <div key={index} className="leading-6">
+                  {isClient && searchTerm ? (
+                    <span dangerouslySetInnerHTML={{ __html: line || '\u00A0' }} />
+                  ) : (
+                    line || '\u00A0'
+                  )}
                 </div>
-              )}
-              <div className="flex-1">
-                {lines.map((line, index) => (
-                  <div key={index} className="leading-6">
-                    {line || '\u00A0'}
-                  </div>
-                ))}
-              </div>
+              ))}
             </div>
-          )}
+          </div>
         </code>
       </pre>
     </div>
   )
 }
+
+export { SyntaxHighlighter }
+export default SyntaxHighlighter
 
 /**
  * Hebt Suchbegriffe im Code hervor

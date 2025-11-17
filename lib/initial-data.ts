@@ -27,24 +27,30 @@ export const initialTestScript: TestScript = {
   },
   test: [
     {
-      name: "Minimal Test",
-      description: "Ein minimaler Testfall",
+      id: "minimal-test-1",
+      name: "Patient Ressource laden",
+      description: "Validiert, dass der Server die Beispiel-Patientenressource bereitstellt.",
       action: [
         {
+          id: "action-read-patient",
           operation: {
+            label: "Patient laden",
+            description: "Führt eine READ-Operation für den Beispiel-Patienten aus.",
             type: {
               system: "http://hl7.org/fhir/restful-interaction",
               code: "read"
             },
+            method: "GET",
             resource: "Patient",
             url: "/Patient/example",
-            encodeRequestUrl: true
-          },
-          assert: {
-            description: "Prüfe, dass die Antwort erfolgreich ist",
-            response: "okay",
-            warningOnly: false,
-            stopTestOnFail: true
+            params: "_format=json",
+            encodeRequestUrl: true,
+            requestHeader: [
+              {
+                field: "Accept",
+                value: "application/fhir+json"
+              }
+            ]
           }
         }
       ]

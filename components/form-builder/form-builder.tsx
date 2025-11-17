@@ -19,7 +19,7 @@ import { ProgressIndicator } from "./progress-indicator"
 import BasicInfoSection from "./sections/basic-info-section"
 import MetadataSection from "./sections/metadata-section"
 import SetupSection from "./sections/setup-section"
-import TestCaseSection from "./sections/test-case-section"
+import { TestCaseSection } from "./sections/test-case-section"
 import TeardownSection from "./sections/teardown-section"
 import { TestSystemSection } from "./sections/test-system-section"
 import { EndpointsSection } from "./sections/endpoints-section"
@@ -322,8 +322,8 @@ function FormBuilder({ testScript, updateTestScript, updateSection }: FormBuilde
         sectionCompleteness={progressCompleteness}
       />
 
-      <div className="grid gap-6 lg:grid-cols-[260px_1fr]">
-        <Card className="p-4">
+      <div className="grid gap-6 lg:grid-cols-[320px_minmax(0,1fr)] xl:grid-cols-[360px_minmax(0,1fr)]">
+        <Card className="relative flex flex-col overflow-hidden p-4">
           <div className="space-y-4">
             <div>
               <h3 className="text-sm font-semibold">Arbeitsbereiche</h3>
@@ -332,67 +332,69 @@ function FormBuilder({ testScript, updateTestScript, updateSection }: FormBuilde
               </p>
             </div>
 
-            <ScrollArea className="h-[420px] pr-2">
-              <div className="space-y-4">
-                {SECTION_GROUPS.map((group) => (
-                  <div key={group.id} className="space-y-2">
-                    <p className="text-xs font-semibold uppercase text-muted-foreground">
-                      {group.title}
-                    </p>
-                    <div className="space-y-1">
-                      {group.sections.map((sectionKey) => {
-                        const isActive = activeSection === sectionKey
-                        const isComplete = sectionCompleteness[sectionKey]
-                        const meta = SECTION_DETAILS[sectionKey]
-                        return (
-                          <button
-                            key={sectionKey}
-                            type="button"
-                            onClick={() => setActiveSection(sectionKey)}
-                            className={cn(
-                              "w-full rounded-md border px-3 py-2 text-left text-sm transition",
-                              isActive
-                                ? "border-primary bg-primary/5 text-primary"
-                                : "border-transparent hover:bg-muted",
-                            )}
-                          >
-                            <div className="flex items-start justify-between gap-3">
-                              <div className="space-y-1">
-                                <p className="font-medium">{meta.title}</p>
-                                <p className="text-xs text-muted-foreground">
-                                  {meta.description}
-                                </p>
+            <div className="relative">
+              <ScrollArea className="pr-2 min-h-[420px] max-h-[70vh] md:max-h-none">
+                <div className="space-y-4">
+                  {SECTION_GROUPS.map((group) => (
+                    <div key={group.id} className="space-y-2">
+                      <p className="text-xs font-semibold uppercase text-muted-foreground">
+                        {group.title}
+                      </p>
+                      <div className="space-y-1">
+                        {group.sections.map((sectionKey) => {
+                          const isActive = activeSection === sectionKey
+                          const isComplete = sectionCompleteness[sectionKey]
+                          const meta = SECTION_DETAILS[sectionKey]
+                          return (
+                            <button
+                              key={sectionKey}
+                              type="button"
+                              onClick={() => setActiveSection(sectionKey)}
+                              className={cn(
+                                "w-full rounded-md border px-3 py-2 text-left text-sm transition",
+                                isActive
+                                  ? "border-primary bg-primary/5 text-primary"
+                                  : "border-transparent hover:bg-muted",
+                              )}
+                            >
+                              <div className="flex items-start justify-between gap-3">
+                                <div className="space-y-1">
+                                  <p className="font-medium">{meta.title}</p>
+                                  <p className="text-xs text-muted-foreground">
+                                    {meta.description}
+                                  </p>
+                                </div>
+                                <div className="flex flex-col items-end gap-2">
+                                  {sectionKey === "tests" ? (
+                                    <div className="flex gap-1">
+                                      <Badge variant="outline" className="text-[10px]">
+                                        {tests.length} Tests
+                                      </Badge>
+                                      <Badge variant="secondary" className="text-[10px]">
+                                        {testsActionTotal} Aktionen
+                                      </Badge>
+                                    </div>
+                                  ) : null}
+                                  {isComplete ? (
+                                    <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                                  ) : (
+                                    <Circle className="h-4 w-4 text-muted-foreground" />
+                                  )}
+                                </div>
                               </div>
-                              <div className="flex flex-col items-end gap-2">
-                                {sectionKey === "tests" ? (
-                                  <div className="flex gap-1">
-                                    <Badge variant="outline" className="text-[10px]">
-                                      {tests.length} Tests
-                                    </Badge>
-                                    <Badge variant="secondary" className="text-[10px]">
-                                      {testsActionTotal} Aktionen
-                                    </Badge>
-                                  </div>
-                                ) : null}
-                                {isComplete ? (
-                                  <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-                                ) : (
-                                  <Circle className="h-4 w-4 text-muted-foreground" />
-                                )}
-                              </div>
-                            </div>
-                          </button>
-                        )
-                      })}
+                            </button>
+                          )
+                        })}
+                      </div>
                     </div>
-                  </div>
-                ))}
-              </div>
-            </ScrollArea>
+                  ))}
+                </div>
+              </ScrollArea>
+            </div>
           </div>
         </Card>
 
-        <Card className="space-y-6 p-6">
+        <Card className="flex min-h-[500px] flex-col space-y-6 p-6 lg:min-h-[70vh]">
           <div className="space-y-2">
             <h2 className="text-lg font-semibold">{activeMeta.title}</h2>
             <p className="text-sm text-muted-foreground">{activeMeta.description}</p>
@@ -516,4 +518,5 @@ const TestsPanel = memo(function TestsPanel({
   )
 })
 
+export { FormBuilder }
 export default FormBuilder

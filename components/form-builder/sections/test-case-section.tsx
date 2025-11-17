@@ -1,11 +1,16 @@
 "use client"
 
+import { useEffect, useState } from "react"
+import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { ScrollArea } from "@/components/ui/scroll-area"
 import { Textarea } from "@/components/ui/textarea"
-import { Plus, Trash2 } from "lucide-react"
+import { FlaskConical, Plus, Trash2, TestTube2 } from "lucide-react"
 import type { TestScriptTest, TestScriptTestAction } from "@/types/fhir-enhanced"
+import { cn } from "@/lib/utils"
 import ActionComponent from "../shared/action-component"
 
 interface TestCaseSectionProps {
@@ -15,13 +20,22 @@ interface TestCaseSectionProps {
   removeTest: () => void
 }
 
-export default function TestCaseSection({
+export function TestCaseSection({
   test,
   testIndex,
   updateTest,
   removeTest,
 }: TestCaseSectionProps) {
   const actions = test.action ?? []
+  const [activeActionIndex, setActiveActionIndex] = useState(0)
+
+  useEffect(() => {
+    if (actions.length === 0) {
+      setActiveActionIndex(0)
+      return
+    }
+    setActiveActionIndex((prev) => Math.min(prev, actions.length - 1))
+  }, [actions.length])
 
   const updateField = <K extends keyof TestScriptTest>(field: K, value: TestScriptTest[K]) => {
     updateTest({
@@ -37,6 +51,7 @@ export default function TestCaseSection({
       },
     }
     updateField("action", [...actions, newAction])
+    setActiveActionIndex(actions.length)
   }
 
   const updateAction = (index: number, action: TestScriptTestAction) => {
@@ -48,6 +63,28 @@ export default function TestCaseSection({
   const removeAction = (index: number) => {
     const next = actions.filter((_, idx) => idx !== index)
     updateField("action", next)
+    setActiveActionIndex((prev) => {
+      if (next.length === 0) return 0
+      if (prev === index) return Math.max(0, index - 1)
+      if (prev > index) return prev - 1
+      return prev
+    })
+  }
+
+  const activeAction = actions[activeActionIndex]
+
+  const getActionTitle = (action: TestScriptTestAction, index: number) => {
+    if (action.operation?.label) return action.operation.label
+    if (action.assert?.label) return action.assert.label
+    if (action.operation?.resource) return `Operation ${action.operation.resource}`
+    if (action.assert?.description) return action.assert.description
+    return `Aktion ${index + 1}`
+  }
+
+  const getActionBadge = (action: TestScriptTestAction) => {
+    if (action.operation) return { label: "Operation", variant: "secondary" as const }
+    if (action.assert) return { label: "Assertion", variant: "outline" as const }
+    return { label: "Schritt", variant: "default" as const }
   }
 
   return (
@@ -99,7 +136,7 @@ export default function TestCaseSection({
 
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <h4 className="text-sm font-medium">Aktionen</h4>
+          <h4 className="text-sm font-medium">Aktionen & Assertions</h4>
           <Button variant="outline" size="sm" onClick={addAction} className="flex items-center gap-1">
             <Plus className="h-4 w-4" />
             Aktion hinzufügen
@@ -111,17 +148,71 @@ export default function TestCaseSection({
             Noch keine Aktionen definiert.
           </div>
         ) : (
-          <div className="space-y-3">
-            {actions.map((action, idx) => (
-              <ActionComponent
-                key={idx}
-                action={action}
-                index={idx}
-                sectionType="test"
-                updateAction={(updated) => updateAction(idx, updated)}
-                removeAction={() => removeAction(idx)}
-              />
-            ))}
+          <div className="grid gap-4 lg:grid-cols-[230px_1fr]">
+            <Card className="p-3">
+              <ScrollArea className="h-[260px] pr-2 md:h-[320px]">
+                <div className="space-y-2">
+                  {actions.map((action, idx) => {
+                    const badge = getActionBadge(action)
+                    const isActive = idx === activeActionIndex
+                    return (
+                      <button
+                        key={idx}
+                        type="button"
+                        onClick={() => setActiveActionIndex(idx)}
+                        className={cn(
+                          "w-full rounded-md border px-3 py-2 text-left text-sm transition",
+                          isActive
+                            ? "border-primary bg-primary/5 text-primary"
+                            : "border-border hover:border-primary/50"
+                        )}
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="font-medium truncate">{getActionTitle(action, idx)}</span>
+                          <Badge variant={badge.variant} className="text-[10px]">
+                            {badge.label}
+                          </Badge>
+                        </div>
+                        <p className="mt-1 text-xs text-muted-foreground line-clamp-2">
+                          {action.operation?.description || action.assert?.description || "Keine Beschreibung"}
+                        </p>
+                      </button>
+                    )
+                  })}
+                </div>
+              </ScrollArea>
+            </Card>
+
+            <Card className="space-y-3 p-4">
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2 text-sm font-semibold">
+                  <TestTube2 className="h-4 w-4 text-primary" />
+                  <span>{getActionTitle(activeAction, activeActionIndex)}</span>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="text-destructive"
+                  onClick={() => removeAction(activeActionIndex)}
+                >
+                  <Trash2 className="h-4 w-4" />
+                  Entfernen
+                </Button>
+              </div>
+
+              {activeAction ? (
+                <ActionComponent
+                  key={activeActionIndex}
+                  action={activeAction}
+                  index={activeActionIndex}
+                  sectionType="test"
+                  updateAction={(updated) => updateAction(activeActionIndex, updated)}
+                  removeAction={() => removeAction(activeActionIndex)}
+                />
+              ) : (
+                <p className="text-sm text-muted-foreground">Wähle links eine Aktion aus.</p>
+              )}
+            </Card>
           </div>
         )}
       </div>

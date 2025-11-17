@@ -19,7 +19,7 @@ import type {
 import type { Coding } from "fhir/r5"
 import { useMemo } from "react"
 import { cn } from "@/lib/utils"
-import AssertionComponent from "./assertion-component"
+import { SimpleAssertionForm } from "./simple-assertion-form"
 
 type SectionType = "setup" | "test" | "teardown" | "common"
 type ScriptAction = TestScriptSetupAction | TestScriptTestAction | TestScriptTeardownAction
@@ -600,16 +600,13 @@ export default function ActionComponent<TAction extends ScriptAction>({
           </div>
 
           {action.assert ? (
-            <AssertionComponent
+            <SimpleAssertionForm
               assertion={action.assert}
               updateAssertion={updateAssertion}
               removeAssertion={removeAssertion}
               responseOptions={RESPONSE_OPTIONS}
               directionOptions={ASSERTION_DIRECTIONS}
               operatorOptions={ASSERTION_OPERATORS}
-              requestMethodOptions={REQUEST_METHOD_OPTIONS}
-              onAddRequirement={(requirements) => addRequirement(requirements)}
-              onRemoveRequirement={(requirements, idx) => removeRequirement(requirements, idx)}
               errors={assertionErrors ?? undefined}
             />
           ) : (

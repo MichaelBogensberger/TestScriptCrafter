@@ -1,50 +1,39 @@
+"use client"
+
 import { TestScript } from "@/types/fhir-enhanced"
 import SyntaxHighlighter from "./syntax-highlighter"
 import { Button } from "./ui/button"
 import { ClipboardCopy, Download } from "lucide-react"
 import { toast } from "sonner"
 import { formatToXml } from "@/lib/formatters/xml-formatter"
+import { clientOnly } from "@/hooks/use-client-only"
 
 interface XmlViewProps {
   testScript: TestScript
 }
 
 export function XmlView({ testScript }: XmlViewProps) {
-  const copyToClipboard = () => {
+  const copyToClipboard = async () => {
     const content = formatToXml(testScript)
-    navigator.clipboard
-      .writeText(content)
-      .then(() => {
-        toast.success("In die Zwischenablage kopiert", {
-          description: "TestScript XML wurde kopiert",
-        })
+    try {
+      await clientOnly.clipboard.writeText(content)
+      toast.success("In die Zwischenablage kopiert", {
+        description: "TestScript XML wurde kopiert",
       })
-      .catch((error: unknown) => {
-        const message = error instanceof Error ? error.message : String(error)
-        toast.error("Fehler beim Kopieren", {
-          description: message,
-        })
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error)
+      toast.error("Fehler beim Kopieren", {
+        description: message,
       })
+    }
   }
 
   const downloadContent = () => {
     const content = formatToXml(testScript)
     const filename = `testscript_${testScript.id || "export"}.xml`
 
-    const blob = new Blob([content], { type: "application/xml" })
-    const url = URL.createObjectURL(blob)
-
-    const anchor = document.createElement("a")
-    anchor.href = url
-    anchor.download = filename
-    document.body.appendChild(anchor)
-    anchor.click()
-
-    setTimeout(() => {
-      document.body.removeChild(anchor)
-      URL.revokeObjectURL(url)
-    }, 100)
-
+    clientOnly.download.file(content, filename, "application/xml")
+    
     toast.success("Datei heruntergeladen", {
       description: `${filename} wurde heruntergeladen`,
     })

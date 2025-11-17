@@ -168,64 +168,101 @@ export async function POST(request: Request) {
       });
     }
 
-    // Sende formatiertes JSON an FHIR-Server für bessere Zeilennummern
-    const formattedTestScript = JSON.stringify(body, null, 2);
-    const fhirServerUrl = 'https://hapi.fhir.org/baseR5/TestScript/$validate';
+    // Führe erweiterte lokale Validierung durch
+    const extendedValidation = validateExtendedStructure(body);
     
-    const response = await fetch(fhirServerUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/fhir+json',
-        'Accept': 'application/fhir+json'
-      },
-      body: JSON.stringify({
-        resourceType: 'Parameters',
-        parameter: [
+    // Wenn lokale Validierung erfolgreich ist, versuche externe Validierung
+    if (extendedValidation.valid) {
+      try {
+        const formattedTestScript = JSON.stringify(body, null, 2);
+        const fhirServerUrl = 'https://hapi.fhir.org/baseR5/TestScript/$validate';
+        
+        const response = await fetch(fhirServerUrl, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/fhir+json',
+            'Accept': 'application/fhir+json'
+          },
+          body: JSON.stringify({
+            resourceType: 'Parameters',
+            parameter: [
+              {
+                name: 'resource',
+                resource: body
+              }
+            ]
+          } as Parameters, null, 2),
+          signal: AbortSignal.timeout(10000) // 10 Sekunden Timeout
+        });
+
+        if (response.ok) {
+          const fhirResponse = (await response.json()) as OperationOutcome;
+          const enhancedResponse = enhanceFhirResponse(fhirResponse, formattedTestScript);
+          return NextResponse.json(enhancedResponse);
+        }
+      } catch (fetchError) {
+        console.warn('Externe FHIR-Validierung fehlgeschlagen, verwende lokale Validierung:', fetchError);
+      }
+    }
+    
+    // Fallback: Verwende lokale Validierung
+    return NextResponse.json({
+      resourceType: 'OperationOutcome',
+      issue: extendedValidation.valid ? [{
+        severity: 'information',
+        code: 'informational',
+        diagnostics: 'TestScript ist strukturell korrekt. Externe FHIR-Validierung nicht verfügbar.',
+        extension: [
           {
-            name: 'resource',
-            resource: body
+            url: "http://hl7.org/fhir/StructureDefinition/operationoutcome-issue-line",
+            valueInteger: 1
+          },
+          {
+            url: "http://hl7.org/fhir/StructureDefinition/operationoutcome-issue-col",
+            valueInteger: 1
           }
         ]
-      } as Parameters, null, 2) // Sende formatiertes JSON für bessere Positionierung
+      }] : extendedValidation.errors.map(error => ({
+        severity: 'error',
+        code: 'structure',
+        diagnostics: error.message,
+        location: error.location,
+        extension: [
+          {
+            url: "http://hl7.org/fhir/StructureDefinition/operationoutcome-issue-line",
+            valueInteger: error.line || 1
+          },
+          {
+            url: "http://hl7.org/fhir/StructureDefinition/operationoutcome-issue-col",
+            valueInteger: error.column || 1
+          }
+        ]
+      }))
     });
-
-    if (!response.ok) {
-      throw new Error(`FHIR-Server-Fehler: ${response.status} ${response.statusText}`);
-    }
-
-    const fhirResponse = (await response.json()) as OperationOutcome;
-    
-    // Erweitere die FHIR-Response mit besseren Fehlermeldungen und korrekten Zeilennummern
-    const enhancedResponse = enhanceFhirResponse(fhirResponse, formattedTestScript);
-    
-    return NextResponse.json(enhancedResponse);
     
   } catch (error: unknown) {
     console.error('Validierungsfehler:', error);
     
     const errorMessage = error instanceof Error ? error.message : 'Unbekannter Fehler';
     
-    return NextResponse.json(
-      { 
-        resourceType: 'OperationOutcome',
-        issue: [{
-          severity: 'error',
-          code: 'exception',
-          diagnostics: `Fehler bei der Validierung: ${errorMessage}`,
-          extension: [
-            {
-              url: "http://hl7.org/fhir/StructureDefinition/operationoutcome-issue-line",
-              valueInteger: 1
-            },
-            {
-              url: "http://hl7.org/fhir/StructureDefinition/operationoutcome-issue-col",
-              valueInteger: 1
-            }
-          ]
-        }]
-      },
-      { status: 500 }
-    );
+    return NextResponse.json({
+      resourceType: 'OperationOutcome',
+      issue: [{
+        severity: 'error',
+        code: 'exception',
+        diagnostics: `Lokale Validierung fehlgeschlagen: ${errorMessage}`,
+        extension: [
+          {
+            url: "http://hl7.org/fhir/StructureDefinition/operationoutcome-issue-line",
+            valueInteger: 1
+          },
+          {
+            url: "http://hl7.org/fhir/StructureDefinition/operationoutcome-issue-col",
+            valueInteger: 1
+          }
+        ]
+      }]
+    });
   }
 }
 
@@ -356,6 +393,77 @@ function validateBasicStructure(testScript: Partial<TestScript>) {
           location: ['test', index.toString(), 'action'],
           line: 20 + index * 5,
           column: 7
+        });
+      }
+    });
+  }
+
+  return {
+    valid: errors.length === 0,
+    errors
+  };
+}
+
+function validateExtendedStructure(testScript: TestScript) {
+  const errors: StructureIssue[] = [];
+
+  // Erweiterte Validierung für Test-Aktionen
+  if (testScript.test && Array.isArray(testScript.test)) {
+    testScript.test.forEach((test, testIndex) => {
+      if (test.action && Array.isArray(test.action)) {
+        test.action.forEach((action, actionIndex) => {
+          // Prüfe FHIR-Constraint tst-2: Aktion darf nur Operation ODER Assert haben, nicht beides
+          if (action.operation && action.assert) {
+            errors.push({
+              message: `Test ${testIndex + 1}, Aktion ${actionIndex + 1}: Eine Aktion darf nur eine Operation oder eine Assertion enthalten, nicht beides (FHIR-Constraint tst-2)`,
+              location: ['test', testIndex.toString(), 'action', actionIndex.toString()],
+              line: 30 + testIndex * 10 + actionIndex * 2,
+              column: 9
+            });
+          }
+
+          // Prüfe, dass mindestens Operation oder Assert vorhanden ist
+          if (!action.operation && !action.assert) {
+            errors.push({
+              message: `Test ${testIndex + 1}, Aktion ${actionIndex + 1}: Eine Aktion muss entweder eine Operation oder eine Assertion enthalten`,
+              location: ['test', testIndex.toString(), 'action', actionIndex.toString()],
+              line: 30 + testIndex * 10 + actionIndex * 2,
+              column: 9
+            });
+          }
+
+          // Validiere Operation falls vorhanden
+          if (action.operation) {
+            if (!action.operation.type?.code) {
+              errors.push({
+                message: `Test ${testIndex + 1}, Aktion ${actionIndex + 1}: Operation benötigt einen Type-Code`,
+                location: ['test', testIndex.toString(), 'action', actionIndex.toString(), 'operation', 'type', 'code'],
+                line: 32 + testIndex * 10 + actionIndex * 2,
+                column: 13
+              });
+            }
+
+            if (!action.operation.resource) {
+              errors.push({
+                message: `Test ${testIndex + 1}, Aktion ${actionIndex + 1}: Operation benötigt eine Resource-Angabe`,
+                location: ['test', testIndex.toString(), 'action', actionIndex.toString(), 'operation', 'resource'],
+                line: 34 + testIndex * 10 + actionIndex * 2,
+                column: 13
+              });
+            }
+          }
+
+          // Validiere Assertion falls vorhanden
+          if (action.assert) {
+            if (!action.assert.description) {
+              errors.push({
+                message: `Test ${testIndex + 1}, Aktion ${actionIndex + 1}: Assertion benötigt eine Beschreibung`,
+                location: ['test', testIndex.toString(), 'action', actionIndex.toString(), 'assert', 'description'],
+                line: 36 + testIndex * 10 + actionIndex * 2,
+                column: 13
+              });
+            }
+          }
         });
       }
     });
