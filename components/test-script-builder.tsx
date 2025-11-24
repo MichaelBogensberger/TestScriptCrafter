@@ -109,5 +109,4 @@ export function TestScriptBuilder() {
   )
 }
 
-export { TestScriptBuilder }
 export default TestScriptBuilder

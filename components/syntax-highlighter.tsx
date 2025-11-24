@@ -63,7 +63,6 @@ export function SyntaxHighlighter({
   )
 }
 
-export { SyntaxHighlighter }
 export default SyntaxHighlighter
 
 /**
