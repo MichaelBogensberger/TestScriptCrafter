@@ -47,13 +47,24 @@ export function JsonView({ testScript, validationState }: JsonViewProps) {
     
     return validationResult.issue
       .filter(issue => issue.line && issue.line > 0)
-      .map(issue => ({
-        line: issue.line!,
-        column: issue.column,
-        message: issue.details?.text || issue.diagnostics || 'Unbekannter Fehler',
-        severity: (issue.severity === 'error' ? 'error' : 
-                  issue.severity === 'warning' ? 'warning' : 'info') as 'error' | 'warning' | 'info'
-      }))
+      .map(issue => {
+        // Korrekte Severity-Mapping: fatal/error -> error, warning -> warning, information -> info, sonst info
+        let severity: 'error' | 'warning' | 'info' = 'info';
+        if (issue.severity === 'error' || issue.severity === 'fatal') {
+          severity = 'error';
+        } else if (issue.severity === 'warning') {
+          severity = 'warning';
+        } else if (issue.severity === 'information') {
+          severity = 'info';
+        }
+        
+        return {
+          line: issue.line!,
+          column: issue.column || 1,
+          message: issue.details?.text || issue.diagnostics || 'Unbekannter Fehler',
+          severity
+        };
+      })
   }, [validationResult])
 
   const hasErrors = validationErrors.some(e => e.severity === 'error')

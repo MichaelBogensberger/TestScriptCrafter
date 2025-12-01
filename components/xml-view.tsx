@@ -3,13 +3,12 @@
 import { TestScript } from "@/types/fhir-enhanced"
 import SyntaxHighlighter from "./syntax-highlighter"
 import { Button } from "./ui/button"
-import { ClipboardCopy, Download, AlertCircle, CheckCircle } from "lucide-react"
+import { ClipboardCopy, Download } from "lucide-react"
 import { toast } from "sonner"
 import { formatToXml } from "@/lib/formatters/xml-formatter"
 import { clientOnly } from "@/hooks/use-client-only"
 import { useFhirVersion } from "@/lib/fhir-version-context"
 import { Badge } from "./ui/badge"
-import { useMemo } from "react"
 
 // Type für Validierungsstate - optional  
 interface ValidationState {
@@ -30,31 +29,9 @@ interface XmlViewProps {
 export function XmlView({ testScript, validationState }: XmlViewProps) {
   const { currentVersion } = useFhirVersion()
   
-  // Verwende IMMER den übergebenen validationState (kein Fallback!)
-  const { validationResult } = validationState || { validationResult: null }
-  
-  // Konvertiere Validierungsfehler zu Zeilen-basierten Fehlern für XML
-  const validationErrors = useMemo(() => {
-    if (!validationResult?.issue) return []
-    
-    console.log('Debug XML: Validierungsergebnis:', validationResult)
-    console.log('Debug XML: Issues:', validationResult.issue)
-    
-    return validationResult.issue
-      .filter(issue => issue.line && issue.line > 0)
-      .map(issue => ({
-        line: issue.line!,
-        column: issue.column,
-        message: issue.details?.text || issue.diagnostics || 'Unbekannter Fehler',
-        severity: (issue.severity === 'error' ? 'error' : 
-                  issue.severity === 'warning' ? 'warning' : 'info') as 'error' | 'warning' | 'info'
-      }))
-  }, [validationResult])
-
-  const hasErrors = validationErrors.some(e => e.severity === 'error')
-  const hasWarnings = validationErrors.some(e => e.severity === 'warning')
-  const errorCount = validationErrors.filter(e => e.severity === 'error').length
-  const warningCount = validationErrors.filter(e => e.severity === 'warning').length
+  // Validierungsfehler werden NICHT in XML angezeigt, da die Zeilennummern nicht übereinstimmen
+  // Die Validierung erfolgt gegen JSON, daher werden Fehler nur in der JSON-Ansicht angezeigt
+  const validationErrors: never[] = []
 
   const copyToClipboard = async () => {
     const content = formatToXml(testScript)
@@ -84,35 +61,12 @@ export function XmlView({ testScript, validationState }: XmlViewProps) {
 
   return (
     <div className="space-y-4">
-      {/* Header mit Validation Status */}
+      {/* Header */}
       <div className="flex justify-between items-center">
         <div className="flex items-center gap-2">
           <Badge variant="secondary" className="text-xs">
             FHIR {currentVersion} XML
           </Badge>
-          
-          {validationResult && (
-            <div className="flex items-center gap-2">
-              {hasErrors ? (
-                <Badge variant="destructive" className="flex items-center gap-1">
-                  <AlertCircle className="h-3 w-3" />
-                  {errorCount} Fehler
-                </Badge>
-              ) : (
-                <Badge variant="secondary" className="flex items-center gap-1 text-green-600 dark:text-green-400">
-                  <CheckCircle className="h-3 w-3" />
-                  Gültig
-                </Badge>
-              )}
-              
-              {hasWarnings && (
-                <Badge variant="outline" className="flex items-center gap-1 text-yellow-600 dark:text-yellow-400">
-                  <AlertCircle className="h-3 w-3" />
-                  {warningCount} Warnungen
-                </Badge>
-              )}
-            </div>
-          )}
         </div>
 
         <div className="flex gap-2">
@@ -138,42 +92,7 @@ export function XmlView({ testScript, validationState }: XmlViewProps) {
         />
       </div>
 
-      {/* Debug-Information (nur in development) */}
-      {process.env.NODE_ENV === 'development' && (
-        <div className="rounded-md border bg-blue-50 dark:bg-blue-900/20 p-3 text-xs">
-          <strong>Debug XML:</strong> 
-          <br />Validation Result: {validationResult ? 'Ja' : 'Nein'}
-          <br />Issues: {validationResult?.issue?.length || 0}
-          <br />Validation Errors: {validationErrors.length}
-          <br />Has Errors: {hasErrors ? 'Ja' : 'Nein'}
-        </div>
-      )}
-
-      {/* Fehler-Zusammenfassung */}
-      {validationResult && (hasErrors || hasWarnings) && (
-        <div className="rounded-md border bg-muted/50 p-4">
-          <h4 className="text-sm font-medium mb-2">Validierungsprobleme:</h4>
-          <div className="space-y-1 text-sm">
-            {validationErrors.slice(0, 5).map((error, idx) => (
-              <div key={idx} className="flex items-start gap-2">
-                <span className="text-muted-foreground">Zeile {error.line}:</span>
-                <span className={
-                  error.severity === 'error' ? 'text-red-600 dark:text-red-400' :
-                  error.severity === 'warning' ? 'text-yellow-600 dark:text-yellow-400' :
-                  'text-blue-600 dark:text-blue-400'
-                }>
-                  {error.message}
-                </span>
-              </div>
-            ))}
-            {validationErrors.length > 5 && (
-              <div className="text-muted-foreground text-xs">
-                ... und {validationErrors.length - 5} weitere Probleme
-              </div>
-            )}
-          </div>
-        </div>
-      )}
+      {/* Hinweis: Validierungsfehler werden nur in der JSON-Ansicht angezeigt, da die Validierung gegen JSON erfolgt */}
     </div>
   )
 }

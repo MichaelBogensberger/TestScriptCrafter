@@ -42,40 +42,92 @@ export function useFhirValidation() {
     let line = 1;
     let column = 1;
 
-    const lineExtension = issue.extension?.find(
-      (extension: Extension) =>
-        extension.url === "http://hl7.org/fhir/StructureDefinition/operationoutcome-issue-line",
-    );
-    const columnExtension = issue.extension?.find(
-      (extension: Extension) =>
-        extension.url === "http://hl7.org/fhir/StructureDefinition/operationoutcome-issue-col",
-    );
+    // Suche nach Extensions (können mehrfach vorkommen - nehme die erste)
+    if (issue.extension && issue.extension.length > 0) {
+      const lineExtension = issue.extension.find(
+        (extension: Extension) =>
+          extension.url === "http://hl7.org/fhir/StructureDefinition/operationoutcome-issue-line" &&
+          typeof extension.valueInteger === "number"
+      );
+      const columnExtension = issue.extension.find(
+        (extension: Extension) =>
+          extension.url === "http://hl7.org/fhir/StructureDefinition/operationoutcome-issue-col" &&
+          typeof extension.valueInteger === "number"
+      );
 
-    if (typeof lineExtension?.valueInteger === "number") {
-      line = lineExtension.valueInteger;
+      if (lineExtension?.valueInteger !== undefined) {
+        line = lineExtension.valueInteger;
+      }
+
+      if (columnExtension?.valueInteger !== undefined) {
+        column = columnExtension.valueInteger;
+      }
     }
 
-    if (typeof columnExtension?.valueInteger === "number") {
-      column = columnExtension.valueInteger;
+    // Fallback: Versuche auch aus location-Strings zu extrahieren (z.B. "Line[28] Col[14]")
+    if (line === 1 && column === 1 && issue.location && issue.location.length > 0) {
+      const locationStr = issue.location.find(loc => loc.includes("Line["));
+      if (locationStr) {
+        const lineMatch = locationStr.match(/Line\[(\d+)\]/);
+        const colMatch = locationStr.match(/Col\[(\d+)\]/);
+        if (lineMatch) line = parseInt(lineMatch[1], 10);
+        if (colMatch) column = parseInt(colMatch[1], 10);
+      }
     }
 
     return { line, column };
   };
 
+  const extractConstraintName = (issue: OperationOutcomeIssue): string | undefined => {
+    // Versuche Constraint-Namen aus details.coding.code zu extrahieren (z.B. "TestScript#tst-7")
+    if (issue.details?.coding && issue.details.coding.length > 0) {
+      const coding = issue.details.coding[0];
+      if (coding.code && coding.code.includes("#")) {
+        const parts = coding.code.split("#");
+        if (parts.length > 1) {
+          return parts[parts.length - 1]; // z.B. "tst-7" oder "tst-8"
+        }
+      }
+    }
+    return undefined;
+  };
+
   const parseValidationResult = (outcome: OperationOutcome): ValidationResult => {
     const issues: ValidationIssue[] = (outcome.issue ?? []).map((issue: OperationOutcomeIssue) => {
       const { line, column } = extractPosition(issue);
-      const diagnostics = issue.diagnostics ?? issue.details?.text ?? "Unbekannter Fehler";
+      const constraintName = extractConstraintName(issue);
+      
+      // Extrahiere die beste verfügbare Fehlermeldung
+      // Priorität: diagnostics > details.text > details.coding.display > "Unbekannter Fehler"
+      let diagnostics = issue.diagnostics;
+      if (!diagnostics && issue.details) {
+        diagnostics = issue.details.text || issue.details.coding?.[0]?.display;
+      }
+      if (!diagnostics) {
+        diagnostics = "Unbekannter Fehler";
+      }
+
+      // Bereite das details-Objekt vor (behalte alle Felder)
+      const details = issue.details ? {
+        ...issue.details,
+        text: diagnostics,
+        // Füge Constraint-Name hinzu falls vorhanden
+        ...(constraintName && { constraint: constraintName })
+      } : {
+        text: diagnostics,
+        ...(constraintName && { constraint: constraintName })
+      };
 
       return {
         ...issue,
-        details: {
-          text: diagnostics,
-        },
+        details,
         location: issue.location ?? [],
+        expression: issue.expression ?? [],
         line,
         column,
-      };
+        // Füge Constraint-Name als zusätzliche Eigenschaft hinzu (nicht Teil von FHIR, aber nützlich)
+        constraintName,
+      } as ValidationIssue;
     });
 
     return {

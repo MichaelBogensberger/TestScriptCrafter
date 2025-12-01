@@ -92,6 +92,7 @@ export type OperationOutcomeIssue = FhirOperationOutcomeIssue;
 export interface ValidationIssue extends FhirOperationOutcomeIssue {
   line?: number;
   column?: number;
+  constraintName?: string; // Z.B. "tst-7", "tst-8" - extrahiert aus details.coding.code
 }
 
 export type ValidationResult = Omit<FhirOperationOutcome, "issue"> & {

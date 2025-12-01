@@ -1,6 +1,6 @@
 "use client";
 
-import { TestScript, ValidationResult } from "@/types/fhir-enhanced";
+import { TestScript, ValidationResult, ValidationIssue } from "@/types/fhir-enhanced";
 import { FhirVersion } from "@/types/fhir-config";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -13,7 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Progress } from "@/components/ui/progress";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { useProgressAnimation } from "@/hooks/use-progress-animation";
 import { clientOnly } from "@/hooks/use-client-only";
 
@@ -69,14 +69,25 @@ export function ValidationTab({
     }
   };
 
-  const getLocationDisplayPath = (location: string[]): string => {
+  const getLocationDisplayPath = (location: string[] | undefined, expression: string[] | undefined): string => {
+    // Bevorzuge expression-Feld, da es oft sauberer ist
+    if (expression && expression.length > 0) {
+      const cleanExpression = expression
+        .map(expr => expr.replace(/Parameters\.parameter\[0\]\.resource\./, "")
+                        .replace(/\/\*TestScript\/null\*\/\./, "")
+                        .replace(/\[\d+\]/g, (match) => `[${match.slice(1, -1)}]`))
+        .join(" → ");
+      if (cleanExpression) return cleanExpression;
+    }
+    
     if (!location || location.length === 0) return "Unbekannte Position";
     
     // Bereinige die FHIR-Location-Pfade für bessere Lesbarkeit
     return location
       .map(loc => loc.replace(/Parameters\.parameter\[0\]\.resource\./, "")
                     .replace(/\/\*TestScript\/null\*\/\./, "")
-                    .replace(/\[\d+\]/g, (match) => `[${match.slice(1, -1)}]`))
+                    .replace(/\[\d+\]/g, (match) => `[${match.slice(1, -1)}]`)
+                    .replace(/^Line\[(\d+)\] Col\[(\d+)\]$/, "Zeile $1, Spalte $2")) // Formatiere "Line[28] Col[14]" um
       .join(" → ");
   };
 
@@ -88,7 +99,75 @@ export function ValidationTab({
       .replace(/Canonical URLs must be absolute URLs if they are not fragment references/, 
                "Canonical URLs müssen absolute URLs sein, falls es sich nicht um Fragment-Referenzen handelt")
       .replace(/minimum required = (\d+), but only found (\d+)/, 
-               "Mindestens $1 erforderlich, aber nur $2 gefunden");
+               "Mindestens $1 erforderlich, aber nur $2 gefunden")
+      .replace(/Constraint failed: ([\w-]+): (.+)/, 
+               "Constraint-Verletzung ($1): $2");
+  };
+
+  const renderIssueDetails = (issue: ValidationIssue, colorScheme: {
+    icon: ReactNode;
+    text: string;
+    bg: string;
+    border: string;
+    label: string;
+  }) => {
+    const issueText = issue.details?.text || issue.diagnostics || "Unbekannter Fehler";
+    const hasLine = issue.line && issue.line > 0;
+    const hasColumn = issue.column && issue.column > 0;
+    const hasPosition = hasLine || hasColumn;
+    const locationPath = getLocationDisplayPath(issue.location, issue.expression);
+    const hasLocation = locationPath && locationPath !== "Unbekannte Position";
+    
+    // Baue Position-String zusammen
+    const positionParts: string[] = [];
+    if (hasLine) positionParts.push(`Zeile ${issue.line}`);
+    if (hasColumn) positionParts.push(`Spalte ${issue.column}`);
+    const positionText = positionParts.length > 0 ? positionParts.join(", ") : undefined;
+    
+    return (
+      <div className="flex items-start gap-3">
+        {colorScheme.icon}
+        <div className="flex-1 min-w-0">
+          <p className={`font-medium ${colorScheme.text} mb-2`}>
+            {formatValidationMessage(issueText)}
+          </p>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+            {positionText && (
+              <div>
+                <Label className={`${colorScheme.label} font-medium`}>Position:</Label>
+                <p className={`${colorScheme.text} mt-1`}>
+                  {positionText}
+                </p>
+              </div>
+            )}
+            <div>
+              <Label className={`${colorScheme.label} font-medium`}>Code:</Label>
+              <p className={`${colorScheme.text} mt-1 font-mono`}>
+                {issue.code || "Unbekannt"}
+              </p>
+            </div>
+            {issue.constraintName && (
+              <div>
+                <Label className={`${colorScheme.label} font-medium`}>Constraint:</Label>
+                <p className={`${colorScheme.text} mt-1 font-mono font-semibold`}>
+                  {issue.constraintName}
+                </p>
+              </div>
+            )}
+          </div>
+          
+          {hasLocation && (
+            <div className="mt-3">
+              <Label className={`${colorScheme.label} font-medium`}>Pfad:</Label>
+              <p className={`${colorScheme.text} mt-1 font-mono text-xs break-all`}>
+                {locationPath}
+              </p>
+            </div>
+          )}
+        </div>
+      </div>
+    );
   };
 
   const renderValidationStatus = () => {
@@ -240,38 +319,13 @@ export function ValidationTab({
                   {fatalIssues.map((issue, index) => (
                     <Card key={index} className="border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-950">
                       <CardContent className="p-4">
-                        <div className="flex items-start gap-3">
-                          <XCircle className="h-5 w-5 text-red-600 dark:text-red-400 mt-0.5 flex-shrink-0" />
-                          <div className="flex-1 min-w-0">
-                            <p className="font-medium text-red-800 dark:text-red-200 mb-2">
-                              {formatValidationMessage(issue.details?.text || "Unbekannter Fehler")}
-                            </p>
-                            
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                              <div>
-                                <Label className="text-red-700 dark:text-red-300 font-medium">Position:</Label>
-                                <p className="text-red-600 dark:text-red-400 mt-1">
-                                  Zeile {issue.line}, Spalte {issue.column}
-                                </p>
-                              </div>
-                              <div>
-                                <Label className="text-red-700 dark:text-red-300 font-medium">Code:</Label>
-                                <p className="text-red-600 dark:text-red-400 mt-1 font-mono">
-                                  {issue.code || "Unbekannt"}
-                                </p>
-                              </div>
-                            </div>
-                            
-                            {issue.location && issue.location.length > 0 && (
-                              <div className="mt-3">
-                                <Label className="text-red-700 dark:text-red-300 font-medium">Pfad:</Label>
-                                <p className="text-red-600 dark:text-red-400 mt-1 font-mono text-xs break-all">
-                                  {getLocationDisplayPath(issue.location)}
-                                </p>
-                              </div>
-                            )}
-                          </div>
-                        </div>
+                        {renderIssueDetails(issue, {
+                          icon: <XCircle className="h-5 w-5 text-red-600 dark:text-red-400 mt-0.5 flex-shrink-0" />,
+                          text: "text-red-800 dark:text-red-200",
+                          bg: "bg-red-50 dark:bg-red-950",
+                          border: "border-red-200 dark:border-red-800",
+                          label: "text-red-700 dark:text-red-300"
+                        })}
                       </CardContent>
                     </Card>
                   ))}
@@ -293,38 +347,13 @@ export function ValidationTab({
                   {errorIssues.map((issue, index) => (
                     <Card key={index} className="border-red-200 bg-red-50 dark:border-red-800 dark:bg-red-950">
                       <CardContent className="p-4">
-                        <div className="flex items-start gap-3">
-                          <XCircle className="h-5 w-5 text-red-600 dark:text-red-400 mt-0.5 flex-shrink-0" />
-                          <div className="flex-1 min-w-0">
-                            <p className="font-medium text-red-800 dark:text-red-200 mb-2">
-                              {formatValidationMessage(issue.details?.text || "Unbekannter Fehler")}
-                            </p>
-                            
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                              <div>
-                                <Label className="text-red-700 dark:text-red-300 font-medium">Position:</Label>
-                                <p className="text-red-600 dark:text-red-400 mt-1">
-                                  Zeile {issue.line}, Spalte {issue.column}
-                                </p>
-                              </div>
-                              <div>
-                                <Label className="text-red-700 dark:text-red-300 font-medium">Code:</Label>
-                                <p className="text-red-600 dark:text-red-400 mt-1 font-mono">
-                                  {issue.code || "Unbekannt"}
-                                </p>
-                              </div>
-                            </div>
-                            
-                            {issue.location && issue.location.length > 0 && (
-                              <div className="mt-3">
-                                <Label className="text-red-700 dark:text-red-300 font-medium">Pfad:</Label>
-                                <p className="text-red-600 dark:text-red-400 mt-1 font-mono text-xs break-all">
-                                  {getLocationDisplayPath(issue.location)}
-                                </p>
-                              </div>
-                            )}
-                          </div>
-                        </div>
+                        {renderIssueDetails(issue, {
+                          icon: <XCircle className="h-5 w-5 text-red-600 dark:text-red-400 mt-0.5 flex-shrink-0" />,
+                          text: "text-red-800 dark:text-red-200",
+                          bg: "bg-red-50 dark:bg-red-950",
+                          border: "border-red-200 dark:border-red-800",
+                          label: "text-red-700 dark:text-red-300"
+                        })}
                       </CardContent>
                     </Card>
                   ))}
@@ -346,38 +375,13 @@ export function ValidationTab({
                   {warningIssues.map((issue, index) => (
                     <Card key={index} className="border-yellow-200 bg-yellow-50 dark:border-yellow-800 dark:bg-yellow-950">
                       <CardContent className="p-4">
-                        <div className="flex items-start gap-3">
-                          <AlertTriangle className="h-5 w-5 text-yellow-600 dark:text-yellow-400 mt-0.5 flex-shrink-0" />
-                          <div className="flex-1 min-w-0">
-                            <p className="font-medium text-yellow-800 dark:text-yellow-200 mb-2">
-                              {formatValidationMessage(issue.details?.text || "Unbekannte Warnung")}
-                            </p>
-                            
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                              <div>
-                                <Label className="text-yellow-700 dark:text-yellow-300 font-medium">Position:</Label>
-                                <p className="text-yellow-600 dark:text-yellow-400 mt-1">
-                                  Zeile {issue.line}, Spalte {issue.column}
-                                </p>
-                              </div>
-                              <div>
-                                <Label className="text-yellow-700 dark:text-yellow-300 font-medium">Code:</Label>
-                                <p className="text-yellow-600 dark:text-yellow-400 mt-1 font-mono">
-                                  {issue.code || "Unbekannt"}
-                                </p>
-                              </div>
-                            </div>
-                            
-                            {issue.location && issue.location.length > 0 && (
-                              <div className="mt-3">
-                                <Label className="text-yellow-700 dark:text-yellow-300 font-medium">Pfad:</Label>
-                                <p className="text-yellow-600 dark:text-yellow-400 mt-1 font-mono text-xs break-all">
-                                  {getLocationDisplayPath(issue.location)}
-                                </p>
-                              </div>
-                            )}
-                          </div>
-                        </div>
+                        {renderIssueDetails(issue, {
+                          icon: <AlertTriangle className="h-5 w-5 text-yellow-600 dark:text-yellow-400 mt-0.5 flex-shrink-0" />,
+                          text: "text-yellow-800 dark:text-yellow-200",
+                          bg: "bg-yellow-50 dark:bg-yellow-950",
+                          border: "border-yellow-200 dark:border-yellow-800",
+                          label: "text-yellow-700 dark:text-yellow-300"
+                        })}
                       </CardContent>
                     </Card>
                   ))}
@@ -399,38 +403,13 @@ export function ValidationTab({
                   {infoIssues.map((issue, index) => (
                     <Card key={index} className="border-blue-200 bg-blue-50 dark:border-blue-800 dark:bg-blue-950">
                       <CardContent className="p-4">
-                        <div className="flex items-start gap-3">
-                          <Info className="h-5 w-5 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />
-                          <div className="flex-1 min-w-0">
-                            <p className="font-medium text-blue-800 dark:text-blue-200 mb-2">
-                              {issue.details?.text || "Unbekannte Information"}
-                            </p>
-                            
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                              <div>
-                                <Label className="text-blue-700 dark:text-blue-300 font-medium">Position:</Label>
-                                <p className="text-blue-600 dark:text-blue-400 mt-1">
-                                  Zeile {issue.line}, Spalte {issue.column}
-                                </p>
-                              </div>
-                              <div>
-                                <Label className="text-blue-700 dark:text-blue-300 font-medium">Code:</Label>
-                                <p className="text-blue-600 dark:text-blue-400 mt-1 font-mono">
-                                  {issue.code || "Unbekannt"}
-                                </p>
-                              </div>
-                            </div>
-                            
-                            {issue.location && issue.location.length > 0 && (
-                              <div className="mt-3">
-                                <Label className="text-blue-700 dark:text-blue-300 font-medium">Pfad:</Label>
-                                <p className="text-blue-600 dark:text-blue-400 mt-1 font-mono text-xs break-all">
-                                  {getLocationDisplayPath(issue.location)}
-                                </p>
-                              </div>
-                            )}
-                          </div>
-                        </div>
+                        {renderIssueDetails(issue, {
+                          icon: <Info className="h-5 w-5 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />,
+                          text: "text-blue-800 dark:text-blue-200",
+                          bg: "bg-blue-50 dark:bg-blue-950",
+                          border: "border-blue-200 dark:border-blue-800",
+                          label: "text-blue-700 dark:text-blue-300"
+                        })}
                       </CardContent>
                     </Card>
                   ))}
