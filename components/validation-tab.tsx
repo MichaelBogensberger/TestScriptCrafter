@@ -1,7 +1,7 @@
 "use client";
 
-import { TestScript } from "@/types/fhir-enhanced";
-import { useFhirValidation } from "@/hooks/use-fhir-validation";
+import { TestScript, ValidationResult } from "@/types/fhir-enhanced";
+import { FhirVersion } from "@/types/fhir-config";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
@@ -19,20 +19,35 @@ import { clientOnly } from "@/hooks/use-client-only";
 
 interface ValidationTabProps {
   testScript: TestScript;
+  // Geteilte Validation State Props (statt eigenem Hook)
+  isValidating: boolean;
+  validationResult: ValidationResult | null;
+  validate: (testScript: TestScript) => Promise<void>;
+  serverError: string | null;
+  serverUrl: string;
+  setServerUrl: (url: string) => void;
+  currentFhirVersion: FhirVersion;
+  // Neue Props für Request/Response Anzeige
+  lastRequestPayload: TestScript | null;
+  lastServerResponse: any | null;
 }
 
-export function ValidationTab({ testScript }: ValidationTabProps) {
-  const { 
-    isValidating, 
-    validationResult, 
-    validate,
-    serverError,
-    serverUrl,
-    setServerUrl,
-    currentFhirVersion
-  } = useFhirValidation();
+export function ValidationTab({ 
+  testScript, 
+  isValidating, 
+  validationResult, 
+  validate,
+  serverError,
+  serverUrl,
+  setServerUrl,
+  currentFhirVersion,
+  lastRequestPayload,
+  lastServerResponse 
+}: ValidationTabProps) {
+  // Hook wurde entfernt - verwende Props stattdessen
   
   const [showPayload, setShowPayload] = useState(false);
+  const [showServerResponse, setShowServerResponse] = useState(false);
   
   // SSR-sichere Progress-Animation ohne Math.random()
   const progress = useProgressAnimation({
@@ -428,17 +443,31 @@ export function ValidationTab({ testScript }: ValidationTabProps) {
         {/* Debug-Information */}
         <Separator />
         <div className="mt-4">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setShowPayload(!showPayload)}
-            className="flex items-center gap-2"
-          >
-            <Code2 className="h-4 w-4" />
-            {showPayload ? "JSON ausblenden" : "JSON-Payload anzeigen"}
-          </Button>
+          <div className="flex gap-2 flex-wrap">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowPayload(!showPayload)}
+              className="flex items-center gap-2"
+              disabled={!lastRequestPayload}
+            >
+              <Code2 className="h-4 w-4" />
+              {showPayload ? "Request ausblenden" : "Request-Payload anzeigen"}
+            </Button>
+            
+            <Button
+              variant="outline" 
+              size="sm"
+              onClick={() => setShowServerResponse(!showServerResponse)}
+              className="flex items-center gap-2"
+              disabled={!lastServerResponse}
+            >
+              <Server className="h-4 w-4" />
+              {showServerResponse ? "Response ausblenden" : "Server-Response anzeigen"}
+            </Button>
+          </div>
           
-          {showPayload && (
+          {showPayload && lastRequestPayload && (
             <Card className="mt-3">
               <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
@@ -446,7 +475,7 @@ export function ValidationTab({ testScript }: ValidationTabProps) {
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => copyToClipboard(JSON.stringify(testScript, null, 2))}
+                    onClick={() => copyToClipboard(JSON.stringify(lastRequestPayload, null, 2))}
                   >
                     <Copy className="h-4 w-4" />
                   </Button>
@@ -454,7 +483,29 @@ export function ValidationTab({ testScript }: ValidationTabProps) {
               </CardHeader>
               <CardContent>
                 <pre className="text-xs bg-muted p-3 rounded-md overflow-auto max-h-64 border">
-                  {JSON.stringify(testScript, null, 2)}
+                  {JSON.stringify(lastRequestPayload, null, 2)}
+                </pre>
+              </CardContent>
+            </Card>
+          )}
+
+          {showServerResponse && lastServerResponse && (
+            <Card className="mt-3">
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-sm">Server-Antwort (OperationOutcome)</CardTitle>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => copyToClipboard(JSON.stringify(lastServerResponse, null, 2))}
+                  >
+                    <Copy className="h-4 w-4" />
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <pre className="text-xs bg-muted p-3 rounded-md overflow-auto max-h-64 border">
+                  {JSON.stringify(lastServerResponse, null, 2)}
                 </pre>
               </CardContent>
             </Card>

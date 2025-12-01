@@ -14,6 +14,8 @@ export function useFhirValidation() {
   const [isValidating, setIsValidating] = useState(false);
   const [validationResult, setValidationResult] = useState<ValidationResult | null>(null);
   const [serverError, setServerError] = useState<string | null>(null);
+  const [lastRequestPayload, setLastRequestPayload] = useState<TestScript | null>(null);
+  const [lastServerResponse, setLastServerResponse] = useState<any | null>(null);
   const { currentVersion, currentConfig } = useFhirVersion();
   
   // Version-abhängige Server URL basierend auf der aktuellen FHIR Version
@@ -26,10 +28,14 @@ export function useFhirValidation() {
 
   // Automatische Aktualisierung der Server URL bei Version-Wechsel
   useEffect(() => {
+    console.log('Debug: FHIR Version geändert zu:', currentVersion);
     setServerUrl(getDefaultServerUrl(currentVersion));
     // Validierungsergebnis zurücksetzen da es für andere Version nicht mehr relevant ist
+    console.log('Debug: Validierungsergebnisse für neue Version zurückgesetzt');
     setValidationResult(null);
     setServerError(null);
+    setLastRequestPayload(null); // Lösche auch Payload und Response
+    setLastServerResponse(null);
   }, [currentVersion]);
 
   const extractPosition = (issue: OperationOutcomeIssue): { line: number; column: number } => {
@@ -83,6 +89,9 @@ export function useFhirValidation() {
     setServerError(null);
     
     try {
+      // Speichere die Payload für die Anzeige
+      setLastRequestPayload(testScript);
+      
       const response = await fetch("/api/validate", {
         method: "POST",
         headers: {
@@ -98,6 +107,10 @@ export function useFhirValidation() {
       }
 
       const data = (await response.json()) as OperationOutcome;
+      
+      // Speichere die komplette Server-Response für die Anzeige
+      setLastServerResponse(data);
+      
       const parsedResult = parseValidationResult(data);
       setValidationResult(parsedResult);
     } catch (error: unknown) {
@@ -129,6 +142,8 @@ export function useFhirValidation() {
     serverError,
     serverUrl,
     setServerUrl,
-    currentFhirVersion: currentVersion
+    currentFhirVersion: currentVersion,
+    lastRequestPayload,
+    lastServerResponse
   };
 } 
