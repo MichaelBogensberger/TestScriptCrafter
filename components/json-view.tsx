@@ -33,6 +33,116 @@ export function JsonView({ testScript, validationState }: JsonViewProps) {
   // Verwende IMMER den übergebenen validationState (kein Fallback!)
   const { validationResult } = validationState || { validationResult: null }
   
+  // Funktion zum Finden der Zeilennummer basierend auf Location-Pfad
+  const findLineByLocation = (locationPath: string, jsonString: string): number => {
+    // Extrahiere alles nach "null*/" aus dem Location-Pfad
+    // z.B. "Parameters.parameter[0].resource/*TestScript/null*/.title" -> ".title"
+    // oder "Parameters.parameter[0].resource/*TestScript/null*/" -> "" (Root-Level)
+    const match = locationPath.match(/null\*\/(.*)$/);
+    if (!match) {
+      return 1; // Fallback
+    }
+    
+    const pathAfterNull = (match[1] || '').trim();
+    
+    // Wenn der Pfad leer ist (nur "null*/"), suche nach der ersten Zeile mit "resourceType"
+    if (!pathAfterNull || pathAfterNull === '') {
+      const lines = jsonString.split('\n');
+      for (let i = 0; i < lines.length; i++) {
+        if (lines[i].includes('"resourceType"')) {
+          return i + 1;
+        }
+      }
+      return 1;
+    }
+    
+    // Wenn der Pfad mit "." beginnt, entferne es
+    const cleanPath = pathAfterNull.startsWith('.') ? pathAfterNull.substring(1) : pathAfterNull;
+    
+    // Zerlege den Pfad in Komponenten (behalte Array-Indizes)
+    // z.B. "destination[0].profile" -> ["destination[0]", "profile"]
+    // oder "title" -> ["title"]
+    // oder "test[0].action[0].operation.type" -> ["test[0]", "action[0]", "operation", "type"]
+    const pathParts = cleanPath.split(/\.(?![^\[]*\])/); // Split by "." but not inside []
+    
+    // Suche nach dem letzten Element im Pfad (das ist das Feld, das wir markieren wollen)
+    const lastPart = pathParts[pathParts.length - 1];
+    const fieldName = lastPart.replace(/\[\d+\]/g, ''); // Entferne Array-Indizes für die Suche
+    
+    // Teile JSON in Zeilen
+    const lines = jsonString.split('\n');
+    
+    // Für einfache Pfade (nur ein Element wie "title") - direkt suchen
+    if (pathParts.length === 1) {
+      for (let i = 0; i < lines.length; i++) {
+        const fieldRegex = new RegExp(`"${fieldName}"\\s*:`, 'g');
+        if (fieldRegex.test(lines[i])) {
+          return i + 1;
+        }
+      }
+      return 1;
+    }
+    
+    // Für komplexere Pfade - suche kontextbasiert
+    // Baue einen Such-Pfad: suche nach allen Pfad-Teilen in der richtigen Reihenfolge
+    const searchPath = pathParts.map(part => {
+      const cleanPart = part.replace(/\[\d+\]/g, '');
+      return `"${cleanPart}"`;
+    });
+    
+    // Suche nach dem letzten Feld mit Kontext-Check
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+      
+      // Prüfe ob diese Zeile das letzte Feld enthält
+      const lastFieldRegex = new RegExp(`"${fieldName}"\\s*:`, 'g');
+      if (!lastFieldRegex.test(line)) {
+        continue;
+      }
+      
+      // Prüfe ob der Kontext passt - schaue zurück nach den vorherigen Pfad-Teilen
+      let contextMatches = true;
+      let foundParts = 0;
+      
+      // Gehe rückwärts durch die Zeilen und suche nach den Pfad-Teilen
+      for (let j = i - 1; j >= 0 && j >= i - 50; j--) { // Prüfe max. 50 Zeilen zurück
+        const prevLine = lines[j];
+        
+        // Prüfe ob ein Teil des Pfads in dieser Zeile vorkommt (rückwärts durch den Pfad)
+        for (let k = searchPath.length - 2; k >= foundParts; k--) {
+          if (prevLine.includes(searchPath[k])) {
+            foundParts = k + 1;
+            break;
+          }
+        }
+        
+        // Wenn wir alle Pfad-Teile gefunden haben, ist der Kontext korrekt
+        if (foundParts >= searchPath.length - 1) {
+          contextMatches = true;
+          break;
+        }
+      }
+      
+      // Wenn der Kontext passt oder es ein einfacher Pfad war, nehmen wir diese Zeile
+      if (contextMatches || foundParts > 0) {
+        return i + 1;
+      }
+    }
+    
+    // Fallback: Wenn Kontext-Check fehlschlägt, nehme einfach das erste Vorkommen
+    for (let i = 0; i < lines.length; i++) {
+      const fieldRegex = new RegExp(`"${fieldName}"\\s*:`, 'g');
+      if (fieldRegex.test(lines[i])) {
+        return i + 1;
+      }
+    }
+    
+    return 1; // Fallback
+  };
+  
+  // Formatiertes JSON für Zeilennummer-Berechnung
+  const formattedJson = formatToJson(testScript);
+  
   // Konvertiere Validierungsfehler zu Zeilen-basierten Fehlern für JSON
   const validationErrors = useMemo(() => {
     console.log('Debug JSON: validationResult:', validationResult)
@@ -46,7 +156,6 @@ export function JsonView({ testScript, validationState }: JsonViewProps) {
     console.log('Debug JSON: Gefundene issues:', validationResult.issue.length)
     
     return validationResult.issue
-      .filter(issue => issue.line && issue.line > 0)
       .map(issue => {
         // Korrekte Severity-Mapping: fatal/error -> error, warning -> warning, information -> info, sonst info
         let severity: 'error' | 'warning' | 'info' = 'info';
@@ -58,14 +167,46 @@ export function JsonView({ testScript, validationState }: JsonViewProps) {
           severity = 'info';
         }
         
+        // Versuche Zeilennummer aus Location-Pfad zu finden
+        let line = issue.line || 1;
+        if (issue.location && issue.location.length > 0) {
+          // Nutze den ersten Location-Pfad der nicht "Line[X] Col[Y]" ist
+          const locationPath = issue.location.find(loc => !loc.includes('Line['));
+          if (locationPath) {
+            const calculatedLine = findLineByLocation(locationPath, formattedJson);
+            if (calculatedLine > 1) {
+              line = calculatedLine;
+              console.log(`Debug JSON: Location-Pfad "${locationPath}" → Zeile ${line}`);
+            }
+          }
+        }
+        
+        // Wenn immer noch keine gute Zeile gefunden, versuche expression
+        if (line === 1 && issue.expression && issue.expression.length > 0) {
+          const expressionPath = issue.expression[0];
+          if (expressionPath) {
+            const calculatedLine = findLineByLocation(expressionPath, formattedJson);
+            if (calculatedLine > 1) {
+              line = calculatedLine;
+              console.log(`Debug JSON: Expression-Pfad "${expressionPath}" → Zeile ${line}`);
+            }
+          }
+        }
+        
+        // Nur zurückgeben wenn wir eine gültige Zeile gefunden haben
+        if (line <= 1) {
+          return null; // Filter diese später raus
+        }
+        
         return {
-          line: issue.line!,
+          line,
           column: issue.column || 1,
           message: issue.details?.text || issue.diagnostics || 'Unbekannter Fehler',
           severity
         };
       })
-  }, [validationResult])
+      .filter((error): error is NonNullable<typeof error> => error !== null) // Entferne null-Werte
+  }, [validationResult, formattedJson])
 
   const hasErrors = validationErrors.some(e => e.severity === 'error')
   const hasWarnings = validationErrors.some(e => e.severity === 'warning')
