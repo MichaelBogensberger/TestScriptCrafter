@@ -9,13 +9,11 @@ import { Switch } from "@/components/ui/switch"
 import type {
   TestScriptSetupActionAssert,
   TestScriptSetupActionAssertRequirement,
-} from "@/types/fhir-enhanced"
-import type {
   TestScriptSetupActionAssertDirection,
   TestScriptSetupActionAssertOperator,
   TestScriptSetupActionAssertResponse,
   TestScriptSetupActionOperationMethod,
-} from "fhir/r5"
+} from "@/types/fhir-enhanced"
 import { Textarea } from "@/components/ui/textarea"
 import { Plus, Trash2 } from "lucide-react"
 import { cn } from "@/lib/utils"
@@ -443,5 +441,4 @@ export function AssertionComponent({
   )
 }
 
-export { AssertionComponent }
 export default AssertionComponent

@@ -19,6 +19,29 @@ export const initialTestScript: TestScript = {
   // Erforderlich: url (canonical identifier)
   url: "http://example.org/fhir/TestScript/MinimalTestScript",
   
+  // Fixtures für Test-Daten
+  fixture: [
+    {
+      id: "patient-fixture",
+      autocreate: false,
+      autodelete: false,
+      resource: {
+        reference: "Patient/example"
+      }
+    }
+  ],
+  
+  // Destination Server Definition
+  destination: [
+    {
+      index: 1,
+      profile: {
+        system: "http://hl7.org/fhir/testscript-profile-destination-types",
+        code: "FHIR-Server"
+      }
+    }
+  ],
+  
   // Optional aber empfohlen: title
   title: "Minimales TestScript",
   
@@ -69,6 +92,8 @@ export const initialTestScript: TestScript = {
               code: "read"
             },
             resource: "Patient",
+            sourceId: "patient-fixture",
+            targetId: "1",
             url: "/Patient/example",
             encodeRequestUrl: true
           },

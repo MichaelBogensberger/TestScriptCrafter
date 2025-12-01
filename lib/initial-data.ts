@@ -15,6 +15,25 @@ export const initialTestScript: TestScript = {
   description: "Ein minimales, aber valides FHIR TestScript für Validierungszwecke.",
   date: "2024-01-15T10:00:00.000Z",
   publisher: "FHIR TestScript Crafter",
+  fixture: [
+    {
+      id: "patient-fixture",
+      autocreate: false,
+      autodelete: false,
+      resource: {
+        reference: "Patient/example"
+      }
+    }
+  ],
+  destination: [
+    {
+      index: 1,
+      profile: {
+        system: "http://hl7.org/fhir/testscript-profile-destination-types",
+        code: "FHIR-Server"
+      }
+    }
+  ],
   metadata: {
     capability: [
       {
@@ -40,8 +59,10 @@ export const initialTestScript: TestScript = {
               system: "http://hl7.org/fhir/restful-interaction",
               code: "read"
             },
-            method: "GET",
+            method: "get",
             resource: "Patient",
+            sourceId: "patient-fixture",
+            targetId: "1",
             url: "/Patient/example",
             params: "_format=json",
             encodeRequestUrl: true,

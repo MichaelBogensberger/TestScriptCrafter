@@ -8,6 +8,7 @@ import type {
   TestScriptMetadataCapability,
   TestScriptTest,
 } from "@/types/fhir-enhanced"
+import { getFhirVersionConfig, parseFhirVersion } from "@/types/fhir-config"
 
 interface StructureIssue {
   message: string;
@@ -144,6 +145,11 @@ export async function POST(request: Request) {
   try {
     const body = (await request.json()) as TestScript;
     
+    // Bestimme FHIR Version aus Header
+    const versionHeader = request.headers.get('X-FHIR-Version');
+    const fhirVersion = parseFhirVersion(versionHeader || undefined);
+    const fhirConfig = getFhirVersionConfig(fhirVersion);
+    
     // Validiere grundlegende TestScript-Struktur
     const basicValidation = validateBasicStructure(body);
     if (!basicValidation.valid) {
@@ -175,7 +181,9 @@ export async function POST(request: Request) {
     if (extendedValidation.valid) {
       try {
         const formattedTestScript = JSON.stringify(body, null, 2);
-        const fhirServerUrl = 'https://hapi.fhir.org/baseR5/TestScript/$validate';
+        const fhirServerUrl = fhirConfig.validationEndpoint;
+        
+        console.log(`Verwende ${fhirVersion} FHIR Server für Validierung: ${fhirServerUrl}`);
         
         const response = await fetch(fhirServerUrl, {
           method: 'POST',

@@ -28,7 +28,8 @@ export function ValidationTab({ testScript }: ValidationTabProps) {
     validate,
     serverError,
     serverUrl,
-    setServerUrl
+    setServerUrl,
+    currentFhirVersion
   } = useFhirValidation();
   
   const [showPayload, setShowPayload] = useState(false);
@@ -499,11 +500,13 @@ export function ValidationTab({ testScript }: ValidationTabProps) {
                   </HoverCardTrigger>
                   <HoverCardContent className="w-80">
                     <div className="space-y-2">
-                      <h4 className="text-sm font-semibold">Empfohlene FHIR-Server:</h4>
+                      <h4 className="text-sm font-semibold">Empfohlene FHIR-Server für {currentFhirVersion}:</h4>
                       <div className="space-y-1 text-xs">
-                                                 <p><code className="bg-muted px-1 rounded">https://hapi.fhir.org/baseR5</code> - HAPI FHIR R5</p>
-                         <p><code className="bg-muted px-1 rounded">https://vonk.fire.ly</code> - Firely Vonk</p>
-                         <p><code className="bg-muted px-1 rounded">http://localhost:8080/fhir</code> - Lokaler Server</p>
+                        <p><code className="bg-muted px-1 rounded">
+                          {currentFhirVersion === 'R5' ? 'https://hapi.fhir.org/baseR5' : 'https://hapi.fhir.org/baseR4'}
+                        </code> - HAPI FHIR {currentFhirVersion}</p>
+                        <p><code className="bg-muted px-1 rounded">https://vonk.fire.ly</code> - Firely Vonk (Multi-Version)</p>
+                        <p><code className="bg-muted px-1 rounded">http://localhost:8080/fhir</code> - Lokaler Server</p>
                       </div>
                       <p className="text-xs text-muted-foreground">
                         Stelle sicher, dass der Server CORS aktiviert hat und TestScript-Validierung unterstützt.
@@ -517,7 +520,7 @@ export function ValidationTab({ testScript }: ValidationTabProps) {
                 type="text"
                 value={serverUrl}
                 onChange={(e) => setServerUrl(e.target.value)}
-                placeholder="https://hapi.fhir.org/baseR5"
+                placeholder={currentFhirVersion === 'R5' ? 'https://hapi.fhir.org/baseR5' : 'https://hapi.fhir.org/baseR4'}
                 className="font-mono text-sm"
               />
             </div>

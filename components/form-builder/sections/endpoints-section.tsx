@@ -11,8 +11,8 @@ import type {
   TestScript,
   TestScriptDestination,
   TestScriptOrigin,
+  Coding,
 } from "@/types/fhir-enhanced"
-import type { Coding } from "fhir/r5"
 
 interface EndpointsSectionProps {
   origin: TestScript["origin"]

@@ -15,8 +15,8 @@ import type {
   TestScriptSetupActionAssertRequirement,
   TestScriptTeardownAction,
   TestScriptTestAction,
+  Coding,
 } from "@/types/fhir-enhanced"
-import type { Coding } from "fhir/r5"
 import { useMemo } from "react"
 import { cn } from "@/lib/utils"
 import { SimpleAssertionForm } from "./simple-assertion-form"

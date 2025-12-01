@@ -16,6 +16,7 @@ interface BasicInfoSectionProps {
  * Focuses on required elements first
  */
 export default function BasicInfoSection({ testScript, updateTestScript }: BasicInfoSectionProps) {
+
   return (
     <div className="space-y-4 p-2">
       {/* Required fields */}

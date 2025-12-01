@@ -2,6 +2,7 @@ import TestScriptBuilder from "@/components/test-script-builder";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { CompactVersionSelector } from "@/components/version-selector";
 import { FileText, Activity } from "lucide-react";
 
 export default function Home() {
@@ -21,9 +22,9 @@ export default function Home() {
                   <p className="text-xs text-muted-foreground hidden sm:block">FHIR TestScript Builder</p>
                 </div>
               </div>
-              <Badge variant="outline" className="hidden md:inline-flex text-xs">
-                FHIR R5
-              </Badge>
+              <div className="hidden md:inline-flex">
+                <CompactVersionSelector showLabel={false} />
+              </div>
             </div>
             
             <div className="flex items-center space-x-3">
@@ -52,7 +53,7 @@ export default function Home() {
             </p>
             <div className="flex items-center space-x-2">
               <Badge variant="outline" className="text-xs">
-                HL7 FHIR R5 compatible
+                HL7 FHIR Multi-Version compatible
               </Badge>
             </div>
           </div>

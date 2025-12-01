@@ -6,8 +6,7 @@ import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Plus, Trash2 } from "lucide-react"
-import type { TestScript, TestScriptScope } from "@/types/fhir-enhanced"
-import type { CodeableConcept } from "fhir/r5"
+import type { TestScript, TestScriptScope, CodeableConcept } from "@/types/fhir-enhanced"
 
 interface ScopeSectionProps {
   scopes: TestScript["scope"]

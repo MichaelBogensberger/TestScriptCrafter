@@ -1,27 +1,34 @@
+// Import types from version-specific modules for better version management
 import type {
-  OperationOutcome as FhirOperationOutcome,
-  OperationOutcomeIssue as FhirOperationOutcomeIssue,
-  TestScript as FhirTestScript,
-  TestScriptMetadata as FhirTestScriptMetadata,
-  TestScriptMetadataCapability as FhirTestScriptMetadataCapability,
-  TestScriptMetadataLink as FhirTestScriptMetadataLink,
-  TestScriptSetup as FhirTestScriptSetup,
-  TestScriptSetupAction as FhirTestScriptSetupAction,
-  TestScriptSetupActionAssert as FhirTestScriptSetupActionAssert,
-  TestScriptSetupActionOperation as FhirTestScriptSetupActionOperation,
-  TestScriptSetupActionAssertRequirement as FhirTestScriptSetupActionAssertRequirement,
-  TestScriptTeardown as FhirTestScriptTeardown,
-  TestScriptTeardownAction as FhirTestScriptTeardownAction,
-  TestScriptTest as FhirTestScriptTest,
-  TestScriptTestAction as FhirTestScriptTestAction,
-  Parameters as FhirParameters,
-  Extension as FhirExtension,
-  TestScriptOrigin as FhirTestScriptOrigin,
-  TestScriptDestination as FhirTestScriptDestination,
-  TestScriptFixture as FhirTestScriptFixture,
-  TestScriptVariable as FhirTestScriptVariable,
-  TestScriptScope as FhirTestScriptScope,
-} from "fhir/r5";
+  FhirOperationOutcome,
+  FhirOperationOutcomeIssue,
+  FhirTestScript,
+  FhirTestScriptMetadata,
+  FhirTestScriptMetadataCapability,
+  FhirTestScriptMetadataLink,
+  FhirTestScriptSetup,
+  FhirTestScriptSetupAction,
+  FhirTestScriptSetupActionAssert,
+  FhirTestScriptSetupActionOperation,
+  FhirTestScriptSetupActionAssertRequirement,
+  FhirTestScriptTeardown,
+  FhirTestScriptTeardownAction,
+  FhirTestScriptTest,
+  FhirTestScriptTestAction,
+  FhirParameters,
+  FhirExtension,
+  FhirTestScriptOrigin,
+  FhirTestScriptDestination,
+  FhirTestScriptFixture,
+  FhirTestScriptVariable,
+  FhirCoding,
+  FhirCodeableConcept
+} from "./fhir-versions/r5-types"
+
+// Import R5-specific types that might not exist in R4
+import type { TestScriptScope as FhirTestScriptScope } from "fhir/r5"
+
+import type { FhirVersion } from "./fhir-config"
 
 /**
  * Erweiterte FHIR-Typen basierend auf @types/fhir
@@ -34,6 +41,8 @@ export type TestScriptTest = FhirTestScriptTest;
 export type TestScriptTestAction = FhirTestScriptTestAction;
 export type TestScriptSetup = FhirTestScriptSetup;
 export type TestScriptSetupAction = FhirTestScriptSetupAction;
+export type TestScriptSetupActionAssert = FhirTestScriptSetupActionAssert;
+export type TestScriptSetupActionOperation = FhirTestScriptSetupActionOperation;
 export type TestScriptTeardown = FhirTestScriptTeardown;
 export type TestScriptTeardownAction = FhirTestScriptTeardownAction;
 export type TestScriptSetupActionAssertRequirement = FhirTestScriptSetupActionAssertRequirement;
@@ -45,6 +54,7 @@ export type TestScriptScope = FhirTestScriptScope;
 
 export type TestScriptMetadata = FhirTestScriptMetadata;
 export type TestScriptCapability = FhirTestScriptMetadataCapability;
+export type TestScriptMetadataCapability = FhirTestScriptMetadataCapability;
 export type TestScriptMetadataLink = FhirTestScriptMetadataLink;
 
 export type EnhancedTestScriptOperation = FhirTestScriptSetupActionOperation;
@@ -91,3 +101,13 @@ export type ValidationResult = Omit<FhirOperationOutcome, "issue"> & {
 export type Parameters = FhirParameters;
 
 export type Extension = FhirExtension;
+
+export type Coding = FhirCoding;
+
+export type CodeableConcept = FhirCodeableConcept;
+
+// Define commonly used Enum types as string unions (consistent across FHIR versions)
+export type TestScriptSetupActionAssertDirection = "request" | "response"
+export type TestScriptSetupActionAssertOperator = "equals" | "notEquals" | "in" | "notIn" | "greaterThan" | "lessThan" | "empty" | "notEmpty" | "contains" | "notContains" | "eval"
+export type TestScriptSetupActionAssertResponse = "continue" | "switchingProtocols" | "okay" | "created" | "accepted" | "nonAuthoritativeInformation" | "noContent" | "resetContent" | "partialContent" | "multipleChoices" | "movedPermanently" | "found" | "seeOther" | "notModified" | "useProxy" | "temporaryRedirect" | "badRequest" | "unauthorized" | "paymentRequired" | "forbidden" | "notFound" | "methodNotAllowed" | "notAcceptable" | "proxyAuthenticationRequired" | "requestTimeOut" | "conflict" | "gone" | "lengthRequired" | "preconditionFailed" | "contentTooLarge" | "uriTooLong" | "unsupportedMediaType" | "rangeNotSatisfiable" | "expectationFailed" | "unprocessableEntity" | "locked" | "failedDependency" | "upgradeRequired" | "internalServerError" | "notImplemented" | "badGateway" | "serviceUnavailable" | "gatewayTimeOut" | "httpVersionNotSupported"
+export type TestScriptSetupActionOperationMethod = "head" | "get" | "post" | "put" | "patch" | "delete" | "options"

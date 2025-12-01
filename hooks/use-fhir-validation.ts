@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import type {
   Extension,
   OperationOutcome,
@@ -7,12 +7,30 @@ import type {
   ValidationIssue,
   ValidationResult,
 } from "@/types/fhir-enhanced";
+import { useFhirVersion } from "@/lib/fhir-version-context";
+import { FhirVersion, getFhirVersionConfig } from "@/types/fhir-config";
 
 export function useFhirValidation() {
   const [isValidating, setIsValidating] = useState(false);
   const [validationResult, setValidationResult] = useState<ValidationResult | null>(null);
   const [serverError, setServerError] = useState<string | null>(null);
-  const [serverUrl, setServerUrl] = useState("https://hapi.fhir.org/baseR5");
+  const { currentVersion, currentConfig } = useFhirVersion();
+  
+  // Version-abhängige Server URL basierend auf der aktuellen FHIR Version
+  const getDefaultServerUrl = (version: FhirVersion) => {
+    const config = getFhirVersionConfig(version);
+    return config.validationEndpoint.replace('/TestScript/$validate', '');
+  };
+  
+  const [serverUrl, setServerUrl] = useState(() => getDefaultServerUrl(currentVersion));
+
+  // Automatische Aktualisierung der Server URL bei Version-Wechsel
+  useEffect(() => {
+    setServerUrl(getDefaultServerUrl(currentVersion));
+    // Validierungsergebnis zurücksetzen da es für andere Version nicht mehr relevant ist
+    setValidationResult(null);
+    setServerError(null);
+  }, [currentVersion]);
 
   const extractPosition = (issue: OperationOutcomeIssue): { line: number; column: number } => {
     let line = 1;
@@ -69,9 +87,10 @@ export function useFhirValidation() {
         method: "POST",
         headers: {
           "Content-Type": "application/fhir+json",
-          "Accept": "application/fhir+json"
+          "Accept": "application/fhir+json",
+          "X-FHIR-Version": currentVersion // Übermittle Version über Header
         },
-        body: JSON.stringify(testScript)
+        body: JSON.stringify(testScript) // Sende nur FHIR-konforme TestScript-Daten
       });
 
       if (!response.ok) {
@@ -109,6 +128,7 @@ export function useFhirValidation() {
     validate,
     serverError,
     serverUrl,
-    setServerUrl
+    setServerUrl,
+    currentFhirVersion: currentVersion
   };
 } 
