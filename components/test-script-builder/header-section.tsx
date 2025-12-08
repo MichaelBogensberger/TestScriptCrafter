@@ -24,7 +24,7 @@ export function HeaderSection({
   onImport
 }: HeaderSectionProps) {
   return (
-    <Card className="relative bg-card/95 backdrop-blur-sm border-l-4 border-l-primary overflow-hidden">
+    <Card className="relative bg-card/95 backdrop-blur-sm overflow-hidden">
       <div className="relative z-10">
         <CardHeader className="pb-4">
         <div className="flex items-center gap-3">

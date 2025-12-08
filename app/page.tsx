@@ -10,7 +10,7 @@ export default function Home() {
   return (
     <div className="min-h-screen bg-background relative">
       <div className="fixed inset-0 pointer-events-none">
-        <GridPattern width={40} height={40} className="opacity-30" />
+        <GridPattern width={40} height={40} className="opacity-40" />
       </div>
       {/* Compact Header */}
       <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -34,7 +34,7 @@ export default function Home() {
             <div className="flex items-center space-x-3">
               <div className="hidden sm:flex items-center space-x-2 text-sm text-muted-foreground">
                 <Activity className="w-4 h-4 text-green-500" />
-                <span>Version 1.0</span>
+                <span>Version 2.0</span>
               </div>
               <Separator orientation="vertical" className="h-6 hidden sm:block" />
               <ThemeToggle />

@@ -19,7 +19,7 @@ export function OutputSection({ testScript }: OutputSectionProps) {
   const actionCount = testScript.test?.reduce((sum, test) => sum + (test.action?.length || 0), 0) || 0
 
   return (
-    <Card className="bg-card/95 backdrop-blur-sm border-l-4 border-l-green-500">
+    <Card className="bg-card/95 backdrop-blur-sm">
       <CardHeader className="pb-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">

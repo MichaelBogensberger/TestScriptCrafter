@@ -79,12 +79,13 @@ export function TestScriptBuilder() {
       />
 
       <Tabs defaultValue="builder" className="w-full">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div>
-            <p className="text-sm font-medium text-muted-foreground">Arbeitsbereich wechseln</p>
-            <p className="text-xs text-muted-foreground">Fokussiere wahlweise auf Eingaben oder Vorschau.</p>
-          </div>
-          <TabsList className="grid w-full grid-cols-2 sm:w-auto sm:min-w-[320px] bg-muted/40">
+        <div className="bg-card/95 backdrop-blur-sm rounded-lg p-4 border">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-sm font-medium text-muted-foreground">Arbeitsbereich wechseln</p>
+              <p className="text-xs text-muted-foreground">Fokussiere wahlweise auf Eingaben oder Vorschau.</p>
+            </div>
+            <TabsList className="grid w-full grid-cols-2 sm:w-auto sm:min-w-[320px] bg-muted/40">
             <TabsTrigger value="builder" className="gap-2">
               Formular
             </TabsTrigger>
@@ -92,6 +93,7 @@ export function TestScriptBuilder() {
               Vorschau
             </TabsTrigger>
           </TabsList>
+          </div>
         </div>
 
         <TabsContent value="builder" className="mt-6">
