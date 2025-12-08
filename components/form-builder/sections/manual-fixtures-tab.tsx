@@ -3,6 +3,7 @@
 import { useMemo } from "react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
+import { EmptyState } from "@/components/ui/empty-state"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
@@ -56,21 +57,17 @@ export function ManualFixturesTab({ fixtures, updateFixtures }: ManualFixturesTa
       </div>
 
       {entries.length === 0 ? (
-        <div className="rounded-md border border-dashed p-6 text-center">
-          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-lg bg-muted">
-            <Plus className="h-6 w-6 text-muted-foreground" />
-          </div>
-          <h3 className="mt-2 text-sm font-medium">Keine Fixtures definiert</h3>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Beginne mit dem Hinzufügen deines ersten Fixtures für Testdaten.
-          </p>
-          <div className="mt-4">
+        <EmptyState
+          icon={<Plus className="h-6 w-6 text-muted-foreground" />}
+          title="Keine Fixtures definiert"
+          description="Beginne mit dem Hinzufügen deines ersten Fixtures für Testdaten."
+          action={
             <Button variant="outline" onClick={addFixture} className="flex items-center gap-1">
               <Plus className="h-4 w-4" />
               Erstes Fixture erstellen
             </Button>
-          </div>
-        </div>
+          }
+        />
       ) : (
         <div className="space-y-3">
           {entries.map((fixture, idx) => (

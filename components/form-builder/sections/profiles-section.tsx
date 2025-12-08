@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
+import { EmptyState } from "@/components/ui/empty-state"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Plus, Trash2 } from "lucide-react"
@@ -56,9 +57,10 @@ export function ProfilesSection({ profiles, updateProfiles }: ProfilesSectionPro
       </div>
 
       {entries.length === 0 ? (
-        <div className="rounded-md border border-dashed p-4 text-center text-sm text-muted-foreground">
-          Noch keine Profile hinterlegt.
-        </div>
+        <EmptyState
+          title="Noch keine Profile hinterlegt."
+          description="Füge kanonische Profile-URLs hinzu, die dieses TestScript abdeckt."
+        />
       ) : (
         <div className="space-y-3">
           {entries.map((profile, idx) => (

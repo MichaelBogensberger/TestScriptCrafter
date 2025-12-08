@@ -75,6 +75,7 @@ export function TestScriptBuilder() {
         testScript={testScript}
         isValidTestScript={isValidTestScript}
         getStatusBadgeVariant={getStatusBadgeVariant}
+        onImport={(importedScript) => setTestScript(importedScript)}
       />
 
       <Tabs defaultValue="builder" className="w-full">

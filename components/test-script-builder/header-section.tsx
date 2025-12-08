@@ -4,11 +4,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Settings, CheckCircle, AlertCircle } from "lucide-react"
 import type { TestScript, TestScriptStatus } from "@/types/fhir-enhanced"
+import { TestScriptImport } from "./test-script-import"
 
 interface HeaderSectionProps {
   testScript: TestScript
   isValidTestScript: boolean
   getStatusBadgeVariant: (status: TestScriptStatus) => "default" | "secondary" | "destructive" | "outline"
+  onImport: (testScript: TestScript) => void
 }
 
 /**
@@ -18,11 +20,13 @@ interface HeaderSectionProps {
 export function HeaderSection({ 
   testScript, 
   isValidTestScript, 
-  getStatusBadgeVariant 
+  getStatusBadgeVariant,
+  onImport
 }: HeaderSectionProps) {
   return (
-    <Card className="bg-gradient-to-br from-background to-muted/20 border-l-4 border-l-primary">
-      <CardHeader className="pb-4">
+    <Card className="relative bg-card/95 backdrop-blur-sm border-l-4 border-l-primary overflow-hidden">
+      <div className="relative z-10">
+        <CardHeader className="pb-4">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 bg-primary/10 rounded-lg flex items-center justify-center">
             <Settings className="h-5 w-5 text-primary" />
@@ -34,6 +38,7 @@ export function HeaderSection({
             </p>
           </div>
           <div className="flex items-center gap-2">
+            <TestScriptImport onImport={onImport} />
             <Badge variant={getStatusBadgeVariant(testScript.status as TestScriptStatus)}>
               {testScript.status}
             </Badge>
@@ -71,6 +76,7 @@ export function HeaderSection({
           </div>
         </div>
       </CardContent>
+      </div>
     </Card>
   )
 }

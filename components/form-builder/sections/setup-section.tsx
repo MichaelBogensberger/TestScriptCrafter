@@ -1,6 +1,7 @@
 "use client"
 
 import { Button } from "@/components/ui/button"
+import { EmptyState } from "@/components/ui/empty-state"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Plus } from "lucide-react"
@@ -70,9 +71,10 @@ export default function SetupSection({ setup, updateSetup }: SetupSectionProps) 
       </div>
 
       {actions.length === 0 ? (
-        <div className="rounded-md border border-dashed p-4 text-center text-sm text-muted-foreground">
-          Noch keine Setup-Aktionen definiert.
-        </div>
+        <EmptyState
+          title="Noch keine Setup-Aktionen definiert."
+          description="Füge vorbereitende Operationen hinzu, die vor den eigentlichen Tests ausgeführt werden."
+        />
       ) : (
         <div className="space-y-3">
           {actions.map((action, idx) => (

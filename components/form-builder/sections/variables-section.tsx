@@ -3,6 +3,7 @@
 import { useMemo } from "react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
+import { EmptyState } from "@/components/ui/empty-state"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
@@ -51,9 +52,10 @@ export function VariablesSection({ variables, updateVariables }: VariablesSectio
       </div>
 
       {entries.length === 0 ? (
-        <div className="rounded-md border border-dashed p-4 text-center text-sm text-muted-foreground">
-          Noch keine Variablen angelegt.
-        </div>
+        <EmptyState
+          title="Noch keine Variablen angelegt."
+          description="Füge Parameter hinzu, die während der Ausführung ersetzt werden."
+        />
       ) : (
         <div className="space-y-3">
           {entries.map((variable, idx) => (

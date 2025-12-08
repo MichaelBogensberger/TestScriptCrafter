@@ -32,7 +32,7 @@ export function ProgressIndicator({ overallProgress, sectionCompleteness }: Prog
   const totalSections = sections.length
 
   return (
-    <div className="bg-muted/30 rounded-lg p-4 space-y-4">
+    <div className="bg-card/95 backdrop-blur-sm rounded-lg p-4 space-y-4">
       {/* Hauptfortschrittsanzeige */}
       <div className="space-y-2">
         <div className="flex items-center justify-between">

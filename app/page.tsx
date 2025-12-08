@@ -4,10 +4,14 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { CompactVersionSelector } from "@/components/version-selector";
 import { FileText, Activity } from "lucide-react";
+import { GridPattern } from "@/components/ui/grid-pattern";
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background relative">
+      <div className="fixed inset-0 pointer-events-none">
+        <GridPattern width={40} height={40} className="opacity-30" />
+      </div>
       {/* Compact Header */}
       <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
         <div className="container mx-auto px-4 py-3">

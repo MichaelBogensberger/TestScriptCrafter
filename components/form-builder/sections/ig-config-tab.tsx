@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useMemo, useCallback } from "react"
+import { useState, useEffect, useMemo, useCallback, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -25,6 +25,7 @@ export function IGConfigTab({ onConfigurationChange }: IGConfigTabProps) {
   const [config, setConfig] = useState<IGConfiguration>()
   const [testingSource, setTestingSource] = useState<string | null>(null)
   const [testResults, setTestResults] = useState<Record<string, { success: boolean; message: string }>>({})
+  const sourceCounterRef = useRef(0)
   
   // Create service only once using useMemo to prevent re-creation on every render
   const igService = useMemo(() => new IGService(), [])
@@ -46,8 +47,10 @@ export function IGConfigTab({ onConfigurationChange }: IGConfigTabProps) {
   const addSource = () => {
     if (!config) return
 
+    // SSR-sichere ID-Generierung mit Counter
+    sourceCounterRef.current += 1
     const newSource: IGSource = {
-      id: `custom-${Date.now()}`,
+      id: `custom-${sourceCounterRef.current}`,
       name: "Neuer IG",
       url: "",
       enabled: true,

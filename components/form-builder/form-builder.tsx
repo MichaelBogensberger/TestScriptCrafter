@@ -324,7 +324,7 @@ function FormBuilder({ testScript, updateTestScript, updateSection }: FormBuilde
 
       <div className="grid gap-6 lg:grid-cols-[320px_minmax(0,1fr)] xl:grid-cols-[360px_minmax(0,1fr)]">
         <Card className="relative flex flex-col overflow-hidden p-4">
-          <div className="space-y-4">
+          <div className="relative z-10 space-y-4">
             <div>
               <h3 className="text-sm font-semibold">Arbeitsbereiche</h3>
               <p className="text-xs text-muted-foreground">
@@ -394,7 +394,7 @@ function FormBuilder({ testScript, updateTestScript, updateSection }: FormBuilde
           </div>
         </Card>
 
-        <Card className="flex min-h-[500px] flex-col space-y-6 p-6 lg:min-h-[70vh]">
+        <Card className="flex min-h-[500px] flex-col space-y-6 p-6 lg:min-h-[70vh] bg-card/95 backdrop-blur-sm">
           <div className="space-y-2">
             <h2 className="text-lg font-semibold">{activeMeta.title}</h2>
             <p className="text-sm text-muted-foreground">{activeMeta.description}</p>
