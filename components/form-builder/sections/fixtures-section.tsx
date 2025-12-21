@@ -34,30 +34,27 @@ export function FixturesSection({ fixtures, updateFixtures }: FixturesSectionPro
         </p>
       </div>
 
-      <Tabs defaultValue="manual" className="w-full">
+      <Tabs defaultValue="ig-config" className="w-full">
         <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="manual" className="flex items-center gap-2">
-            <FileText className="h-4 w-4" />
-            <span className="hidden sm:inline">Manuelle Fixtures</span>
-            <span className="sm:hidden">Manuell</span>
+          <TabsTrigger value="ig-config" className="flex items-center gap-2">
+            <Settings className="h-4 w-4" />
+            <span className="hidden sm:inline">IG Konfiguration</span>
+            <span className="sm:hidden">Konfiguration</span>
           </TabsTrigger>
           <TabsTrigger value="ig-browser" className="flex items-center gap-2">
             <Database className="h-4 w-4" />
             <span className="hidden sm:inline">IG Example Browser</span>
             <span className="sm:hidden">IG Browser</span>
           </TabsTrigger>
-          <TabsTrigger value="ig-config" className="flex items-center gap-2">
-            <Settings className="h-4 w-4" />
-            <span className="hidden sm:inline">IG Konfiguration</span>
-            <span className="sm:hidden">Konfiguration</span>
+          <TabsTrigger value="manual" className="flex items-center gap-2">
+            <FileText className="h-4 w-4" />
+            <span className="hidden sm:inline">Manuelle Fixtures</span>
+            <span className="sm:hidden">Manuell</span>
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="manual" className="mt-4">
-          <ManualFixturesTab 
-            fixtures={fixtures} 
-            updateFixtures={updateFixtures} 
-          />
+        <TabsContent value="ig-config" className="mt-4">
+          <IGConfigTab onConfigurationChange={handleConfigurationChange} />
         </TabsContent>
 
         <TabsContent value="ig-browser" className="mt-4">
@@ -68,8 +65,11 @@ export function FixturesSection({ fixtures, updateFixtures }: FixturesSectionPro
           />
         </TabsContent>
 
-        <TabsContent value="ig-config" className="mt-4">
-          <IGConfigTab onConfigurationChange={handleConfigurationChange} />
+        <TabsContent value="manual" className="mt-4">
+          <ManualFixturesTab 
+            fixtures={fixtures} 
+            updateFixtures={updateFixtures} 
+          />
         </TabsContent>
       </Tabs>
     </div>

@@ -13,22 +13,22 @@ interface OutputViewerProps {
 }
 
 /**
- * OutputViewer Komponente für die Anzeige und Bearbeitung eines TestScripts
+ * OutputViewer component for displaying and editing a TestScript
  * 
- * Bietet verschiedene Ansichten:
- * - JSON-Ansicht mit Syntax-Hervorhebung
- * - XML-Ansicht mit Syntax-Hervorhebung
- * - Strukturierte Ansicht mit fokussierten Bereichen
- * - Gefilterte Ansicht für spezifische Teile des TestScripts
+ * Provides various views:
+ * - JSON view with syntax highlighting
+ * - XML view with syntax highlighting
+ * - Structured view with focused sections
+ * - Filtered view for specific parts of the TestScript
  * 
- * Funktionen:
+ * Features:
  * - Kopieren in die Zwischenablage
  * - Herunterladen als Datei
  * - Anpassung der Einrückung
  * - Ein-/Ausblenden von Zeilennummern
  */
 export function OutputViewer({ testScript }: OutputViewerProps) {
-  // Zentrale Validierungsergebnisse für ALLE Tabs (inkl. ValidationTab)
+  // Central validation results for ALL tabs (including ValidationTab)
   const validationState = useFhirValidation();
   const { 
     isValidating, 
@@ -47,8 +47,8 @@ export function OutputViewer({ testScript }: OutputViewerProps) {
       <TabsList>
         <TabsTrigger value="json">JSON</TabsTrigger>
         <TabsTrigger value="xml">XML</TabsTrigger>
-        <TabsTrigger value="structured">Strukturiert</TabsTrigger>
-        <TabsTrigger value="validation">Validierung</TabsTrigger>
+        <TabsTrigger value="structured">Structured</TabsTrigger>
+        <TabsTrigger value="validation">Validation</TabsTrigger>
       </TabsList>
       <TabsContent value="json">
         <JsonView testScript={testScript} validationState={validationState} />

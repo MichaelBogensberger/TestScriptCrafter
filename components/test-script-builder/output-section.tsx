@@ -11,8 +11,8 @@ interface OutputSectionProps {
 }
 
 /**
- * Output-Sektion für den TestScript Builder
- * Zeigt die Live-Vorschau des TestScripts an
+ * Output section for the TestScript Builder
+ * Displays the live preview of the TestScript
  */
 export function OutputSection({ testScript }: OutputSectionProps) {
   const testCount = testScript.test?.length || 0
@@ -27,9 +27,9 @@ export function OutputSection({ testScript }: OutputSectionProps) {
               <Code className="h-5 w-5 text-green-600" />
             </div>
             <div>
-              <CardTitle className="text-xl">Live Vorschau</CardTitle>
+              <CardTitle className="text-xl">Live Preview</CardTitle>
               <p className="text-sm text-muted-foreground mt-1">
-                Echtzeit-Vorschau deines TestScripts
+                Real-time preview of your TestScript
               </p>
             </div>
           </div>

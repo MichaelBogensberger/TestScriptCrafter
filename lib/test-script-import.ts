@@ -18,17 +18,17 @@ export function parseJsonTestScript(jsonContent: string): ImportResult {
     if (!parsed || typeof parsed !== "object") {
       return {
         success: false,
-        errors: ["Ungültiges JSON-Format"],
+        errors: ["Invalid JSON format"],
       }
     }
 
     const testScript = parsed as TestScript
 
-    // Prüfe ob es ein TestScript ist
+    // Check if it's a TestScript
     if (testScript.resourceType !== "TestScript") {
       return {
         success: false,
-        errors: [`Ungültiger ResourceType: ${testScript.resourceType}. Erwartet: TestScript`],
+        errors: [`Invalid ResourceType: ${testScript.resourceType}. Expected: TestScript`],
       }
     }
 
@@ -39,7 +39,7 @@ export function parseJsonTestScript(jsonContent: string): ImportResult {
   } catch (error) {
     return {
       success: false,
-      errors: [`JSON-Parsing-Fehler: ${error instanceof Error ? error.message : String(error)}`],
+      errors: [`JSON parsing error: ${error instanceof Error ? error.message : String(error)}`],
     }
   }
 }
@@ -50,35 +50,35 @@ export function parseJsonTestScript(jsonContent: string): ImportResult {
  */
 export function parseXmlTestScript(xmlContent: string): ImportResult {
   try {
-    // Prüfe ob DOMParser verfügbar ist (Browser-Umgebung)
+    // Check if DOMParser is available (browser environment)
     if (typeof window === "undefined" || !window.DOMParser) {
       return {
         success: false,
-        errors: ["XML-Parsing ist nur im Browser verfügbar"],
+        errors: ["XML parsing is only available in the browser"],
       }
     }
 
     const parser = new DOMParser()
     const xmlDoc = parser.parseFromString(xmlContent, "text/xml")
 
-    // Prüfe auf XML-Parsing-Fehler
+    // Check for XML parsing errors
     const parseError = xmlDoc.querySelector("parsererror")
     if (parseError) {
-      const errorText = parseError.textContent || "Unbekannter XML-Parsing-Fehler"
+      const errorText = parseError.textContent || "Unknown XML parsing error"
       return {
         success: false,
-        errors: [`XML-Parsing-Fehler: ${errorText}`],
+        errors: [`XML parsing error: ${errorText}`],
       }
     }
 
-    // Konvertiere XML zu JSON
+    // Convert XML to JSON
     const jsonContent = xmlToJson(xmlDoc.documentElement)
 
-    // Prüfe ob es ein TestScript ist
+    // Check if it's a TestScript
     if (jsonContent.resourceType !== "TestScript") {
       return {
         success: false,
-        errors: [`Ungültiger ResourceType: ${jsonContent.resourceType}. Erwartet: TestScript`],
+        errors: [`Invalid ResourceType: ${jsonContent.resourceType}. Expected: TestScript`],
       }
     }
 
@@ -89,7 +89,7 @@ export function parseXmlTestScript(xmlContent: string): ImportResult {
   } catch (error) {
     return {
       success: false,
-      errors: [`XML-Parsing-Fehler: ${error instanceof Error ? error.message : String(error)}`],
+      errors: [`XML parsing error: ${error instanceof Error ? error.message : String(error)}`],
     }
   }
 }
@@ -116,18 +116,18 @@ function xmlToJson(xml: Element): any {
       if (node.nodeType === Node.TEXT_NODE) {
         const text = node.textContent?.trim()
         if (text) {
-          // Wenn es nur Text gibt und keine anderen Kinder, speichere als Wert
+          // If there's only text and no other children, store as value
           if (xml.childNodes.length === 1) {
             return text
           }
-          // Sonst als Text-Property
+          // Otherwise as text property
           result._text = text
         }
       } else if (node.nodeType === Node.ELEMENT_NODE) {
         const element = node as Element
         const tagName = element.tagName
 
-        // Wenn das Element bereits existiert, mache es zu einem Array
+        // If the element already exists, make it an array
         if (result[tagName]) {
           if (!Array.isArray(result[tagName])) {
             result[tagName] = [result[tagName]]
@@ -153,6 +153,7 @@ export async function validateImportedTestScript(
   try {
     const headers: HeadersInit = {
       "Content-Type": "application/json",
+      "X-Validation-Mode": "import", // Lockere Validierung für Import
     }
 
     if (fhirVersion) {
@@ -172,7 +173,7 @@ export async function validateImportedTestScript(
           {
             severity: "error",
             code: "exception",
-            diagnostics: `Validierungsfehler: ${response.status} ${response.statusText}`,
+            diagnostics: `Validation error: ${response.status} ${response.statusText}`,
           },
         ],
       }
@@ -186,7 +187,7 @@ export async function validateImportedTestScript(
         {
           severity: "error",
           code: "exception",
-          diagnostics: `Verbindungsfehler: ${error instanceof Error ? error.message : String(error)}`,
+          diagnostics: `Connection error: ${error instanceof Error ? error.message : String(error)}`,
         },
       ],
     }
@@ -205,92 +206,61 @@ export async function importTestScriptFromFile(
 
   let parseResult: ImportResult
 
-  // Erkenne Format primär basierend auf Inhalt, nicht Dateinamen
+  // Detect format primarily based on content, not filename
   if (trimmedContent.startsWith("{") || trimmedContent.startsWith("[")) {
-    // JSON-Format erkannt
+    // JSON format detected
     parseResult = parseJsonTestScript(fileContent)
   } else if (trimmedContent.startsWith("<")) {
-    // XML-Format erkannt
+    // XML format detected
     parseResult = parseXmlTestScript(fileContent)
   } else {
-    // Versuche beide Formate, beginne mit JSON
+    // Try both formats, starting with JSON
     parseResult = parseJsonTestScript(fileContent)
     if (!parseResult.success) {
-      // Falls JSON fehlschlägt, versuche XML
+      // If JSON fails, try XML
       parseResult = parseXmlTestScript(fileContent)
     }
     
-    // Wenn beide fehlschlagen, gib Fehler zurück
+    // If both fail, return error
     if (!parseResult.success) {
       return {
         success: false,
-        errors: ["Unbekanntes Dateiformat. Die Datei muss gültiges JSON oder XML enthalten."],
+        errors: ["Unknown file format. The file must contain valid JSON or XML."],
       }
     }
   }
 
-  // Wenn Parsing fehlgeschlagen ist, gib Fehler zurück
+  // If parsing failed, return error
   if (!parseResult.success || !parseResult.testScript) {
     return parseResult
   }
 
-  // Validiere das importierte TestScript
+  // Validate the imported TestScript (with lenient import validation)
   const validationResult = await validateImportedTestScript(parseResult.testScript, fhirVersion)
 
-  // Wenn Validierung Fehler hat, filtere Namensvalidierungsfehler heraus (beim Import weniger streng)
+  // Check if there are critical errors
   if (validationResult && validationResult.issue && validationResult.issue.length > 0) {
-    // Trenne Namensfehler von anderen Fehlern
-    const nameIssues = validationResult.issue.filter((issue) => {
-      const location = issue.location || []
-      return location.includes("name") && 
-        (issue.diagnostics?.includes("Name muss") || 
-         issue.diagnostics?.includes("Name") ||
-         (issue.code === "structure" && issue.diagnostics?.toLowerCase().includes("name")))
-    })
-
-    const otherIssues = validationResult.issue.filter((issue) => {
-      const location = issue.location || []
-      const isNameError = location.includes("name") && 
-        (issue.diagnostics?.includes("Name muss") || 
-         issue.diagnostics?.includes("Name") ||
-         (issue.code === "structure" && issue.diagnostics?.toLowerCase().includes("name")))
-      return !isNameError
-    })
-
-    // Konvertiere Namensfehler zu Warnungen
-    const nameWarnings = nameIssues.map((issue) => ({
-      ...issue,
-      severity: "warning" as const,
-    }))
-
-    // Prüfe ob es noch andere Fehler gibt (außer Namensfehler)
-    const hasOtherErrors = otherIssues.some(
+    const hasErrors = validationResult.issue.some(
       (issue) => issue.severity === "error" || issue.severity === "fatal"
     )
 
-    if (hasOtherErrors) {
-      // Es gibt andere Fehler, Import schlägt fehl
+    if (hasErrors) {
+      // There are errors, import fails
       return {
         success: false,
         testScript: parseResult.testScript,
-        validationResult: {
-          ...validationResult,
-          issue: [...otherIssues, ...nameWarnings],
-        },
-        errors: otherIssues.map(
-          (issue) => `${issue.severity}: ${issue.diagnostics || issue.code}`
-        ),
+        validationResult,
+        errors: validationResult.issue
+          .filter((issue) => issue.severity === "error" || issue.severity === "fatal")
+          .map((issue) => `${issue.severity}: ${issue.diagnostics || issue.code}`),
       }
     }
 
-    // Nur Namensfehler oder Warnungen vorhanden - Import erfolgreich
+    // Only warnings present - import successful
     return {
       success: true,
       testScript: parseResult.testScript,
-      validationResult: {
-        ...validationResult,
-        issue: [...otherIssues, ...nameWarnings],
-      },
+      validationResult,
     }
   }
 

@@ -31,6 +31,7 @@ import type {
 import type { TestScript } from "@/types/fhir-enhanced"
 import { IGService } from "@/lib/services/ig-service"
 import { FixtureGeneratorService } from "@/lib/services/fixture-generator"
+import { toast } from "sonner"
 
 interface IGBrowserTabProps {
   fixtures: TestScript["fixture"]
@@ -97,7 +98,7 @@ export function IGBrowserTab({ fixtures, updateFixtures, igConfiguration }: IGBr
         setSelectedExample(null)
 
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Unbekannter Fehler beim Laden der Examples')
+        setError(err instanceof Error ? err.message : 'Unknown error loading examples')
         setSearchResult(null)
         setSelectedExample(null)
       } finally {
@@ -132,16 +133,37 @@ export function IGBrowserTab({ fixtures, updateFixtures, igConfiguration }: IGBr
       if (result.success && result.data) {
         const standardFixture = fixtureGenerator.convertToTestScriptFixture(result.data)
         const currentFixtures = fixtures || []
+        
+        // Prüfe auf Duplikat-ID
+        const isDuplicate = currentFixtures.some(f => f.id === standardFixture.id)
+        if (isDuplicate) {
+          toast.error("Duplikat-Fixture", {
+            description: `Eine Fixture mit der ID "${standardFixture.id}" existiert bereits.`,
+          })
+          setAddingFixture(null)
+          return
+        }
+        
         updateFixtures([...currentFixtures, standardFixture])
         
-        // Show success feedback briefly
+        // Show success feedback
+        toast.success("Fixture erfolgreich hinzugefügt", {
+          description: `${example.title || example.id} wurde als Fixture hinzugefügt.`,
+        })
         setTimeout(() => setAddingFixture(null), 1000)
       } else {
         setError(result.error?.message || 'Fehler beim Generieren des Fixtures')
+        toast.error("Fehler beim Hinzufügen", {
+          description: result.error?.message || 'Fehler beim Generieren des Fixtures',
+        })
         setAddingFixture(null)
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unbekannter Fehler')
+      const errorMessage = err instanceof Error ? err.message : 'Unbekannter Fehler'
+      setError(errorMessage)
+      toast.error("Fehler beim Hinzufügen", {
+        description: errorMessage,
+      })
       setAddingFixture(null)
     }
   }, [fixtureGenerator, fixtures, updateFixtures])
@@ -160,8 +182,8 @@ export function IGBrowserTab({ fixtures, updateFixtures, igConfiguration }: IGBr
         <Alert>
           <AlertCircle className="h-4 w-4" />
           <AlertDescription>
-            Keine Implementation Guide Quellen konfiguriert. 
-            Wechsle zum Tab "IG Konfiguration", um Quellen hinzuzufügen.
+            No Implementation Guide sources configured. 
+            Switch to the "IG Configuration" tab to add sources.
           </AlertDescription>
         </Alert>
       </div>
@@ -173,7 +195,7 @@ export function IGBrowserTab({ fixtures, updateFixtures, igConfiguration }: IGBr
       <div>
         <h4 className="text-sm font-medium">IG Example Browser</h4>
         <p className="text-xs text-muted-foreground">
-          Durchsuche Example Instances aus konfigurierten Implementation Guides und füge sie als Fixtures hinzu.
+          Browse example instances from configured Implementation Guides and add them as fixtures.
         </p>
       </div>
 
@@ -233,7 +255,7 @@ export function IGBrowserTab({ fixtures, updateFixtures, igConfiguration }: IGBr
             <div className="flex items-end">
               <Button variant="outline" onClick={clearFilters} className="w-full">
                 <Filter className="h-4 w-4 mr-1" />
-                Zurücksetzen
+                Reset
               </Button>
             </div>
           </div>
@@ -280,8 +302,8 @@ export function IGBrowserTab({ fixtures, updateFixtures, igConfiguration }: IGBr
               {searchResult.instances.length === 0 ? (
                 <div className="text-center p-8 text-muted-foreground">
                   <Database className="mx-auto h-12 w-12 mb-2" />
-                  <p className="text-sm">Keine Examples gefunden</p>
-                  <p className="text-xs">Versuche andere Suchbegriffe oder Filter</p>
+                  <p className="text-sm">No examples found</p>
+                  <p className="text-xs">Try different search terms or filters</p>
                 </div>
               ) : (
                 <ScrollArea className="h-[400px] pr-2">
@@ -358,7 +380,7 @@ export function IGBrowserTab({ fixtures, updateFixtures, igConfiguration }: IGBr
             <div className="space-y-4">
               <div className="flex items-center gap-2">
                 <Eye className="h-4 w-4" />
-                <h5 className="text-sm font-medium">Fixture Vorschau</h5>
+                <h5 className="text-sm font-medium">Fixture Preview</h5>
               </div>
 
               {selectedExample && previewFixture ? (
@@ -422,12 +444,12 @@ export function IGBrowserTab({ fixtures, updateFixtures, igConfiguration }: IGBr
                     {addingFixture === selectedExample.id ? (
                       <>
                         <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                        Wird hinzugefügt...
+                        Adding...
                       </>
                     ) : (
                       <>
                         <Plus className="h-4 w-4 mr-2" />
-                        Als Fixture hinzufügen
+                        Add as Fixture
                       </>
                     )}
                   </Button>
@@ -437,7 +459,7 @@ export function IGBrowserTab({ fixtures, updateFixtures, igConfiguration }: IGBr
                     <Alert className="border-green-200">
                       <CheckCircle2 className="h-4 w-4 text-green-600" />
                       <AlertDescription>
-                        Fixture wurde erfolgreich hinzugefügt!
+                        Fixture successfully added!
                       </AlertDescription>
                     </Alert>
                   )}
@@ -445,8 +467,8 @@ export function IGBrowserTab({ fixtures, updateFixtures, igConfiguration }: IGBr
               ) : (
                 <div className="text-center p-8 text-muted-foreground">
                   <Eye className="mx-auto h-12 w-12 mb-2" />
-                  <p className="text-sm">Wähle ein Example aus der Liste</p>
-                  <p className="text-xs">um eine Vorschau des Fixtures zu sehen</p>
+                  <p className="text-sm">Select an example from the list</p>
+                  <p className="text-xs">to see a fixture preview</p>
                 </div>
               )}
             </div>

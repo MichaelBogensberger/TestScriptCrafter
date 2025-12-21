@@ -106,20 +106,20 @@ const removeAction = (entry: TestScriptCommon, actionIdx: number): TestScriptCom
     <div className="space-y-4 p-2">
       <div className="flex items-center justify-between">
         <div>
-          <h4 className="text-sm font-medium">Common Aktionen</h4>
+          <h4 className="text-sm font-medium">Common Actions</h4>
           <p className="text-xs text-muted-foreground">
-            Gemeinsame Aktionen, die über den Schlüssel referenziert werden können.
+            Shared actions that can be referenced by their key.
           </p>
         </div>
         <Button variant="outline" size="sm" onClick={addCommon} className="flex items-center gap-1">
           <Plus className="h-4 w-4" />
-          Common hinzufügen
+          Add Common Action
         </Button>
       </div>
 
       {entries.length === 0 ? (
         <div className="rounded-md border border-dashed p-4 text-center text-sm text-muted-foreground">
-          Keine Common-Aktionen definiert.
+          No common actions defined.
         </div>
       ) : (
         <div className="space-y-3">
@@ -147,13 +147,13 @@ const removeAction = (entry: TestScriptCommon, actionIdx: number): TestScriptCom
                         onChange={(event) =>
                           updateEntry(idx, { ...entry, name: event.target.value || undefined })
                         }
-                        placeholder="Optionaler Name"
+                        placeholder="Optional name"
                       />
                     </div>
                   </div>
 
                   <div>
-                    <Label htmlFor={`common-${idx}-description`}>Beschreibung</Label>
+                    <Label htmlFor={`common-${idx}-description`}>Description</Label>
                     <Input
                       id={`common-${idx}-description`}
                       value={entry.description ?? ""}
@@ -163,7 +163,7 @@ const removeAction = (entry: TestScriptCommon, actionIdx: number): TestScriptCom
                           description: event.target.value || undefined,
                         })
                       }
-                      placeholder="Kurze Beschreibung"
+                      placeholder="Brief description"
                     />
                   </div>
 
@@ -182,7 +182,7 @@ const removeAction = (entry: TestScriptCommon, actionIdx: number): TestScriptCom
                     </div>
                     {(entry.parameter ?? []).length === 0 ? (
                       <p className="text-xs text-muted-foreground">
-                        Keine Parameter definiert. Füge optional Key/Value-Paare hinzu.
+                        No parameters defined. Add optional key/value pairs.
                       </p>
                     ) : (
                       <div className="space-y-2">
@@ -224,7 +224,7 @@ const removeAction = (entry: TestScriptCommon, actionIdx: number): TestScriptCom
                               onClick={() =>
                                 updateEntry(idx, removeParameter(entry, parameterIdx))
                               }
-                              title="Parameter entfernen"
+                              title="Remove parameter"
                             >
                               <Trash2 className="h-4 w-4" />
                             </Button>
@@ -250,7 +250,7 @@ const removeAction = (entry: TestScriptCommon, actionIdx: number): TestScriptCom
 
                     {(entry.action ?? []).length === 0 ? (
                       <p className="text-xs text-muted-foreground">
-                        Noch keine Aktionen angelegt.
+                        No actions created yet.
                       </p>
                     ) : (
                       <div className="space-y-3">
@@ -277,7 +277,7 @@ const removeAction = (entry: TestScriptCommon, actionIdx: number): TestScriptCom
                   size="icon"
                   className="mt-1 h-8 w-8 text-destructive"
                   onClick={() => removeEntry(idx)}
-                  title="Common-Block entfernen"
+                  title="Remove common block"
                 >
                   <Trash2 className="h-4 w-4" />
                 </Button>

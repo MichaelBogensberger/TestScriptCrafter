@@ -47,14 +47,14 @@ export function TestScriptImport({ onImport }: TestScriptImportProps) {
       const result = await importTestScriptFromFile(file, currentFhirVersion)
 
       if (result.success && result.testScript) {
-        // Zeige Toast-Meldung für erfolgreichen Import
+        // Show toast message for successful import
         const hasWarnings = result.validationResult?.issue && result.validationResult.issue.length > 0
         if (hasWarnings) {
-          toast.success("TestScript erfolgreich importiert", {
-            description: `${result.validationResult.issue.length} Hinweis(e) vorhanden`,
+          toast.success("TestScript imported successfully", {
+            description: `${result.validationResult.issue.length} hint(s) present`,
           })
         } else {
-          toast.success("TestScript erfolgreich importiert")
+          toast.success("TestScript imported successfully")
         }
 
         // Importiere sofort und schließe Dialog
@@ -75,7 +75,7 @@ export function TestScriptImport({ onImport }: TestScriptImportProps) {
     } catch (error) {
       setImportResult({
         success: false,
-        errors: [`Unerwarteter Fehler: ${error instanceof Error ? error.message : String(error)}`],
+        errors: [`Unexpected error: ${error instanceof Error ? error.message : String(error)}`],
       })
     } finally {
       setIsImporting(false)
@@ -97,15 +97,15 @@ export function TestScriptImport({ onImport }: TestScriptImportProps) {
       <DialogTrigger asChild>
         <Button variant="outline" size="sm" className="gap-2">
           <Upload className="h-4 w-4" />
-          Importieren
+          Import
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>TestScript importieren</DialogTitle>
+          <DialogTitle>Import TestScript</DialogTitle>
           <DialogDescription>
-            Wähle eine JSON- oder XML-Datei aus, um ein bestehendes TestScript zu importieren.
-            Die Datei wird automatisch validiert.
+            Select a JSON or XML file to import an existing TestScript.
+            The file will be automatically validated.
           </DialogDescription>
         </DialogHeader>
 
@@ -123,12 +123,12 @@ export function TestScriptImport({ onImport }: TestScriptImportProps) {
                 )}
                 <p className="mb-2 text-sm text-muted-foreground">
                   {isImporting ? (
-                    <span>Importiere und validiere...</span>
+                    <span>Importing and validating...</span>
                   ) : (
-                    <span className="font-semibold">Klicke zum Auswählen</span>
+                    <span className="font-semibold">Click to select</span>
                   )}
                 </p>
-                <p className="text-xs text-muted-foreground">Jede Datei mit JSON oder XML Inhalt (max. 10MB)</p>
+                <p className="text-xs text-muted-foreground">Any file with JSON or XML content (max. 10MB)</p>
               </div>
               <input
                 id="testscript-file"
@@ -145,7 +145,7 @@ export function TestScriptImport({ onImport }: TestScriptImportProps) {
           {importResult && !importResult.success && (
             <Alert variant="destructive" className="mt-4">
               <AlertCircle className="h-4 w-4" />
-              <AlertTitle>Import fehlgeschlagen</AlertTitle>
+              <AlertTitle>Import failed</AlertTitle>
               <AlertDescription className="mt-2">
                 <div>
                   {importResult.errors && importResult.errors.length > 0 && (
@@ -158,7 +158,7 @@ export function TestScriptImport({ onImport }: TestScriptImportProps) {
                   {importResult.validationResult?.issue &&
                     importResult.validationResult.issue.length > 0 && (
                       <div className="mt-2">
-                        <p className="text-sm font-medium">Validierungsfehler:</p>
+                        <p className="text-sm font-medium">Validation errors:</p>
                         <ul className="list-disc list-inside text-sm mt-1 space-y-1">
                           {importResult.validationResult.issue.map((issue, index) => (
                             <li key={index}>
@@ -166,7 +166,7 @@ export function TestScriptImport({ onImport }: TestScriptImportProps) {
                               {issue.location && issue.location.length > 0 && (
                                 <span className="text-muted-foreground">
                                   {" "}
-                                  (Pfad: {issue.location.join(".")})
+                                  (Path: {issue.location.join(".")})
                                 </span>
                               )}
                             </li>
@@ -186,7 +186,7 @@ export function TestScriptImport({ onImport }: TestScriptImportProps) {
             onClick={() => handleOpenChange(false)}
             disabled={isImporting}
           >
-            Abbrechen
+            Cancel
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -36,7 +36,7 @@ export function StructuredView({ testScript }: StructuredViewProps) {
             <div>
               <CardTitle className="text-2xl">{testScript.name || "Unbenanntes TestScript"}</CardTitle>
               <CardDescription className="mt-2">
-                {testScript.description || "Keine Beschreibung verfügbar"}
+                {testScript.description || "No description available"}
               </CardDescription>
             </div>
             <div className="flex items-center gap-2">
@@ -76,24 +76,24 @@ export function StructuredView({ testScript }: StructuredViewProps) {
               <span className="text-sm font-medium">Tests</span>
             </div>
             <p className="mt-1 text-2xl font-bold">{testCount}</p>
-            <p className="text-xs text-muted-foreground">Anzahl definierter Testfälle</p>
+            <p className="text-xs text-muted-foreground">Number of defined test cases</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-2">
               <Layers className="h-4 w-4 text-primary" />
-              <span className="text-sm font-medium">Test-Aktionen</span>
+              <span className="text-sm font-medium">Test Actions</span>
             </div>
             <p className="mt-1 text-2xl font-bold">{testActionCount}</p>
-            <p className="text-xs text-muted-foreground">Summe aller Aktionen in Tests</p>
+            <p className="text-xs text-muted-foreground">Total actions in tests</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center gap-2">
               <Info className="h-4 w-4 text-blue-500" />
-              <span className="text-sm font-medium">Setup-Aktionen</span>
+              <span className="text-sm font-medium">Setup Actions</span>
             </div>
             <p className="mt-1 text-2xl font-bold">{setupActionCount}</p>
             <p className="text-xs text-muted-foreground">Vorbereitungen</p>
@@ -103,10 +103,10 @@ export function StructuredView({ testScript }: StructuredViewProps) {
           <CardContent className="p-4">
             <div className="flex items-center gap-2">
               <XCircle className="h-4 w-4 text-red-500" />
-              <span className="text-sm font-medium">Teardown-Aktionen</span>
+              <span className="text-sm font-medium">Teardown Actions</span>
             </div>
             <p className="mt-1 text-2xl font-bold">{teardownActionCount}</p>
-            <p className="text-xs text-muted-foreground">Aufräum-Schritte</p>
+            <p className="text-xs text-muted-foreground">Cleanup steps</p>
           </CardContent>
         </Card>
       </div>
@@ -120,27 +120,27 @@ export function StructuredView({ testScript }: StructuredViewProps) {
         </CardContent>
       </Card>
 
-      {/* Hauptinhalt mit Tabs */}
+      {/* Main content with tabs */}
       <Tabs defaultValue="overview" className="w-full">
         <TabsList className="grid w-full grid-cols-6">
-          <TabsTrigger value="overview">Übersicht</TabsTrigger>
-          <TabsTrigger value="config">Konfiguration</TabsTrigger>
+          <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="config">Configuration</TabsTrigger>
           <TabsTrigger value="tests">Tests</TabsTrigger>
           <TabsTrigger value="setup">Setup</TabsTrigger>
           <TabsTrigger value="common">Common</TabsTrigger>
-          <TabsTrigger value="validation">Validierung</TabsTrigger>
+          <TabsTrigger value="validation">Validation</TabsTrigger>
         </TabsList>
 
         <TabsContent value="overview" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>TestScript Übersicht</CardTitle>
+              <CardTitle>TestScript Overview</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
                 {testScript.metadata && (
                   <div>
-                    <h4 className="font-medium mb-2">Metadaten</h4>
+                    <h4 className="font-medium mb-2">Metadata</h4>
                     <div className="space-y-2">
                       {testScript.metadata.capability?.map((capability, index) => (
                         <div key={index} className="p-3 bg-muted rounded-lg">
@@ -150,10 +150,10 @@ export function StructuredView({ testScript }: StructuredViewProps) {
                             </span>
                             <div className="flex items-center gap-2">
                               {capability.required && (
-                                <Badge variant="destructive" className="text-xs">Erforderlich</Badge>
+                                <Badge variant="destructive" className="text-xs">Required</Badge>
                               )}
                               {capability.validated && (
-                                <Badge variant="default" className="text-xs">Validiert</Badge>
+                                <Badge variant="default" className="text-xs">Validated</Badge>
                               )}
                             </div>
                           </div>
@@ -203,7 +203,7 @@ function SetupSection({ setup }: { setup: TestScriptSetup | undefined }) {
       <Card>
         <CardContent className="p-6 text-center">
           <Info className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
-          <p className="text-muted-foreground">Keine Setup-Aktionen definiert</p>
+          <p className="text-muted-foreground">No setup actions defined</p>
         </CardContent>
       </Card>
     );
@@ -236,7 +236,7 @@ function SetupSection({ setup }: { setup: TestScriptSetup | undefined }) {
               )}
               {action.assert && (
                 <div className="mt-2 p-2 bg-muted rounded">
-                  <p className="text-sm"><span className="font-medium">Assertion:</span> {action.assert.description || "Keine Beschreibung"}</p>
+                  <p className="text-sm"><span className="font-medium">Assertion:</span> {action.assert.description || "No description"}</p>
                 </div>
               )}
             </div>
@@ -253,7 +253,7 @@ function TeardownSection({ teardown }: { teardown: TestScriptTeardown | undefine
       <Card>
         <CardContent className="p-6 text-center">
           <Info className="mx-auto mb-2 h-8 w-8 text-muted-foreground" />
-          <p className="text-muted-foreground">Keine Teardown-Aktionen definiert</p>
+          <p className="text-muted-foreground">No teardown actions defined</p>
         </CardContent>
       </Card>
     )
@@ -295,7 +295,7 @@ function TestSection({ tests }: { tests: TestScriptTest[] | undefined }) {
       <Card>
         <CardContent className="p-6 text-center">
           <Info className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
-          <p className="text-muted-foreground">Keine Tests definiert</p>
+          <p className="text-muted-foreground">No tests defined</p>
         </CardContent>
       </Card>
     );
@@ -341,7 +341,7 @@ function TestSection({ tests }: { tests: TestScriptTest[] | undefined }) {
                 ))}
               </div>
             ) : (
-              <p className="text-muted-foreground text-sm">Keine Aktionen definiert</p>
+              <p className="text-muted-foreground text-sm">No actions defined</p>
             )}
           </CardContent>
         </Card>
@@ -455,7 +455,7 @@ function ConfigurationSection({ testScript }: { testScript: TestScript }) {
         <CardContent className="p-6 text-center">
           <Info className="mx-auto mb-2 h-8 w-8 text-muted-foreground" />
           <p className="text-muted-foreground">
-            Keine zusätzlichen Konfigurationen (Systeme, Fixtures, Variablen oder Scope) definiert.
+            No additional configurations (systems, fixtures, variables or scope) defined.
           </p>
         </CardContent>
       </Card>
@@ -527,7 +527,7 @@ function ConfigurationSection({ testScript }: { testScript: TestScript }) {
                     <div key={destination.index} className="rounded border p-2">
                       <div className="flex items-center justify-between">
                         <span>Index {destination.index}</span>
-                        <Badge variant="outline">Empfänger</Badge>
+                        <Badge variant="outline">Receiver</Badge>
                       </div>
                       <p className="text-xs text-muted-foreground">
                         Profil: {destination.profile?.code ?? "unbekannt"}
@@ -631,7 +631,7 @@ function ConfigurationSection({ testScript }: { testScript: TestScript }) {
                 </p>
                 {scope.conformance?.coding?.[0]?.code && (
                   <p className="text-xs text-muted-foreground">
-                    Konformität: {scope.conformance.coding[0].code} (
+                    Conformance: {scope.conformance.coding[0].code} (
                     {scope.conformance.coding[0].display})
                   </p>
                 )}

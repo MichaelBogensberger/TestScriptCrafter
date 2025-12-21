@@ -18,6 +18,7 @@ interface TestCaseSectionProps {
   testIndex: number
   updateTest: (test: TestScriptTest) => void
   removeTest: () => void
+  availableFixtures?: Array<{ id: string; description?: string }>
 }
 
 export function TestCaseSection({
@@ -25,6 +26,7 @@ export function TestCaseSection({
   testIndex,
   updateTest,
   removeTest,
+  availableFixtures = [],
 }: TestCaseSectionProps) {
   const actions = test.action ?? []
   const [activeActionIndex, setActiveActionIndex] = useState(0)
@@ -48,6 +50,19 @@ export function TestCaseSection({
     const newAction: TestScriptTestAction = {
       operation: {
         encodeRequestUrl: true,
+      },
+    }
+    updateField("action", [...actions, newAction])
+    setActiveActionIndex(actions.length)
+  }
+
+  const addAssertionAction = () => {
+    const newAction: TestScriptTestAction = {
+      assert: {
+        description: "",
+        response: "okay",
+        warningOnly: false,
+        stopTestOnFail: true,
       },
     }
     updateField("action", [...actions, newAction])
@@ -116,7 +131,7 @@ export function TestCaseSection({
             size="icon"
             className="h-8 w-8 text-destructive"
             onClick={removeTest}
-            title="Testfall entfernen"
+            title="Remove test case"
           >
             <Trash2 className="h-4 w-4" />
           </Button>
@@ -124,28 +139,34 @@ export function TestCaseSection({
       </div>
 
       <div>
-        <Label htmlFor={`test-${testIndex}-description`}>Beschreibung</Label>
+        <Label htmlFor={`test-${testIndex}-description`}>Description</Label>
         <Textarea
           id={`test-${testIndex}-description`}
           value={test.description ?? ""}
           onChange={(event) => updateField("description", event.target.value || undefined)}
           rows={3}
-          placeholder="Kurze Beschreibung für Reporting"
+          placeholder="Brief description for reporting"
         />
       </div>
 
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <h4 className="text-sm font-medium">Aktionen & Assertions</h4>
-          <Button variant="outline" size="sm" onClick={addAction} className="flex items-center gap-1">
-            <Plus className="h-4 w-4" />
-            Aktion hinzufügen
-          </Button>
+          <h4 className="text-sm font-medium">Actions & Assertions</h4>
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm" onClick={addAction} className="flex items-center gap-1">
+              <Plus className="h-4 w-4" />
+              Add Operation
+            </Button>
+            <Button variant="outline" size="sm" onClick={addAssertionAction} className="flex items-center gap-1">
+              <Plus className="h-4 w-4" />
+              Add Assertion
+            </Button>
+          </div>
         </div>
 
         {actions.length === 0 ? (
           <div className="rounded-md border border-dashed p-4 text-center text-sm text-muted-foreground">
-            Noch keine Aktionen definiert.
+            No actions defined yet.
           </div>
         ) : (
           <div className="grid gap-4 lg:grid-cols-[230px_1fr]">
@@ -194,6 +215,8 @@ export function TestCaseSection({
                   size="sm"
                   className="text-destructive"
                   onClick={() => removeAction(activeActionIndex)}
+                  disabled={actions.length === 1}
+                  title={actions.length === 1 ? "Mindestens eine Action ist erforderlich" : "Action entfernen"}
                 >
                   <Trash2 className="h-4 w-4" />
                   Entfernen
@@ -208,9 +231,10 @@ export function TestCaseSection({
                   sectionType="test"
                   updateAction={(updated) => updateAction(activeActionIndex, updated)}
                   removeAction={() => removeAction(activeActionIndex)}
+                  availableFixtures={availableFixtures}
                 />
               ) : (
-                <p className="text-sm text-muted-foreground">Wähle links eine Aktion aus.</p>
+                <p className="text-sm text-muted-foreground">Select an action from the left.</p>
               )}
             </Card>
           </div>

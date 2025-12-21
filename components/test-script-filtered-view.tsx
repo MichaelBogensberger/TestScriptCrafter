@@ -157,7 +157,7 @@ const filterCommonSection = (common: TestScriptCommon, options: FilterOptions): 
 }
 
 /**
- * Komponente zum gefilterten Anzeigen von TestScript-Inhalten
+ * Component for filtered display of TestScript contents
  */
 export function TestScriptFilteredView({ testScript }: TestScriptFilteredViewProps) {
   const [searchTerm, setSearchTerm] = useState("")
@@ -302,7 +302,7 @@ export function TestScriptFilteredView({ testScript }: TestScriptFilteredViewPro
                 </Label>
                 <Select value={filterType} onValueChange={(value) => setFilterType(value as FilterTypeOption)}>
                   <SelectTrigger id="filter-type">
-                    <SelectValue placeholder="Filtertyp auswählen" />
+                    <SelectValue placeholder="Select filter type" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">Alle Felder</SelectItem>
@@ -319,7 +319,7 @@ export function TestScriptFilteredView({ testScript }: TestScriptFilteredViewPro
                 </Label>
                 <Select value={filterSection} onValueChange={(value) => setFilterSection(value as SectionFilterOption)}>
                   <SelectTrigger id="filter-section">
-                    <SelectValue placeholder="Bereich auswählen" />
+                    <SelectValue placeholder="Select section" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">Alle Bereiche</SelectItem>

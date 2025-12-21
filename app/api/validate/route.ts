@@ -95,26 +95,8 @@ function enhanceFhirResponse(fhirResponse: OperationOutcome, originalJson: strin
     // Verbessere die Fehlermeldung
     let message = issue.diagnostics || issue.details?.text || "Unbekannter Validierungsfehler";
     
-    // Deutsche Übersetzungen für häufige FHIR-Validierungsfehler
-    const translations: Record<string, string> = {
-      "Array cannot be empty - the property should not be present if it has no values": 
-        "Leeres Array - Entfernen Sie die Eigenschaft, wenn keine Werte vorhanden sind",
-      "Canonical URLs must be absolute URLs if they are not fragment references": 
-        "Canonical URLs müssen absolute URLs sein, falls es sich nicht um Fragment-Referenzen handelt"
-    };
-
-    // Übersetze häufige Muster
-    Object.entries(translations).forEach(([english, german]) => {
-      if (message.includes(english)) {
-        message = message.replace(english, german);
-      }
-    });
-
-    // Übersetze "minimum required" Muster
-    message = message.replace(
-      /minimum required = (\d+), but only found (\d+)/g,
-      "Mindestens $1 erforderlich, aber nur $2 gefunden"
-    );
+    // Note: Keeping error messages from FHIR server in original language
+    // for consistency with FHIR specification
 
     const updatedExtensions: Extension[] = [
       ...(issue.extension ?? []),
@@ -150,8 +132,11 @@ export async function POST(request: Request) {
     const fhirVersion = parseFhirVersion(versionHeader || undefined);
     const fhirConfig = getFhirVersionConfig(fhirVersion);
     
+    // Prüfe, ob es sich um einen Import handelt (lockere Validierung)
+    const isImportMode = request.headers.get('X-Validation-Mode') === 'import';
+    
     // Validiere grundlegende TestScript-Struktur
-    const basicValidation = validateBasicStructure(body);
+    const basicValidation = validateBasicStructure(body, isImportMode);
     if (!basicValidation.valid) {
       return NextResponse.json({
         resourceType: 'OperationOutcome',
@@ -177,13 +162,35 @@ export async function POST(request: Request) {
     // Führe erweiterte lokale Validierung durch
     const extendedValidation = validateExtendedStructure(body);
     
-    // Wenn lokale Validierung erfolgreich ist, versuche externe Validierung
+    // In import mode: Skip external validation and return success
+    if (isImportMode) {
+      return NextResponse.json({
+        resourceType: 'OperationOutcome',
+        issue: [{
+          severity: 'information',
+          code: 'informational',
+          diagnostics: 'TestScript imported successfully. External FHIR validation was skipped.',
+          extension: [
+            {
+              url: "http://hl7.org/fhir/StructureDefinition/operationoutcome-issue-line",
+              valueInteger: 1
+            },
+            {
+              url: "http://hl7.org/fhir/StructureDefinition/operationoutcome-issue-col",
+              valueInteger: 1
+            }
+          ]
+        }]
+      });
+    }
+    
+    // In normal mode: If local validation is successful, try external validation
     if (extendedValidation.valid) {
       try {
         const formattedTestScript = JSON.stringify(body, null, 2);
         const fhirServerUrl = fhirConfig.validationEndpoint;
         
-        console.log(`Verwende ${fhirVersion} FHIR Server für Validierung: ${fhirServerUrl}`);
+        console.log(`Using ${fhirVersion} FHIR Server for validation: ${fhirServerUrl}`);
         
         const response = await fetch(fhirServerUrl, {
           method: 'POST',
@@ -209,17 +216,17 @@ export async function POST(request: Request) {
           return NextResponse.json(enhancedResponse);
         }
       } catch (fetchError) {
-        console.warn('Externe FHIR-Validierung fehlgeschlagen, verwende lokale Validierung:', fetchError);
+        console.warn('External FHIR validation failed, using local validation:', fetchError);
       }
     }
     
-    // Fallback: Verwende lokale Validierung
+    // Fallback: Use local validation
     return NextResponse.json({
       resourceType: 'OperationOutcome',
       issue: extendedValidation.valid ? [{
         severity: 'information',
         code: 'informational',
-        diagnostics: 'TestScript ist strukturell korrekt. Externe FHIR-Validierung nicht verfügbar.',
+        diagnostics: 'TestScript is structurally correct. External FHIR validation not available.',
         extension: [
           {
             url: "http://hl7.org/fhir/StructureDefinition/operationoutcome-issue-line",
@@ -249,16 +256,16 @@ export async function POST(request: Request) {
     });
     
   } catch (error: unknown) {
-    console.error('Validierungsfehler:', error);
+    console.error('Validation error:', error);
     
-    const errorMessage = error instanceof Error ? error.message : 'Unbekannter Fehler';
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     
     return NextResponse.json({
       resourceType: 'OperationOutcome',
       issue: [{
         severity: 'error',
         code: 'exception',
-        diagnostics: `Lokale Validierung fehlgeschlagen: ${errorMessage}`,
+        diagnostics: `Local validation failed: ${errorMessage}`,
         extension: [
           {
             url: "http://hl7.org/fhir/StructureDefinition/operationoutcome-issue-line",
@@ -274,73 +281,54 @@ export async function POST(request: Request) {
   }
 }
 
-function validateBasicStructure(testScript: Partial<TestScript>) {
+function validateBasicStructure(testScript: Partial<TestScript>, isImportMode = false) {
   const errors: StructureIssue[] = [];
 
-  // Grundlegende Strukturvalidierung
+  // Basic structure validation - only absolutely necessary fields
   if (!testScript.resourceType || testScript.resourceType !== 'TestScript') {
     errors.push({
-      message: 'ResourceType muss "TestScript" sein',
+      message: 'ResourceType must be "TestScript"',
       location: ['resourceType'],
       line: 2,
       column: 3
     });
   }
 
-  if (!testScript.name || typeof testScript.name !== 'string') {
-    errors.push({
-      message: 'TestScript muss einen Namen (String) haben',
-      location: ['name'],
-      line: 3,
-      column: 3
-    });
-  } else if (!testScript.name.match(/^[A-Z]([A-Za-z0-9_]){1,254}$/)) {
-    errors.push({
-      message: 'Name muss mit einem Großbuchstaben beginnen und darf nur Buchstaben, Zahlen und Unterstriche enthalten',
-      location: ['name'],
-      line: 3,
-      column: 3
-    });
-  }
-
   if (!testScript.status) {
     errors.push({
-      message: 'TestScript muss einen Status haben',
+      message: 'TestScript must have a status',
       location: ['status'],
       line: 4,
       column: 3
     });
   } else if (!['draft', 'active', 'retired', 'unknown'].includes(testScript.status)) {
     errors.push({
-      message: 'Status muss einer der folgenden Werte sein: draft, active, retired, unknown',
+      message: 'Status must be one of: draft, active, retired, unknown',
       location: ['status'],
       line: 4,
       column: 3
     });
   }
 
-  // Prüfe Metadata - muss vorhanden sein und gültige capabilities haben
-  if (!testScript.metadata) {
-    errors.push({
-      message: 'TestScript muss Metadaten enthalten',
-      location: ['metadata'],
-      line: 5,
-      column: 3
-    });
-  } else {
-    if (!testScript.metadata.capability || !Array.isArray(testScript.metadata.capability) || testScript.metadata.capability.length === 0) {
+  // In normal mode (not import): Extended validation
+  if (!isImportMode) {
+    // Name validation (only in edit mode)
+    if (!testScript.name || typeof testScript.name !== 'string' || testScript.name.trim() === '') {
       errors.push({
-        message: 'Metadaten müssen mindestens eine Capability enthalten',
-        location: ['metadata', 'capability'],
-        line: 6,
-        column: 5
+        message: 'TestScript must have a name (string)',
+        location: ['name'],
+        line: 3,
+        column: 3
       });
-    } else {
+    }
+
+    // Metadata validation (only if present)
+    if (testScript.metadata && testScript.metadata.capability && Array.isArray(testScript.metadata.capability)) {
       testScript.metadata.capability.forEach((rawCapability, index: number) => {
         const capability = rawCapability as Partial<TestScriptMetadataCapability>;
         if (!capability.capabilities) {
           errors.push({
-            message: `Capability ${index + 1}: Das 'capabilities'-Feld ist erforderlich`,
+            message: `Capability ${index + 1}: The 'capabilities' field is required`,
             location: ['metadata', 'capability', index.toString(), 'capabilities'],
             line: 7 + index * 3,
             column: 7
@@ -351,7 +339,7 @@ function validateBasicStructure(testScript: Partial<TestScript>) {
           !capability.capabilities.startsWith('https://')
         ) {
           errors.push({
-            message: `Capability ${index + 1}: capabilities muss eine absolute URL sein`,
+            message: `Capability ${index + 1}: capabilities must be an absolute URL`,
             location: ['metadata', 'capability', index.toString(), 'capabilities'],
             line: 7 + index * 3,
             column: 7
@@ -363,7 +351,7 @@ function validateBasicStructure(testScript: Partial<TestScript>) {
 
         if (!hasRequiredFlag && !hasValidatedFlag) {
           errors.push({
-            message: `Capability ${index + 1}: Mindestens 'required' oder 'validated' muss gesetzt sein`,
+            message: `Capability ${index + 1}: At least 'required' or 'validated' must be set`,
             location: ['metadata', 'capability', index.toString()],
             line: 7 + index * 3,
             column: 7
@@ -371,39 +359,39 @@ function validateBasicStructure(testScript: Partial<TestScript>) {
         }
       });
     }
-  }
 
-  // Prüfe, ob leere Arrays vermieden werden
-  if (testScript.setup && Array.isArray(testScript.setup.action) && testScript.setup.action.length === 0) {
-    errors.push({
-      message: 'Setup-Aktionen sind leer - entfernen Sie die setup-Eigenschaft oder fügen Sie Aktionen hinzu',
-      location: ['setup', 'action'],
-      line: 15,
-      column: 5
-    });
-  }
+    // Check empty arrays
+    if (testScript.setup && Array.isArray(testScript.setup.action) && testScript.setup.action.length === 0) {
+      errors.push({
+        message: 'Setup actions are empty - remove the setup property or add actions',
+        location: ['setup', 'action'],
+        line: 15,
+        column: 5
+      });
+    }
 
-  if (testScript.teardown && Array.isArray(testScript.teardown.action) && testScript.teardown.action.length === 0) {
-    errors.push({
-      message: 'Teardown-Aktionen sind leer - entfernen Sie die teardown-Eigenschaft oder fügen Sie Aktionen hinzu',
-      location: ['teardown', 'action'],
-      line: 25,
-      column: 5
-    });
-  }
+    if (testScript.teardown && Array.isArray(testScript.teardown.action) && testScript.teardown.action.length === 0) {
+      errors.push({
+        message: 'Teardown actions are empty - remove the teardown property or add actions',
+        location: ['teardown', 'action'],
+        line: 25,
+        column: 5
+      });
+    }
 
-  if (Array.isArray(testScript.test)) {
-    testScript.test.forEach((rawTestCase, index: number) => {
-      const testCase = rawTestCase as Partial<TestScriptTest>;
-      if (!Array.isArray(testCase.action) || testCase.action.length === 0) {
-        errors.push({
-          message: `Test ${index + 1}: Muss mindestens eine Aktion enthalten`,
-          location: ['test', index.toString(), 'action'],
-          line: 20 + index * 5,
-          column: 7
-        });
-      }
-    });
+    if (Array.isArray(testScript.test)) {
+      testScript.test.forEach((rawTestCase, index: number) => {
+        const testCase = rawTestCase as Partial<TestScriptTest>;
+        if (!Array.isArray(testCase.action) || testCase.action.length === 0) {
+          errors.push({
+            message: `Test ${index + 1}: Must contain at least one action`,
+            location: ['test', index.toString(), 'action'],
+            line: 20 + index * 5,
+            column: 7
+          });
+        }
+      });
+    }
   }
 
   return {
@@ -415,36 +403,36 @@ function validateBasicStructure(testScript: Partial<TestScript>) {
 function validateExtendedStructure(testScript: TestScript) {
   const errors: StructureIssue[] = [];
 
-  // Erweiterte Validierung für Test-Aktionen
+  // Extended validation for test actions
   if (testScript.test && Array.isArray(testScript.test)) {
     testScript.test.forEach((test, testIndex) => {
       if (test.action && Array.isArray(test.action)) {
         test.action.forEach((action, actionIndex) => {
-          // Prüfe FHIR-Constraint tst-2: Aktion darf nur Operation ODER Assert haben, nicht beides
+          // Check FHIR constraint tst-2: Action may only have Operation OR Assert, not both
           if (action.operation && action.assert) {
             errors.push({
-              message: `Test ${testIndex + 1}, Aktion ${actionIndex + 1}: Eine Aktion darf nur eine Operation oder eine Assertion enthalten, nicht beides (FHIR-Constraint tst-2)`,
+              message: `Test ${testIndex + 1}, Action ${actionIndex + 1}: An action may only contain an operation or an assertion, not both (FHIR constraint tst-2)`,
               location: ['test', testIndex.toString(), 'action', actionIndex.toString()],
               line: 30 + testIndex * 10 + actionIndex * 2,
               column: 9
             });
           }
 
-          // Prüfe, dass mindestens Operation oder Assert vorhanden ist
+          // Check that at least Operation or Assert is present
           if (!action.operation && !action.assert) {
             errors.push({
-              message: `Test ${testIndex + 1}, Aktion ${actionIndex + 1}: Eine Aktion muss entweder eine Operation oder eine Assertion enthalten`,
+              message: `Test ${testIndex + 1}, Action ${actionIndex + 1}: An action must contain either an operation or an assertion`,
               location: ['test', testIndex.toString(), 'action', actionIndex.toString()],
               line: 30 + testIndex * 10 + actionIndex * 2,
               column: 9
             });
           }
 
-          // Validiere Operation falls vorhanden
+          // Validate Operation if present
           if (action.operation) {
             if (!action.operation.type?.code) {
               errors.push({
-                message: `Test ${testIndex + 1}, Aktion ${actionIndex + 1}: Operation benötigt einen Type-Code`,
+                message: `Test ${testIndex + 1}, Action ${actionIndex + 1}: Operation requires a type code`,
                 location: ['test', testIndex.toString(), 'action', actionIndex.toString(), 'operation', 'type', 'code'],
                 line: 32 + testIndex * 10 + actionIndex * 2,
                 column: 13
@@ -453,7 +441,7 @@ function validateExtendedStructure(testScript: TestScript) {
 
             if (!action.operation.resource) {
               errors.push({
-                message: `Test ${testIndex + 1}, Aktion ${actionIndex + 1}: Operation benötigt eine Resource-Angabe`,
+                message: `Test ${testIndex + 1}, Action ${actionIndex + 1}: Operation requires a resource specification`,
                 location: ['test', testIndex.toString(), 'action', actionIndex.toString(), 'operation', 'resource'],
                 line: 34 + testIndex * 10 + actionIndex * 2,
                 column: 13
@@ -461,11 +449,11 @@ function validateExtendedStructure(testScript: TestScript) {
             }
           }
 
-          // Validiere Assertion falls vorhanden
+          // Validate Assertion if present
           if (action.assert) {
             if (!action.assert.description) {
               errors.push({
-                message: `Test ${testIndex + 1}, Aktion ${actionIndex + 1}: Assertion benötigt eine Beschreibung`,
+                message: `Test ${testIndex + 1}, Action ${actionIndex + 1}: Assertion requires a description`,
                 location: ['test', testIndex.toString(), 'action', actionIndex.toString(), 'assert', 'description'],
                 line: 36 + testIndex * 10 + actionIndex * 2,
                 column: 13

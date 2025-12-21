@@ -1,12 +1,13 @@
 "use client"
 
-import { useState, useCallback, useMemo } from "react"
+import { useState, useCallback, useMemo, useEffect } from "react"
 import FormBuilder from "@/components/form-builder/form-builder"
 import { HeaderSection } from "./test-script-builder/header-section"
 import { OutputSection } from "./test-script-builder/output-section"
 import type { TestScript, TestScriptStatus } from "@/types/fhir-enhanced"
 import { initialTestScript } from "@/lib/initial-data"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { useSettings } from "@/lib/settings-context"
 
 /**
  * Main TestScript Builder component that manages the overall state and layout
@@ -15,6 +16,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 export function TestScriptBuilder() {
   // State for the TestScript data with proper typing
   const [testScript, setTestScript] = useState<TestScript>(initialTestScript)
+  const { settings } = useSettings()
 
   /**
    * Updates the TestScript data with new values using functional updates
@@ -69,6 +71,27 @@ export function TestScriptBuilder() {
     }
   }, [])
 
+  /**
+   * Resets the TestScript to the initial state
+   */
+  const handleClear = useCallback(() => {
+    setTestScript(initialTestScript)
+  }, [])
+
+  /**
+   * Clean TestScript based on settings - remove disabled features
+   */
+  const cleanedTestScript = useMemo(() => {
+    const cleaned = { ...testScript }
+    
+    // Remove metadata if not enabled in settings
+    if (!settings.showMetadataCapabilities && cleaned.metadata) {
+      delete cleaned.metadata
+    }
+    
+    return cleaned
+  }, [testScript, settings.showMetadataCapabilities])
+
   return (
     <div className="space-y-8">
       <HeaderSection 
@@ -76,21 +99,22 @@ export function TestScriptBuilder() {
         isValidTestScript={isValidTestScript}
         getStatusBadgeVariant={getStatusBadgeVariant}
         onImport={(importedScript) => setTestScript(importedScript)}
+        onClear={handleClear}
       />
 
       <Tabs defaultValue="builder" className="w-full">
         <div className="bg-card/95 backdrop-blur-sm rounded-lg p-4 border">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <p className="text-sm font-medium text-muted-foreground">Arbeitsbereich wechseln</p>
-              <p className="text-xs text-muted-foreground">Fokussiere wahlweise auf Eingaben oder Vorschau.</p>
+              <p className="text-sm font-medium text-muted-foreground">Switch workspace</p>
+              <p className="text-xs text-muted-foreground">Focus on either form input or preview.</p>
             </div>
             <TabsList className="grid w-full grid-cols-2 sm:w-auto sm:min-w-[320px] bg-muted/40">
             <TabsTrigger value="builder" className="gap-2">
-              Formular
+              Form
             </TabsTrigger>
             <TabsTrigger value="preview" className="gap-2">
-              Vorschau
+              Preview
             </TabsTrigger>
           </TabsList>
           </div>
@@ -105,7 +129,7 @@ export function TestScriptBuilder() {
         </TabsContent>
 
         <TabsContent value="preview" className="mt-6">
-          <OutputSection testScript={testScript} />
+          <OutputSection testScript={cleanedTestScript} />
         </TabsContent>
       </Tabs>
     </div>

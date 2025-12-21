@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
 import { Plus, Trash2 } from "lucide-react"
 import type { TestScript, TestScriptFixture } from "@/types/fhir-enhanced"
+import { toast } from "sonner"
 
 interface ManualFixturesTabProps {
   fixtures: TestScript["fixture"]
@@ -28,9 +29,23 @@ export function ManualFixturesTab({ fixtures, updateFixtures }: ManualFixturesTa
       autodelete: false,
     }
     updateFixtures([...(entries ?? []), newFixture])
+    toast.success("Fixture hinzugefügt", {
+      description: "Bitte vergessen Sie nicht, eine eindeutige Fixture ID einzugeben.",
+    })
   }
 
   const updateFixture = (idx: number, fixture: TestScriptFixture) => {
+    // Prüfe auf Duplikat-ID wenn eine ID gesetzt wird
+    if (fixture.id && fixture.id.trim()) {
+      const isDuplicate = entries.some((f, i) => i !== idx && f.id === fixture.id)
+      if (isDuplicate) {
+        toast.error("Duplikat-ID erkannt", {
+          description: `Eine Fixture mit der ID "${fixture.id}" existiert bereits.`,
+        })
+        return
+      }
+    }
+    
     const next = [...entries]
     next[idx] = fixture
     updateFixtures(next)
@@ -45,26 +60,26 @@ export function ManualFixturesTab({ fixtures, updateFixtures }: ManualFixturesTa
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <h4 className="text-sm font-medium">Manuelle Fixtures</h4>
+          <h4 className="text-sm font-medium">Manual Fixtures</h4>
           <p className="text-xs text-muted-foreground">
-            Erstelle Fixtures durch manuelle Eingabe von Resource-Referenzen.
+            Create fixtures by manually entering resource references.
           </p>
         </div>
         <Button variant="outline" size="sm" onClick={addFixture} className="flex items-center gap-1">
           <Plus className="h-4 w-4" />
-          Fixture hinzufügen
+          Add Fixture
         </Button>
       </div>
 
       {entries.length === 0 ? (
         <EmptyState
           icon={<Plus className="h-6 w-6 text-muted-foreground" />}
-          title="Keine Fixtures definiert"
-          description="Beginne mit dem Hinzufügen deines ersten Fixtures für Testdaten."
+          title="No fixtures defined"
+          description="Start by adding your first fixture for test data."
           action={
             <Button variant="outline" onClick={addFixture} className="flex items-center gap-1">
               <Plus className="h-4 w-4" />
-              Erstes Fixture erstellen
+              Create First Fixture
             </Button>
           }
         />
@@ -76,7 +91,9 @@ export function ManualFixturesTab({ fixtures, updateFixtures }: ManualFixturesTa
                 <div className="flex-1 space-y-4">
                   {/* Fixture ID */}
                   <div>
-                    <Label htmlFor={`fixture-${idx}-id`}>Fixture ID</Label>
+                    <Label htmlFor={`fixture-${idx}-id`}>
+                      Fixture ID <span className="text-red-500">*</span>
+                    </Label>
                     <Input
                       id={`fixture-${idx}-id`}
                       value={fixture.id ?? ""}
@@ -88,9 +105,10 @@ export function ManualFixturesTab({ fixtures, updateFixtures }: ManualFixturesTa
                       }
                       placeholder="fixture-patient-example"
                       className="mt-1"
+                      required
                     />
                     <p className="text-xs text-muted-foreground mt-1">
-                      Eindeutige ID für die Referenzierung in Test-Aktionen
+                      Eindeutige ID für die Referenzierung in Test-Aktionen (Pflichtfeld)
                     </p>
                   </div>
 
@@ -100,7 +118,7 @@ export function ManualFixturesTab({ fixtures, updateFixtures }: ManualFixturesTa
                       <div>
                         <Label htmlFor={`fixture-${idx}-autocreate`}>Automatisch erstellen</Label>
                         <p className="text-xs text-muted-foreground">
-                          Fixture wird während des Setups erstellt.
+                          Fixture is created during setup.
                         </p>
                       </div>
                       <Switch
@@ -113,9 +131,9 @@ export function ManualFixturesTab({ fixtures, updateFixtures }: ManualFixturesTa
                     </div>
                     <div className="flex items-center justify-between gap-3 rounded-md border p-3">
                       <div>
-                        <Label htmlFor={`fixture-${idx}-autodelete`}>Automatisch löschen</Label>
+                        <Label htmlFor={`fixture-${idx}-autodelete`}>Auto-delete</Label>
                         <p className="text-xs text-muted-foreground">
-                          Fixture wird nach den Tests entfernt.
+                          Fixture is removed after tests.
                         </p>
                       </div>
                       <Switch
@@ -150,7 +168,7 @@ export function ManualFixturesTab({ fixtures, updateFixtures }: ManualFixturesTa
                         className="mt-1"
                       />
                       <p className="text-xs text-muted-foreground mt-1">
-                        Format: ResourceType/id
+                        Format: ResourceType/id oder URL (z.B. .html Datei)
                       </p>
                     </div>
                     <div>
@@ -192,7 +210,7 @@ export function ManualFixturesTab({ fixtures, updateFixtures }: ManualFixturesTa
                         className="mt-1"
                       />
                       <p className="text-xs text-muted-foreground mt-1">
-                        Lesbare Beschreibung
+                        Human-readable description
                       </p>
                     </div>
                   </div>
@@ -203,7 +221,7 @@ export function ManualFixturesTab({ fixtures, updateFixtures }: ManualFixturesTa
                   size="icon"
                   className="mt-1 h-8 w-8 text-destructive hover:text-destructive"
                   onClick={() => removeFixture(idx)}
-                  title="Fixture entfernen"
+                  title="Remove fixture"
                 >
                   <Trash2 className="h-4 w-4" />
                 </Button>

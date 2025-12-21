@@ -27,7 +27,7 @@ interface ValidationTabProps {
   serverUrl: string;
   setServerUrl: (url: string) => void;
   currentFhirVersion: FhirVersion;
-  // Neue Props für Request/Response Anzeige
+  // New props for Request/Response display
   lastRequestPayload: TestScript | null;
   lastServerResponse: any | null;
 }
@@ -65,12 +65,12 @@ export function ValidationTab({
     try {
       await clientOnly.clipboard.writeText(text);
     } catch (error) {
-      console.warn('Clipboard API nicht verfügbar:', error);
+      console.warn('Clipboard API not available:', error);
     }
   };
 
   const getLocationDisplayPath = (location: string[] | undefined, expression: string[] | undefined): string => {
-    // Bevorzuge expression-Feld, da es oft sauberer ist
+    // Prefer expression field as it's often cleaner
     if (expression && expression.length > 0) {
       const cleanExpression = expression
         .map(expr => expr.replace(/Parameters\.parameter\[0\]\.resource\./, "")
@@ -80,28 +80,20 @@ export function ValidationTab({
       if (cleanExpression) return cleanExpression;
     }
     
-    if (!location || location.length === 0) return "Unbekannte Position";
+    if (!location || location.length === 0) return "Unknown position";
     
-    // Bereinige die FHIR-Location-Pfade für bessere Lesbarkeit
+    // Clean FHIR location paths for better readability
     return location
       .map(loc => loc.replace(/Parameters\.parameter\[0\]\.resource\./, "")
                     .replace(/\/\*TestScript\/null\*\/\./, "")
                     .replace(/\[\d+\]/g, (match) => `[${match.slice(1, -1)}]`)
-                    .replace(/^Line\[(\d+)\] Col\[(\d+)\]$/, "Zeile $1, Spalte $2")) // Formatiere "Line[28] Col[14]" um
+                    .replace(/^Line\[(\d+)\] Col\[(\d+)\]$/, "Line $1, Column $2"))
       .join(" → ");
   };
 
   const formatValidationMessage = (message: string): string => {
-    // Verbessere die Fehlermeldungen für bessere Lesbarkeit
-    return message
-      .replace(/Array cannot be empty - the property should not be present if it has no values/, 
-               "Leeres Array - Entfernen Sie die Eigenschaft, wenn keine Werte vorhanden sind")
-      .replace(/Canonical URLs must be absolute URLs if they are not fragment references/, 
-               "Canonical URLs müssen absolute URLs sein, falls es sich nicht um Fragment-Referenzen handelt")
-      .replace(/minimum required = (\d+), but only found (\d+)/, 
-               "Mindestens $1 erforderlich, aber nur $2 gefunden")
-      .replace(/Constraint failed: ([\w-]+): (.+)/, 
-               "Constraint-Verletzung ($1): $2");
+    // Keep original error messages for consistency with FHIR specification
+    return message;
   };
 
   const renderIssueDetails = (issue: ValidationIssue, colorScheme: {
@@ -111,17 +103,17 @@ export function ValidationTab({
     border: string;
     label: string;
   }) => {
-    const issueText = issue.details?.text || issue.diagnostics || "Unbekannter Fehler";
+    const issueText = issue.details?.text || issue.diagnostics || "Unknown error";
     const hasLine = issue.line && issue.line > 0;
     const hasColumn = issue.column && issue.column > 0;
     const hasPosition = hasLine || hasColumn;
     const locationPath = getLocationDisplayPath(issue.location, issue.expression);
-    const hasLocation = locationPath && locationPath !== "Unbekannte Position";
+    const hasLocation = locationPath && locationPath !== "Unknown position";
     
-    // Baue Position-String zusammen
+    // Build position string
     const positionParts: string[] = [];
-    if (hasLine) positionParts.push(`Zeile ${issue.line}`);
-    if (hasColumn) positionParts.push(`Spalte ${issue.column}`);
+    if (hasLine) positionParts.push(`Line ${issue.line}`);
+    if (hasColumn) positionParts.push(`Column ${issue.column}`);
     const positionText = positionParts.length > 0 ? positionParts.join(", ") : undefined;
     
     return (
@@ -144,7 +136,7 @@ export function ValidationTab({
             <div>
               <Label className={`${colorScheme.label} font-medium`}>Code:</Label>
               <p className={`${colorScheme.text} mt-1 font-mono`}>
-                {issue.code || "Unbekannt"}
+                {issue.code || "Unknown"}
               </p>
             </div>
             {issue.constraintName && (
@@ -159,7 +151,7 @@ export function ValidationTab({
           
           {hasLocation && (
             <div className="mt-3">
-              <Label className={`${colorScheme.label} font-medium`}>Pfad:</Label>
+              <Label className={`${colorScheme.label} font-medium`}>Path:</Label>
               <p className={`${colorScheme.text} mt-1 font-mono text-xs break-all`}>
                 {locationPath}
               </p>
@@ -178,17 +170,17 @@ export function ValidationTab({
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-2">
                 <Loader2 className="h-4 w-4 animate-spin text-blue-600" />
-                <CardTitle className="text-lg">Validierung läuft...</CardTitle>
+                <CardTitle className="text-lg">Validating...</CardTitle>
               </div>
               <Badge variant="secondary" className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
-                In Bearbeitung
+                In Progress
               </Badge>
             </div>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
               <p className="text-sm text-muted-foreground">
-                TestScript wird gegen FHIR-Server validiert...
+                TestScript is being validated against FHIR server...
               </p>
               <Progress value={progress} className="w-full" />
               <p className="text-xs text-muted-foreground">
@@ -204,12 +196,12 @@ export function ValidationTab({
       return (
         <Alert variant="destructive">
           <AlertCircle className="h-4 w-4" />
-          <AlertTitle>Verbindungsfehler</AlertTitle>
+          <AlertTitle>Connection Error</AlertTitle>
           <AlertDescription>
             <div className="space-y-2">
               <p>{serverError}</p>
               <p className="text-sm">
-                Prüfen Sie die Server-URL und Ihre Internetverbindung.
+                Please check the server URL and your internet connection.
               </p>
             </div>
           </AlertDescription>
@@ -221,9 +213,9 @@ export function ValidationTab({
       return (
         <Alert className="border-muted bg-muted/50">
           <Info className="h-4 w-4" />
-          <AlertTitle>Bereit für Validierung</AlertTitle>
+          <AlertTitle>Ready for Validation</AlertTitle>
           <AlertDescription>
-            Klicken Sie auf &quot;Validieren&quot;, um Ihr TestScript zu überprüfen.
+            Click &quot;Validate&quot; to check your TestScript.
           </AlertDescription>
         </Alert>
       );
@@ -247,34 +239,34 @@ export function ValidationTab({
             {hasErrors ? (
               <>
                 <XCircle className="h-5 w-5 text-red-600 dark:text-red-400" />
-                <span className="text-red-600 dark:text-red-400">Validierung fehlgeschlagen</span>
+                <span className="text-red-600 dark:text-red-400">Validation Failed</span>
               </>
             ) : (
               <>
                 <CheckCircle2 className="h-5 w-5 text-green-600 dark:text-green-400" />
-                <span className="text-green-600 dark:text-green-400">Validierung erfolgreich</span>
+                <span className="text-green-600 dark:text-green-400">Validation Successful</span>
               </>
             )}
           </CardTitle>
           <div className="flex gap-2 text-sm">
             {errorCount > 0 && (
               <Badge variant="destructive">
-                {errorCount} Fehler
+                {errorCount} Error{errorCount !== 1 ? 's' : ''}
               </Badge>
             )}
             {warningCount > 0 && (
               <Badge variant="secondary" className="bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200">
-                {warningCount} Warnungen
+                {warningCount} Warning{warningCount !== 1 ? 's' : ''}
               </Badge>
             )}
             {infoCount > 0 && (
               <Badge variant="secondary" className="bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
-                {infoCount} Hinweise
+                {infoCount} Info{infoCount !== 1 ? 's' : ''}
               </Badge>
             )}
             {!hasErrors && !hasWarnings && (
               <Badge variant="secondary" className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
-                Keine Probleme gefunden
+                No Issues Found
               </Badge>
             )}
           </div>
@@ -291,8 +283,8 @@ export function ValidationTab({
       return (
         <div className="text-center py-4 text-green-600 dark:text-green-400">
           <CheckCircle2 className="h-8 w-8 mx-auto mb-2" />
-          <p className="font-medium">Keine Validierungsprobleme gefunden!</p>
-          <p className="text-sm text-muted-foreground">Ihr TestScript entspricht der FHIR-Spezifikation.</p>
+          <p className="font-medium">No Validation Issues Found!</p>
+          <p className="text-sm text-muted-foreground">Your TestScript complies with the FHIR specification.</p>
         </div>
       );
     }
@@ -530,7 +522,7 @@ export function ValidationTab({
                   </HoverCardTrigger>
                   <HoverCardContent className="w-80">
                     <div className="space-y-2">
-                      <h4 className="text-sm font-semibold">Empfohlene FHIR-Server für {currentFhirVersion}:</h4>
+                      <h4 className="text-sm font-semibold">Recommended FHIR servers for {currentFhirVersion}:</h4>
                       <div className="space-y-1 text-xs">
                         <p><code className="bg-muted px-1 rounded">
                           {currentFhirVersion === 'R5' ? 'https://hapi.fhir.org/baseR5' : 'https://hapi.fhir.org/baseR4'}
@@ -539,7 +531,7 @@ export function ValidationTab({
                         <p><code className="bg-muted px-1 rounded">http://localhost:8080/fhir</code> - Lokaler Server</p>
                       </div>
                       <p className="text-xs text-muted-foreground">
-                        Stelle sicher, dass der Server CORS aktiviert hat und TestScript-Validierung unterstützt.
+                        Make sure the server has CORS enabled and supports TestScript validation.
                       </p>
                     </div>
                   </HoverCardContent>

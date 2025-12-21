@@ -135,7 +135,7 @@ export function FixtureTestPanel({ igConfiguration }: FixtureTestPanelProps) {
       exampleParsingTest: "Example Parsing",
       filteringTest: "Filter-Funktionen",
       fixtureGenerationTest: "Fixture Generierung",
-      integrationTest: "Vollständige Integration",
+      integrationTest: "Full Integration",
       performanceTest: "Performance & Caching"
     }
     return names[testKey] || testKey
@@ -248,7 +248,7 @@ export function FixtureTestPanel({ igConfiguration }: FixtureTestPanelProps) {
           <Card className="p-4 bg-muted/30">
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <h4 className="text-sm font-medium">Test-Quellen auswählen</h4>
+                <h4 className="text-sm font-medium">Select Test Sources</h4>
                 <div className="flex gap-2">
                   <Button variant="ghost" size="sm" onClick={selectEnabledSources}>
                     Aktivierte
@@ -328,7 +328,7 @@ export function FixtureTestPanel({ igConfiguration }: FixtureTestPanelProps) {
           <div className="flex items-center justify-center p-8">
             <div className="flex items-center gap-2">
               <Loader2 className="h-6 w-6 animate-spin" />
-              <span>Tests werden ausgeführt...</span>
+              <span>Running tests...</span>
             </div>
           </div>
         )}

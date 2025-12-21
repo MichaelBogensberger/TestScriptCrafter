@@ -14,7 +14,7 @@ export const initialTestScript: TestScript = {
   title: "Minimales TestScript",
   description: "Ein minimales, aber valides FHIR TestScript für Validierungszwecke.",
   date: "2024-01-15T10:00:00.000Z",
-  publisher: "FHIR TestScript Crafter",
+  publisher: "Tinker Tool - FHIR TestScript Builder",
   fixture: [
     {
       id: "patient-fixture",

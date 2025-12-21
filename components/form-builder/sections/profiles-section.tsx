@@ -40,7 +40,8 @@ export function ProfilesSection({ profiles, updateProfiles }: ProfilesSectionPro
       <div>
         <h4 className="text-sm font-medium">Profile</h4>
         <p className="text-xs text-muted-foreground">
-          Liste kanonischer Profile, die dieses TestScript abdeckt.
+          Liste von kanonischen Profil-URLs (StructureDefinitions), die dieses TestScript abdeckt.
+          Format: https://example.org/fhir/StructureDefinition/ProfileName
         </p>
       </div>
 
@@ -52,14 +53,14 @@ export function ProfilesSection({ profiles, updateProfiles }: ProfilesSectionPro
         />
         <Button variant="outline" onClick={addProfile} className="flex items-center gap-1">
           <Plus className="h-4 w-4" />
-          Hinzufügen
+          Add
         </Button>
       </div>
 
       {entries.length === 0 ? (
         <EmptyState
-          title="Noch keine Profile hinterlegt."
-          description="Füge kanonische Profile-URLs hinzu, die dieses TestScript abdeckt."
+          title="No profiles added yet."
+          description="Add canonical profile URLs that this TestScript covers."
         />
       ) : (
         <div className="space-y-3">
@@ -67,7 +68,7 @@ export function ProfilesSection({ profiles, updateProfiles }: ProfilesSectionPro
             <Card key={`${profile}-${idx}`} className="flex items-center justify-between p-3">
               <div className="flex-1">
                 <Label htmlFor={`profile-${idx}`} className="sr-only">
-                  Profil {idx + 1}
+                  Profile {idx + 1}
                 </Label>
                 <Input
                   id={`profile-${idx}`}
@@ -80,7 +81,7 @@ export function ProfilesSection({ profiles, updateProfiles }: ProfilesSectionPro
                 size="icon"
                 className="ml-2 h-8 w-8 text-destructive"
                 onClick={() => removeProfile(idx)}
-                title="Profil entfernen"
+                title="Remove profile"
               >
                 <Trash2 className="h-4 w-4" />
               </Button>

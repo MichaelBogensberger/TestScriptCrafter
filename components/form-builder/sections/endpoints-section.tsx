@@ -86,18 +86,18 @@ export function EndpointsSection({
           <div>
             <h4 className="text-sm font-medium">Origin (Sender)</h4>
             <p className="text-xs text-muted-foreground">
-              Sender-Definitionen, die in Aktionen als <code>origin</code> referenziert werden.
+              Sender definitions that are referenced as <code>origin</code> in actions.
             </p>
           </div>
           <Button variant="outline" size="sm" onClick={addOrigin} className="flex items-center gap-1">
             <Plus className="h-4 w-4" />
-            Origin hinzufügen
+            Add Origin
           </Button>
         </div>
 
         {origins.length === 0 ? (
           <div className="mt-3 rounded-md border border-dashed p-4 text-center text-sm text-muted-foreground">
-            Noch keine Sender definiert.
+            No origins defined yet.
           </div>
         ) : (
           <div className="mt-3 space-y-3">
@@ -177,7 +177,7 @@ export function EndpointsSection({
                               },
                             })
                           }
-                          placeholder="Anzeige (optional)"
+                          placeholder="Display (optional)"
                         />
                       </div>
                     </div>
@@ -187,7 +187,7 @@ export function EndpointsSection({
                     size="icon"
                     className="mt-1 h-8 w-8 text-destructive"
                     onClick={() => removeOrigin(idx)}
-                    title="Origin entfernen"
+                    title="Remove origin"
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>
@@ -203,9 +203,9 @@ export function EndpointsSection({
       <div>
         <div className="flex items-center justify-between">
           <div>
-            <h4 className="text-sm font-medium">Destination (Empfänger)</h4>
+            <h4 className="text-sm font-medium">Destination (Receiver)</h4>
             <p className="text-xs text-muted-foreground">
-              Empfänger-Definitionen, die in Aktionen als <code>destination</code> referenziert werden.
+              Receiver definitions that are referenced as <code>destination</code> in actions.
             </p>
           </div>
           <Button
@@ -215,13 +215,13 @@ export function EndpointsSection({
             className="flex items-center gap-1"
           >
             <Plus className="h-4 w-4" />
-            Destination hinzufügen
+            Add Destination
           </Button>
         </div>
 
         {destinations.length === 0 ? (
           <div className="mt-3 rounded-md border border-dashed p-4 text-center text-sm text-muted-foreground">
-            Noch keine Empfänger definiert.
+            No destinations defined yet.
           </div>
         ) : (
           <div className="mt-3 space-y-3">
@@ -301,7 +301,7 @@ export function EndpointsSection({
                               },
                             })
                           }
-                          placeholder="Anzeige (optional)"
+                          placeholder="Display (optional)"
                         />
                       </div>
                     </div>
@@ -311,7 +311,7 @@ export function EndpointsSection({
                     size="icon"
                     className="mt-1 h-8 w-8 text-destructive"
                     onClick={() => removeDestination(idx)}
-                    title="Destination entfernen"
+                    title="Remove destination"
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>

@@ -10,13 +10,13 @@ export const initialTestScript: TestScript = {
   // Erforderlich: resourceType muss "TestScript" sein
   resourceType: "TestScript",
   
-  // Erforderlich: name (String, muss mit Großbuchstaben beginnen)
+  // Empfohlen: name (String für bessere Identifikation)
   name: "MinimalTestScript",
   
   // Erforderlich: status (draft | active | retired | unknown)
   status: "draft",
   
-  // Erforderlich: url (canonical identifier)
+  // Empfohlen: url (canonical identifier)
   url: "http://example.org/fhir/TestScript/MinimalTestScript",
   
   // Fixtures für Test-Daten
@@ -52,13 +52,13 @@ export const initialTestScript: TestScript = {
   date: "2024-01-15T10:00:00.000Z",
   
   // Optional: publisher
-  publisher: "FHIR TestScript Crafter",
+  publisher: "Tinker Tool - FHIR TestScript Builder",
   
-  // Erforderlich: metadata mit mindestens einer capability
+  // Optional: metadata mit capabilities (für erweiterte Validierung)
   metadata: {
     capability: [
       {
-        // Erforderlich: capabilities (canonical reference)
+        // Erforderlich (wenn metadata vorhanden): capabilities (canonical reference)
         capabilities: "http://hl7.org/fhir/CapabilityStatement/base",
         
         // Optional: required
@@ -73,7 +73,7 @@ export const initialTestScript: TestScript = {
     ]
   },
   
-  // Erforderlich: test array mit mindestens einem Test
+  // Empfohlen: test array mit mindestens einem Test
   test: [
     {
       // Optional: name

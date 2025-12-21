@@ -88,7 +88,7 @@ export function SimpleAssertionForm({
           id="assertion-description"
           value={assertion.description ?? ""}
           onChange={(e) => updateField("description", e.target.value || undefined)}
-          placeholder="Was wird geprüft?"
+          placeholder="What is being checked?"
           rows={2}
         />
         {errors?.description && (
@@ -104,7 +104,7 @@ export function SimpleAssertionForm({
             onValueChange={(value) => updateField("direction", value as typeof assertion.direction)}
           >
             <SelectTrigger id="assertion-direction">
-              <SelectValue placeholder="Wählen" />
+              <SelectValue placeholder="Select" />
             </SelectTrigger>
             <SelectContent>
               {directionOptions.map((direction) => (
@@ -123,7 +123,7 @@ export function SimpleAssertionForm({
             onValueChange={(value) => updateField("response", value as typeof assertion.response)}
           >
             <SelectTrigger id="assertion-response">
-              <SelectValue placeholder="Status wählen" />
+              <SelectValue placeholder="Select status" />
             </SelectTrigger>
             <SelectContent>
               {responseOptions.map((response) => (

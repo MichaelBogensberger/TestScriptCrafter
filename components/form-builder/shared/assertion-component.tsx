@@ -120,7 +120,7 @@ export function AssertionComponent({
             onValueChange={(value) => updateField("direction", value as typeof assertion.direction)}
           >
             <SelectTrigger id="assertion-direction">
-              <SelectValue placeholder="Richtung wählen" />
+              <SelectValue placeholder="Select direction" />
             </SelectTrigger>
             <SelectContent>
               {directionOptions.map((option) => (
@@ -139,7 +139,7 @@ export function AssertionComponent({
             aria-invalid={Boolean(errors?.response)}
           >
             <SelectTrigger id="assertion-response">
-              <SelectValue placeholder="Antwort auswählen" />
+              <SelectValue placeholder="Select response" />
             </SelectTrigger>
             <SelectContent>
               {responseOptions.map((option) => (
@@ -157,8 +157,31 @@ export function AssertionComponent({
             id="assertion-response-code"
             value={assertion.responseCode ?? ""}
             onChange={(event) => updateField("responseCode", event.target.value || undefined)}
-            placeholder="z. B. 200"
+            placeholder="z. B. 200 oder 200,201"
           />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+        <div>
+          <Label htmlFor="assertion-content-type">Content-Type</Label>
+          <Select
+            value={assertion.contentType ?? "__none__"}
+            onValueChange={(value) => updateField("contentType", value === "__none__" ? undefined : value)}
+          >
+            <SelectTrigger id="assertion-content-type">
+              <SelectValue placeholder="Select content type..." />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="__none__">-- None --</SelectItem>
+              <SelectItem value="application/fhir+json">application/fhir+json</SelectItem>
+              <SelectItem value="application/fhir+xml">application/fhir+xml</SelectItem>
+              <SelectItem value="application/json+fhir">application/json+fhir</SelectItem>
+              <SelectItem value="application/xml+fhir">application/xml+fhir</SelectItem>
+              <SelectItem value="application/json">application/json</SelectItem>
+              <SelectItem value="application/xml">application/xml</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       </div>
 
@@ -170,7 +193,7 @@ export function AssertionComponent({
             onValueChange={(value) => updateField("operator", value as typeof assertion.operator)}
           >
             <SelectTrigger id="assertion-operator">
-              <SelectValue placeholder="Operator wählen" />
+              <SelectValue placeholder="Select operator" />
             </SelectTrigger>
             <SelectContent>
               {operatorOptions.map((option) => (
@@ -348,7 +371,7 @@ export function AssertionComponent({
           <div className="flex items-center justify-between">
             <div>
               <Label htmlFor="assertion-navigation-links">Navigation Links</Label>
-              <p className="text-xs text-muted-foreground">Bundle enthält Links first/last/next.</p>
+              <p className="text-xs text-muted-foreground">Bundle contains links first/last/next.</p>
             </div>
             <Switch
               id="assertion-navigation-links"
@@ -380,7 +403,7 @@ export function AssertionComponent({
             <div>
               <Label htmlFor="assertion-stop-on-fail">Stop Test on Fail</Label>
               <p className="text-xs text-muted-foreground">
-                Bei Fehlern Ausführung abbrechen.
+                Abort execution on errors.
               </p>
             </div>
             <Switch
@@ -403,7 +426,7 @@ export function AssertionComponent({
 
         {(assertion.requirement ?? []).length === 0 ? (
           <p className="text-xs text-muted-foreground">
-            Keine Requirement-Verweise definiert. Optional können Links zur Spezifikation ergänzt werden.
+            No requirement references defined. Optionally add links to specification.
           </p>
         ) : (
           <div className="space-y-2">

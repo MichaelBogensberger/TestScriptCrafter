@@ -18,12 +18,19 @@ export default function Home() {
           <div className="flex justify-between items-center">
             <div className="flex items-center space-x-3">
               <div className="flex items-center space-x-2">
-                <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
+                <div className="w-8 h-8 bg-gradient-to-br from-primary to-primary/70 rounded-lg flex items-center justify-center shadow-sm">
                   <FileText className="w-4 h-4 text-primary-foreground" />
                 </div>
                 <div>
-                  <h1 className="text-lg font-bold">TestScript Crafter</h1>
-                  <p className="text-xs text-muted-foreground hidden sm:block">FHIR TestScript Builder</p>
+                  <div className="flex items-baseline gap-2">
+                    <h1 className="text-lg font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
+                      Tinker Tool
+                    </h1>
+                    <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4 hidden sm:inline-flex">
+                      FHIR
+                    </Badge>
+                  </div>
+                  <p className="text-xs text-muted-foreground hidden sm:block">TestScript Builder & Validator</p>
                 </div>
               </div>
               <div className="hidden md:inline-flex">
@@ -49,15 +56,18 @@ export default function Home() {
       </main>
 
       {/* Compact Footer */}
-      <footer className="border-t bg-muted/30 mt-12">
+      <footer className="border-t bg-background mt-12">
         <div className="container mx-auto px-4 py-4">
           <div className="flex flex-col sm:flex-row justify-between items-center space-y-2 sm:space-y-0">
             <p className="text-xs text-muted-foreground">
-              © 2025 TestScript Crafter • Made at FH OÖ - Campus Hagenberg
+              © 2025 Tinker Tool • Made at FH OÖ - Campus Hagenberg
             </p>
             <div className="flex items-center space-x-2">
               <Badge variant="outline" className="text-xs">
-                HL7 FHIR Multi-Version compatible
+                FHIR TestScript
+              </Badge>
+              <Badge variant="outline" className="text-xs">
+                Multi-Version R4/R5
               </Badge>
             </div>
           </div>

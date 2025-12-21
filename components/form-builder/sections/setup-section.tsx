@@ -2,8 +2,6 @@
 
 import { Button } from "@/components/ui/button"
 import { EmptyState } from "@/components/ui/empty-state"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import { Plus } from "lucide-react"
 import type { TestScriptSetup, TestScriptSetupAction } from "@/types/fhir-enhanced"
 import ActionComponent from "../shared/action-component"
@@ -11,9 +9,10 @@ import ActionComponent from "../shared/action-component"
 interface SetupSectionProps {
   setup: TestScriptSetup
   updateSetup: (setup: TestScriptSetup) => void
+  availableFixtures?: Array<{ id: string; description?: string }>
 }
 
-export default function SetupSection({ setup, updateSetup }: SetupSectionProps) {
+export default function SetupSection({ setup, updateSetup, availableFixtures = [] }: SetupSectionProps) {
   const actions = setup.action ?? []
 
   const addSetupAction = () => {
@@ -47,33 +46,17 @@ export default function SetupSection({ setup, updateSetup }: SetupSectionProps) 
 
   return (
     <div className="space-y-4 p-2">
-      <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-        <div>
-          <Label htmlFor="setup-id">Setup ID</Label>
-          <Input
-            id="setup-id"
-            value={setup.id ?? ""}
-            onChange={(event) =>
-              updateSetup({
-                ...setup,
-                id: event.target.value || undefined,
-              })
-            }
-            placeholder="Optionaler Identifier"
-          />
-        </div>
-        <div className="flex items-end justify-end">
-          <Button variant="outline" size="sm" onClick={addSetupAction} className="flex items-center gap-1">
-            <Plus className="h-4 w-4" />
-            Setup-Aktion hinzufügen
-          </Button>
-        </div>
+      <div className="flex items-center justify-end">
+        <Button variant="outline" size="sm" onClick={addSetupAction} className="flex items-center gap-1">
+          <Plus className="h-4 w-4" />
+          Add Setup Action
+        </Button>
       </div>
 
       {actions.length === 0 ? (
         <EmptyState
-          title="Noch keine Setup-Aktionen definiert."
-          description="Füge vorbereitende Operationen hinzu, die vor den eigentlichen Tests ausgeführt werden."
+          title="No setup actions defined yet."
+          description="Add preparatory operations that run before the actual tests."
         />
       ) : (
         <div className="space-y-3">
@@ -85,6 +68,7 @@ export default function SetupSection({ setup, updateSetup }: SetupSectionProps) 
               sectionType="setup"
               updateAction={(updated) => updateAction(idx, updated)}
               removeAction={() => removeAction(idx)}
+              availableFixtures={availableFixtures}
             />
           ))}
         </div>

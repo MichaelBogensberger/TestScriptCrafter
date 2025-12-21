@@ -14,8 +14,8 @@ interface TestCaseManagerProps {
 }
 
 /**
- * Komponente zur Verwaltung von Testfällen
- * Bietet Funktionen zum Hinzufügen, Entfernen und Bearbeiten von Tests
+ * Component for managing test cases
+ * Provides functions to add, remove and edit tests
  */
 export function TestCaseManager({
   tests,
@@ -26,7 +26,7 @@ export function TestCaseManager({
   
   const handleAddTest = useCallback(() => {
     onAddTest()
-    // Automatisch den neuen Testfall aufklappen
+    // Automatically expand the new test case
     onExpandSection(`test-${tests.length}`)
   }, [onAddTest, onExpandSection, tests.length])
 
@@ -35,22 +35,22 @@ export function TestCaseManager({
 
   return (
     <div className="space-y-4">
-      {/* Testfall-Übersicht */}
+      {/* Test Case Overview */}
       <div className="flex items-center justify-between p-4 bg-muted/30 rounded-lg">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center">
             <TestTube className="h-4 w-4 text-primary" />
           </div>
           <div>
-            <h3 className="font-medium">Testfälle</h3>
+            <h3 className="font-medium">Test Cases</h3>
             <p className="text-sm text-muted-foreground">
-              {tests.length} Testfall{tests.length !== 1 ? 'e' : ''} • {totalActions} Aktionen
+              {tests.length} Test{tests.length !== 1 ? 's' : ''} • {totalActions} Actions
             </p>
           </div>
         </div>
         <div className="flex items-center gap-2">
           <Badge variant="outline" className="text-xs">
-            {completedTests}/{tests.length} vollständig
+            {completedTests}/{tests.length} complete
           </Badge>
           <Button 
             size="sm" 
@@ -58,12 +58,12 @@ export function TestCaseManager({
             className="flex items-center gap-2"
           >
             <Plus className="h-3 w-3" />
-            Testfall hinzufügen
+            Add Test Case
           </Button>
         </div>
       </div>
 
-      {/* Testfall-Liste */}
+      {/* Test Case List */}
       {tests.length > 0 && (
         <div className="space-y-2">
           {tests.map((test, index) => (
@@ -76,9 +76,9 @@ export function TestCaseManager({
                   {index + 1}
                 </div>
                 <div>
-                  <p className="font-medium text-sm">{test.name || `Testfall ${index + 1}`}</p>
+                  <p className="font-medium text-sm">{test.name || `Test Case ${index + 1}`}</p>
                   <p className="text-xs text-muted-foreground">
-                    {test.action?.length || 0} Aktionen
+                    {test.action?.length || 0} Actions
                   </p>
                 </div>
               </div>

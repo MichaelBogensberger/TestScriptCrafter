@@ -2,8 +2,6 @@
 
 import { Button } from "@/components/ui/button"
 import { EmptyState } from "@/components/ui/empty-state"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import { Plus } from "lucide-react"
 import type { TestScriptTeardown, TestScriptTeardownAction } from "@/types/fhir-enhanced"
 import ActionComponent from "../shared/action-component"
@@ -11,9 +9,10 @@ import ActionComponent from "../shared/action-component"
 interface TeardownSectionProps {
   teardown: TestScriptTeardown
   updateTeardown: (teardown: TestScriptTeardown) => void
+  availableFixtures?: Array<{ id: string; description?: string }>
 }
 
-export default function TeardownSection({ teardown, updateTeardown }: TeardownSectionProps) {
+export default function TeardownSection({ teardown, updateTeardown, availableFixtures = [] }: TeardownSectionProps) {
   const actions = teardown.action ?? []
 
   const addTeardownAction = () => {
@@ -47,33 +46,17 @@ export default function TeardownSection({ teardown, updateTeardown }: TeardownSe
 
   return (
     <div className="space-y-4 p-2">
-      <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-        <div>
-          <Label htmlFor="teardown-id">Teardown ID</Label>
-          <Input
-            id="teardown-id"
-            value={teardown.id ?? ""}
-            onChange={(event) =>
-              updateTeardown({
-                ...teardown,
-                id: event.target.value || undefined,
-              })
-            }
-            placeholder="Optionaler Identifier"
-          />
-        </div>
-        <div className="flex items-end justify-end">
-          <Button variant="outline" size="sm" onClick={addTeardownAction} className="flex items-center gap-1">
-            <Plus className="h-4 w-4" />
-            Teardown-Aktion hinzufügen
-          </Button>
-        </div>
+      <div className="flex items-center justify-end">
+        <Button variant="outline" size="sm" onClick={addTeardownAction} className="flex items-center gap-1">
+          <Plus className="h-4 w-4" />
+          Add Teardown Action
+        </Button>
       </div>
 
       {actions.length === 0 ? (
         <EmptyState
-          title="Noch keine Teardown-Aktionen definiert."
-          description="Füge Aufräumarbeiten hinzu, die nach Abschluss der Tests ausgeführt werden."
+          title="No teardown actions defined yet."
+          description="Add cleanup operations that run after test completion."
         />
       ) : (
         <div className="space-y-3">
@@ -85,6 +68,7 @@ export default function TeardownSection({ teardown, updateTeardown }: TeardownSe
               sectionType="teardown"
               updateAction={(updated) => updateAction(idx, updated)}
               removeAction={() => removeAction(idx)}
+              availableFixtures={availableFixtures}
             />
           ))}
         </div>

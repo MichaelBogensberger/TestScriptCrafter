@@ -44,20 +44,20 @@ export function TestSystemSection({ testSystems, updateTestSystems }: TestSystem
     <div className="space-y-4 p-2">
       <div className="flex items-center justify-between">
         <div>
-          <h4 className="text-sm font-medium">Testsysteme</h4>
+          <h4 className="text-sm font-medium">Test Systems</h4>
           <p className="text-xs text-muted-foreground">
-            Definiere optionale Systeme (Clients/Server), die in Aktionen referenziert werden können.
+            Define optional systems (clients/servers) that can be referenced in actions.
           </p>
         </div>
         <Button variant="outline" size="sm" onClick={addSystem} className="flex items-center gap-1">
           <Plus className="h-4 w-4" />
-          Hinzufügen
+          Add System
         </Button>
       </div>
 
       {systems.length === 0 ? (
         <div className="rounded-md border border-dashed p-4 text-center text-sm text-muted-foreground">
-          Noch keine Testsysteme definiert.
+          No test systems defined yet.
         </div>
       ) : (
         <div className="space-y-3">
@@ -143,7 +143,7 @@ export function TestSystemSection({ testSystems, updateTestSystems }: TestSystem
                   size="icon"
                   className="mt-1 h-8 w-8 text-destructive"
                   onClick={() => removeSystem(idx)}
-                  title="Testsystem entfernen"
+                  title="Remove test system"
                 >
                   <Trash2 className="h-4 w-4" />
                 </Button>

@@ -26,9 +26,26 @@ Ein modernes Web-Tool zur visuellen Erstellung und Verwaltung von FHIR TestScrip
 
 - **Visueller TestScript Builder** - Formular-basierte Erstellung von FHIR TestScripts
 - **Live-Vorschau** - Echtzeit-Anzeige in XML, JSON und strukturierter Form
+- **FHIR R4/R5 Unterstützung** - Version-spezifische Features (z.B. Scope nur in R5)
 - **FHIR R5 Validierung** - Integration mit FHIR-Servern für automatische Validierung
 - **Modulare Architektur** - Saubere Trennung von UI, Logik und Services
 - **Type-Safety** - Vollständige TypeScript-Unterstützung mit FHIR-Typen
+- **Common Actions (Custom Feature)** - Wiederverwendbare Actions mit Parametern (nicht im FHIR-Standard)
+
+### Hinweise zu Fixtures
+
+Fixtures in FHIR TestScripts verwenden das `Reference` Element, um auf Test-Ressourcen zu verweisen:
+- **reference**: Kann eine relative Referenz (z.B. `Patient/example`) oder eine URL sein
+- In publizierten Implementation Guides verweisen Fixtures oft auf `.html` Dateien, die die Ressource darstellen
+- **type**: Der FHIR Ressourcentyp (z.B. `Patient`, `Observation`)
+- **display**: Eine menschenlesbare Beschreibung der Ressource
+
+### Hinweise zu Profiles
+
+Die `profile` Eigenschaft in TestScript ist ein Array von kanonischen URLs, die auf StructureDefinition-Profile verweisen:
+- Format: `https://example.org/fhir/StructureDefinition/ProfileName`
+- Diese Profile definieren, welche Konformitätsanforderungen das TestScript testet
+- Profile können versionsspezifisch sein (z.B. `|1.0.0` am Ende der URL)
 
 ## Verzeichnisstruktur
 

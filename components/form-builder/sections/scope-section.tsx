@@ -67,18 +67,18 @@ export function ScopeSection({ scopes, updateScopes }: ScopeSectionProps) {
         <div>
           <h4 className="text-sm font-medium">Scope</h4>
           <p className="text-xs text-muted-foreground">
-            Hier definierst du, welche Artefakte dieses TestScript abdeckt und welche Erwartung besteht.
+            Define which artifacts this TestScript covers and what expectations exist.
           </p>
         </div>
         <Button variant="outline" size="sm" onClick={addScope} className="flex items-center gap-1">
           <Plus className="h-4 w-4" />
-          Scope hinzufügen
+          Add Scope
         </Button>
       </div>
 
       {entries.length === 0 ? (
         <div className="rounded-md border border-dashed p-4 text-center text-sm text-muted-foreground">
-          Noch keine Scopes definiert.
+          No scopes defined yet.
         </div>
       ) : (
         <div className="space-y-3">
@@ -87,14 +87,16 @@ export function ScopeSection({ scopes, updateScopes }: ScopeSectionProps) {
               <div className="flex items-start justify-between gap-2">
                 <div className="flex-1 space-y-3">
                   <div>
-                    <Label htmlFor={`scope-${idx}-artifact`}>Artifact</Label>
+                    <Label htmlFor={`scope-${idx}-artifact`}>
+                      Artifact <span className="text-red-500">*</span>
+                    </Label>
                     <Input
                       id={`scope-${idx}-artifact`}
                       value={scope.artifact ?? ""}
                       onChange={(event) =>
                         updateScope(idx, { ...scope, artifact: event.target.value })
                       }
-                      placeholder="Canonical URL oder Referenz"
+                      placeholder="Canonical URL or reference"
                       required
                     />
                   </div>
@@ -188,7 +190,7 @@ export function ScopeSection({ scopes, updateScopes }: ScopeSectionProps) {
                   size="icon"
                   className="mt-1 h-8 w-8 text-destructive"
                   onClick={() => removeScope(idx)}
-                  title="Scope entfernen"
+                  title="Remove scope"
                 >
                   <Trash2 className="h-4 w-4" />
                 </Button>

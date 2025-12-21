@@ -253,7 +253,7 @@ function highlightSearchTerm(code: string, searchTerm: string): string {
     );
   } catch (error) {
     // Fehlerbehandlung für ungültige RegEx
-    console.warn("Ungültiger Suchausdruck:", error);
+    console.warn("Invalid search expression:", error);
     return code;
   }
 } 

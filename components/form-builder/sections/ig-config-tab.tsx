@@ -145,18 +145,18 @@ export function IGConfigTab({ onConfigurationChange }: IGConfigTabProps) {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h4 className="text-sm font-medium">Implementation Guide Konfiguration</h4>
+          <h4 className="text-sm font-medium">Implementation Guide Configuration</h4>
           <p className="text-xs text-muted-foreground">
-            Verwalte IG-Quellen für automatisches Laden von Example Instances.
+            Manage IG sources for automatic loading of example instances.
           </p>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" size="sm" onClick={resetToDefaults}>
-            Zurücksetzen
+            Reset
           </Button>
           <Button variant="outline" size="sm" onClick={addSource} className="flex items-center gap-1">
             <Plus className="h-4 w-4" />
-            IG hinzufügen
+            Add IG
           </Button>
         </div>
       </div>
@@ -171,11 +171,11 @@ export function IGConfigTab({ onConfigurationChange }: IGConfigTabProps) {
             <Settings className="mx-auto h-12 w-12 text-muted-foreground" />
             <h3 className="mt-2 text-sm font-medium">Keine IG-Quellen konfiguriert</h3>
             <p className="mt-1 text-sm text-muted-foreground">
-              Füge Implementation Guide Quellen hinzu, um Example Instances zu laden.
+              Add Implementation Guide sources to load example instances.
             </p>
             <Button variant="outline" onClick={addSource} className="mt-4">
               <Plus className="h-4 w-4 mr-1" />
-              Erste Quelle hinzufügen
+              Add First Source
             </Button>
           </div>
         ) : (
@@ -212,7 +212,7 @@ export function IGConfigTab({ onConfigurationChange }: IGConfigTabProps) {
                       ) : (
                         <ExternalLink className="h-3 w-3" />
                       )}
-                      Testen
+                      Test
                     </Button>
                     
                     {source.type === 'custom' && (
@@ -272,8 +272,8 @@ export function IGConfigTab({ onConfigurationChange }: IGConfigTabProps) {
                 {source.type === 'hl7-austria' && (
                   <div className="rounded-md bg-muted/50 p-3">
                     <p className="text-xs text-muted-foreground">
-                      <strong>HL7 Austria:</strong> Vorkonfigurierte Quelle für österreichische FHIR Implementation Guides.
-                      Unterstützt automatisches Parsen von Example Instances und Artifacts.
+                      <strong>HL7 Austria:</strong> Pre-configured source for Austrian FHIR Implementation Guides.
+                      Supports automatic parsing of example instances and artifacts.
                     </p>
                   </div>
                 )}
@@ -287,8 +287,8 @@ export function IGConfigTab({ onConfigurationChange }: IGConfigTabProps) {
       <Alert>
         <Settings className="h-4 w-4" />
         <AlertDescription>
-          <strong>🇦🇹 Fokus auf HL7 Austria:</strong> Diese Anwendung konzentriert sich auf österreichische 
-          Implementation Guides. Nur diese wurden getestet und optimiert für die verwendete Parsing-Logik.
+          <strong>🇦🇹 Focus on HL7 Austria:</strong> This application focuses on Austrian 
+          Implementation Guides. Only these have been tested and optimized for the parsing logic used.
         </AlertDescription>
       </Alert>
 
@@ -296,13 +296,13 @@ export function IGConfigTab({ onConfigurationChange }: IGConfigTabProps) {
       <Alert>
         <Settings className="h-4 w-4" />
         <AlertDescription>
-          <strong>Verfügbare HL7 Austria IGs:</strong>
+          <strong>Available HL7 Austria IGs:</strong>
           <ul className="mt-2 space-y-1 text-xs">
-            <li>• <strong>Core 8.0 (mit TestScripts)</strong> - Vollständig getestet, enthält Example Instances</li>
-            <li>• <strong>Core R5</strong> - Neueste R5-basierte Version, experimentell</li>
-            <li>• <strong>Core R4 (Standard)</strong> - Basis-Version, möglicherweise ohne Examples</li>
-            <li>• Alle IGs verwenden konsistente österreichische Namenskonventionen</li>
-            <li>• Caching optimiert für wiederholte Zugriffe auf fhir.hl7.at</li>
+            <li>• <strong>Core 8.0 (with TestScripts)</strong> - Fully tested, contains example instances</li>
+            <li>• <strong>Core R5</strong> - Latest R5-based version, experimental</li>
+            <li>• <strong>Core R4 (Standard)</strong> - Base version, possibly without examples</li>
+            <li>• All IGs use consistent Austrian naming conventions</li>
+            <li>• Caching optimized for repeated access to fhir.hl7.at</li>
           </ul>
         </AlertDescription>
       </Alert>

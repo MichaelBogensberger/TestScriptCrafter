@@ -46,7 +46,7 @@ export function FilteredView({ testScript }: FilteredViewProps) {
       <div className="flex items-center gap-4">
         <Select value={focusArea} onValueChange={(value) => setFocusArea(value as FocusArea)}>
           <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Bereich auswählen" />
+            <SelectValue placeholder="Select section" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Gesamtes TestScript</SelectItem>

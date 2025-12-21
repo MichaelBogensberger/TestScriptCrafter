@@ -145,15 +145,9 @@ export function JsonView({ testScript, validationState }: JsonViewProps) {
   
   // Konvertiere Validierungsfehler zu Zeilen-basierten Fehlern für JSON
   const validationErrors = useMemo(() => {
-    console.log('Debug JSON: validationResult:', validationResult)
-    console.log('Debug JSON: validationState verfügbar:', !!validationState)
-    
     if (!validationResult?.issue) {
-      console.log('Debug JSON: Keine issues gefunden')
       return []
     }
-    
-    console.log('Debug JSON: Gefundene issues:', validationResult.issue.length)
     
     return validationResult.issue
       .map(issue => {
@@ -176,19 +170,17 @@ export function JsonView({ testScript, validationState }: JsonViewProps) {
             const calculatedLine = findLineByLocation(locationPath, formattedJson);
             if (calculatedLine > 1) {
               line = calculatedLine;
-              console.log(`Debug JSON: Location-Pfad "${locationPath}" → Zeile ${line}`);
             }
           }
         }
         
-        // Wenn immer noch keine gute Zeile gefunden, versuche expression
+        // If still no good line found, try expression
         if (line === 1 && issue.expression && issue.expression.length > 0) {
           const expressionPath = issue.expression[0];
           if (expressionPath) {
             const calculatedLine = findLineByLocation(expressionPath, formattedJson);
             if (calculatedLine > 1) {
               line = calculatedLine;
-              console.log(`Debug JSON: Expression-Pfad "${expressionPath}" → Zeile ${line}`);
             }
           }
         }
@@ -222,7 +214,7 @@ export function JsonView({ testScript, validationState }: JsonViewProps) {
       })
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : String(error)
-      toast.error("Fehler beim Kopieren", {
+      toast.error("Error copying", {
         description: message,
       })
     }
@@ -275,7 +267,7 @@ export function JsonView({ testScript, validationState }: JsonViewProps) {
         <div className="flex gap-2">
           <Button variant="outline" size="sm" onClick={copyToClipboard} className="flex items-center gap-2">
             <ClipboardCopy className="h-4 w-4" />
-            <span>Kopieren</span>
+            <span>Copy</span>
           </Button>
 
           <Button variant="outline" size="sm" onClick={downloadContent} className="flex items-center gap-2">
@@ -295,16 +287,6 @@ export function JsonView({ testScript, validationState }: JsonViewProps) {
         />
       </div>
 
-      {/* Debug-Information (nur in development) */}
-      {process.env.NODE_ENV === 'development' && (
-        <div className="rounded-md border bg-blue-50 dark:bg-blue-900/20 p-3 text-xs">
-          <strong>Debug:</strong> 
-          <br />Validation Result: {validationResult ? 'Ja' : 'Nein'}
-          <br />Issues: {validationResult?.issue?.length || 0}
-          <br />Validation Errors: {validationErrors.length}
-          <br />Has Errors: {hasErrors ? 'Ja' : 'Nein'}
-        </div>
-      )}
 
       {/* Fehler-Zusammenfassung */}
       {validationResult && (hasErrors || hasWarnings) && (

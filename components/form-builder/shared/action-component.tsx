@@ -17,7 +17,7 @@ import type {
   TestScriptTestAction,
   Coding,
 } from "@/types/fhir-enhanced"
-import { useMemo } from "react"
+import { useMemo, useState, useEffect } from "react"
 import { cn } from "@/lib/utils"
 import { SimpleAssertionForm } from "./simple-assertion-form"
 
@@ -110,12 +110,78 @@ const REQUEST_METHOD_OPTIONS: Array<TestScriptSetupActionAssert["requestMethod"]
   "head",
 ]
 
+const CONTENT_TYPE_OPTIONS = [
+  { value: "application/fhir+json", label: "application/fhir+json" },
+  { value: "application/fhir+xml", label: "application/fhir+xml" },
+  { value: "application/json+fhir", label: "application/json+fhir" },
+  { value: "application/xml+fhir", label: "application/xml+fhir" },
+  { value: "application/json", label: "application/json" },
+  { value: "application/xml", label: "application/xml" },
+]
+
+const OPERATION_TYPE_CODES = [
+  { value: "read", label: "read - Read the current state of the resource" },
+  { value: "vread", label: "vread - Read the state of a specific version" },
+  { value: "update", label: "update - Update an existing resource" },
+  { value: "patch", label: "patch - Update parts of a resource" },
+  { value: "delete", label: "delete - Delete a resource" },
+  { value: "create", label: "create - Create a new resource" },
+  { value: "search", label: "search - Search based on filter criteria" },
+  { value: "history", label: "history - Retrieve change history" },
+  { value: "transaction", label: "transaction - Execute a transaction" },
+  { value: "batch", label: "batch - Execute a batch" },
+  { value: "operation", label: "operation - Perform an operation" },
+  { value: "capabilities", label: "capabilities - Get capability statement" },
+]
+
+const FHIR_RESOURCE_TYPES = [
+  "Account", "ActivityDefinition", "ActorDefinition", "AdministrableProductDefinition",
+  "AdverseEvent", "AllergyIntolerance", "Appointment", "AppointmentResponse",
+  "ArtifactAssessment", "AuditEvent", "Basic", "Binary", "BiologicallyDerivedProduct",
+  "BiologicallyDerivedProductDispense", "BodyStructure", "Bundle", "CapabilityStatement",
+  "CarePlan", "CareTeam", "ChargeItem", "ChargeItemDefinition", "Citation", "Claim",
+  "ClaimResponse", "ClinicalImpression", "ClinicalUseDefinition", "CodeSystem",
+  "Communication", "CommunicationRequest", "CompartmentDefinition", "Composition",
+  "ConceptMap", "Condition", "ConditionDefinition", "Consent", "Contract", "Coverage",
+  "CoverageEligibilityRequest", "CoverageEligibilityResponse", "DetectedIssue",
+  "Device", "DeviceAssociation", "DeviceDefinition", "DeviceDispense", "DeviceMetric",
+  "DeviceRequest", "DeviceUsage", "DiagnosticReport", "DocumentReference",
+  "Encounter", "EncounterHistory", "Endpoint", "EnrollmentRequest", "EnrollmentResponse",
+  "EpisodeOfCare", "EventDefinition", "Evidence", "EvidenceReport", "EvidenceVariable",
+  "ExampleScenario", "ExplanationOfBenefit", "FamilyMemberHistory", "Flag",
+  "FormularyItem", "GenomicStudy", "Goal", "GraphDefinition", "Group",
+  "GuidanceResponse", "HealthcareService", "ImagingSelection", "ImagingStudy",
+  "Immunization", "ImmunizationEvaluation", "ImmunizationRecommendation",
+  "ImplementationGuide", "Ingredient", "InsurancePlan", "InventoryItem",
+  "InventoryReport", "Invoice", "Library", "Linkage", "List", "Location",
+  "ManufacturedItemDefinition", "Measure", "MeasureReport", "Medication",
+  "MedicationAdministration", "MedicationDispense", "MedicationKnowledge",
+  "MedicationRequest", "MedicationStatement", "MedicinalProductDefinition",
+  "MessageDefinition", "MessageHeader", "MolecularSequence", "NamingSystem",
+  "NutritionIntake", "NutritionOrder", "NutritionProduct", "Observation",
+  "ObservationDefinition", "OperationDefinition", "OperationOutcome", "Organization",
+  "OrganizationAffiliation", "PackagedProductDefinition", "Parameters", "Patient",
+  "PaymentNotice", "PaymentReconciliation", "Permission", "Person", "PlanDefinition",
+  "Practitioner", "PractitionerRole", "Procedure", "Provenance", "Questionnaire",
+  "QuestionnaireResponse", "RegulatedAuthorization", "RelatedPerson",
+  "RequestOrchestration", "Requirements", "ResearchStudy", "ResearchSubject",
+  "RiskAssessment", "Schedule", "SearchParameter", "ServiceRequest", "Slot",
+  "Specimen", "SpecimenDefinition", "StructureDefinition", "StructureMap",
+  "Subscription", "SubscriptionStatus", "SubscriptionTopic", "Substance",
+  "SubstanceDefinition", "SubstanceNucleicAcid", "SubstancePolymer",
+  "SubstanceProtein", "SubstanceReferenceInformation", "SubstanceSourceMaterial",
+  "SupplyDelivery", "SupplyRequest", "Task", "TerminologyCapabilities", "TestPlan",
+  "TestReport", "TestScript", "Transport", "ValueSet", "VerificationResult",
+  "VisionPrescription"
+]
+
 interface ActionComponentProps<TAction extends ScriptAction> {
   action: TAction
   index: number
   sectionType: SectionType
   updateAction: (action: TAction) => void
   removeAction: () => void
+  availableFixtures?: Array<{ id: string; description?: string }>
 }
 
 const ensureCoding = (coding: Coding | undefined, defaultSystem: string): Coding => ({
@@ -130,7 +196,10 @@ export default function ActionComponent<TAction extends ScriptAction>({
   sectionType,
   updateAction,
   removeAction,
+  availableFixtures = [],
 }: ActionComponentProps<TAction>) {
+  const [showCustomResourceType, setShowCustomResourceType] = useState(false)
+  
   const operation = useMemo<TestScriptSetupActionOperation>(
     () => ({
       encodeRequestUrl: true,
@@ -140,6 +209,13 @@ export default function ActionComponent<TAction extends ScriptAction>({
   )
 
   const requestHeaders = useMemo(() => operation.requestHeader ?? [], [operation.requestHeader])
+  
+  // Check if current resource type is custom (not in predefined list)
+  useEffect(() => {
+    if (operation.resource && !FHIR_RESOURCE_TYPES.includes(operation.resource)) {
+      setShowCustomResourceType(true)
+    }
+  }, [operation.resource])
 
   const operationErrors = useMemo(() => {
     const errors: {
@@ -151,39 +227,44 @@ export default function ActionComponent<TAction extends ScriptAction>({
       requestHeaders?: Record<number, string[]>
     } = {}
 
+    // Type Code is always required
     if (!operation.type?.code?.trim()) {
-      errors.typeCode = "Operationstyp erforderlich"
+      errors.typeCode = "Operation type required"
     }
 
-    if (!operation.method) {
-      errors.method = "HTTP-Methode erforderlich"
+    // Method, Resource and URL are only required in setup, optional in tests
+    if (sectionType === "setup") {
+      if (!operation.method) {
+        errors.method = "HTTP method required"
+      }
+
+      if (!operation.resource?.trim()) {
+        errors.resource = "Resource type required"
+      }
+
+      if (!operation.url?.trim()) {
+        errors.url = "URL required"
+      }
     }
 
-    if (!operation.resource?.trim()) {
-      errors.resource = "Resource-Typ erforderlich"
-    }
-
-    if (!operation.url?.trim()) {
-      errors.url = "URL erforderlich"
-    }
-
+    // Source ID only required in setup for POST/PUT
     if (
       sectionType === "setup" &&
       operation.method &&
       ["post", "put"].includes(operation.method) &&
       !operation.sourceId?.trim()
     ) {
-      errors.sourceId = "Source ID wird für POST/PUT im Setup benötigt"
+      errors.sourceId = "Source ID required for POST/PUT in setup"
     }
 
     const headerErrors: Record<number, string[]> = {}
     requestHeaders.forEach((header, idx) => {
       const fieldErrors: string[] = []
       if (!header.field?.trim()) {
-        fieldErrors.push("Feldname erforderlich")
+        fieldErrors.push("Field name required")
       }
       if (!header.value?.trim()) {
-        fieldErrors.push("Wert erforderlich")
+        fieldErrors.push("Value required")
       }
       if (fieldErrors.length > 0) {
         headerErrors[idx] = fieldErrors
@@ -198,12 +279,14 @@ export default function ActionComponent<TAction extends ScriptAction>({
 
   const assertionErrors = useMemo(() => {
     if (!action.assert) return null
+    
+    // Description is only required in setup, optional in tests
     const { description, response } = action.assert
     return {
-      description: description?.trim() ? undefined : "Beschreibung erforderlich",
-      response: response ? undefined : "Erwartete Antwort wählen",
+      description: sectionType === "setup" && !description?.trim() ? "Description required" : undefined,
+      response: sectionType === "setup" && !response ? "Select expected response" : undefined,
     }
-  }, [action.assert])
+  }, [action.assert, sectionType])
 
   const updateOperation = (partial: Partial<TestScriptSetupActionOperation>) => {
     updateAction({
@@ -335,46 +418,54 @@ export default function ActionComponent<TAction extends ScriptAction>({
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
-        <div>
-          <Label>Operation Type System</Label>
-          <Input
-            value={operation.type?.system ?? "http://terminology.hl7.org/CodeSystem/testscript-operation-codes"}
-            onChange={(event) => updateOperationTypeField("system", event.target.value)}
-          />
-        </div>
-        <div>
-          <Label>Operation Type Code</Label>
-          <Input
-            value={operation.type?.code ?? ""}
-            onChange={(event) => updateOperationTypeField("code", event.target.value)}
-            placeholder="read | create | ..."
-            className={cn(operationErrors.typeCode && "border-destructive focus-visible:ring-destructive")}
-            aria-invalid={Boolean(operationErrors.typeCode)}
-          />
-          {operationErrors.typeCode && (
-            <p className="text-xs text-destructive">{operationErrors.typeCode}</p>
-          )}
-        </div>
-        <div>
-          <Label>Operation Type Display</Label>
-          <Input
-            value={operation.type?.display ?? ""}
-            onChange={(event) => updateOperationTypeField("display", event.target.value || undefined)}
-            placeholder="Lesbarer Name"
-          />
-        </div>
+      <div>
+        <Label>Operation Type System</Label>
+        <Input
+          value={operation.type?.system ?? "http://terminology.hl7.org/CodeSystem/testscript-operation-codes"}
+          onChange={(event) => updateOperationTypeField("system", event.target.value)}
+        />
       </div>
 
-      <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+      <div>
+        <Label>Operation Type Code</Label>
+        <Select
+          value={operation.type?.code ?? ""}
+          onValueChange={(value) => updateOperationTypeField("code", value)}
+        >
+          <SelectTrigger className={cn(operationErrors.typeCode && "border-destructive focus-visible:ring-destructive")}>
+            <SelectValue placeholder="Select operation..." />
+          </SelectTrigger>
+          <SelectContent>
+            {OPERATION_TYPE_CODES.map((op) => (
+              <SelectItem key={op.value} value={op.value}>
+                {op.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        {operationErrors.typeCode && (
+          <p className="text-xs text-destructive">{operationErrors.typeCode}</p>
+        )}
+      </div>
+
+      <div>
+        <Label>Operation Type Display</Label>
+        <Input
+          value={operation.type?.display ?? ""}
+          onChange={(event) => updateOperationTypeField("display", event.target.value || undefined)}
+          placeholder="Lesbarer Name"
+        />
+      </div>
+
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
         <div>
-          <Label htmlFor={`action-${index}-method`}>HTTP Methode</Label>
+          <Label htmlFor={`action-${index}-method`}>HTTP Method</Label>
           <Select
             value={operation.method ?? ""}
             onValueChange={(value) => updateOperationField("method", value as typeof operation.method)}
           >
             <SelectTrigger id={`action-${index}-method`}>
-              <SelectValue placeholder="Methode wählen" />
+              <SelectValue placeholder="Select method" />
             </SelectTrigger>
             <SelectContent>
               {HTTP_METHODS.map((method) => (
@@ -389,65 +480,135 @@ export default function ActionComponent<TAction extends ScriptAction>({
           )}
         </div>
         <div>
-          <Label htmlFor={`action-${index}-resource`}>Resource Typ</Label>
-          <Input
-            id={`action-${index}-resource`}
-            value={operation.resource ?? ""}
-            onChange={(event) => updateOperationField("resource", event.target.value || undefined)}
-            placeholder="z. B. Patient"
-            className={cn(operationErrors.resource && "border-destructive focus-visible:ring-destructive")}
-            aria-invalid={Boolean(operationErrors.resource)}
-          />
+          <Label htmlFor={`action-${index}-resource`}>Resource Type</Label>
+          {showCustomResourceType ? (
+            <div className="space-y-2">
+              <Input
+                id={`action-${index}-resource`}
+                value={operation.resource ?? ""}
+                onChange={(event) => updateOperationField("resource", event.target.value || undefined)}
+                placeholder="Custom resource type"
+                className={cn(operationErrors.resource && "border-destructive focus-visible:ring-destructive")}
+                aria-invalid={Boolean(operationErrors.resource)}
+              />
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setShowCustomResourceType(false)
+                  updateOperationField("resource", undefined)
+                }}
+                className="text-xs"
+              >
+                ← Zurück zur Auswahl
+              </Button>
+            </div>
+          ) : (
+          <Select
+            value={operation.resource ?? "__none__"}
+            onValueChange={(value) => {
+              if (value === "__custom__") {
+                setShowCustomResourceType(true)
+                updateOperationField("resource", "")
+              } else if (value === "__none__") {
+                updateOperationField("resource", undefined)
+              } else {
+                updateOperationField("resource", value || undefined)
+              }
+            }}
+          >
+            <SelectTrigger 
+              id={`action-${index}-resource`}
+              className={cn(operationErrors.resource && "border-destructive focus-visible:ring-destructive")}
+            >
+              <SelectValue placeholder="Select resource..." />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="__none__">-- None --</SelectItem>
+              {FHIR_RESOURCE_TYPES.map((resourceType) => (
+                <SelectItem key={resourceType} value={resourceType}>
+                  {resourceType}
+                </SelectItem>
+              ))}
+              <SelectItem value="__custom__" className="text-primary font-medium">
+                ✏️ Custom Type...
+              </SelectItem>
+            </SelectContent>
+          </Select>
+          )}
           {operationErrors.resource && (
             <p className="text-xs text-destructive">{operationErrors.resource}</p>
           )}
         </div>
-        <div>
-          <Label htmlFor={`action-${index}-url`}>URL</Label>
-          <Input
-            id={`action-${index}-url`}
-            value={operation.url ?? ""}
-            onChange={(event) => updateOperationField("url", event.target.value || undefined)}
-            placeholder="/Patient/example"
-            className={cn(operationErrors.url && "border-destructive focus-visible:ring-destructive")}
-            aria-invalid={Boolean(operationErrors.url)}
-          />
-          {operationErrors.url && <p className="text-xs text-destructive">{operationErrors.url}</p>}
-        </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+      <div>
+        <Label htmlFor={`action-${index}-url`}>URL</Label>
+        <Input
+          id={`action-${index}-url`}
+          value={operation.url ?? ""}
+          onChange={(event) => updateOperationField("url", event.target.value || undefined)}
+          placeholder="/Patient/example"
+          className={cn(operationErrors.url && "border-destructive focus-visible:ring-destructive")}
+          aria-invalid={Boolean(operationErrors.url)}
+        />
+        {operationErrors.url && <p className="text-xs text-destructive">{operationErrors.url}</p>}
+      </div>
+
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
         <div>
           <Label htmlFor={`action-${index}-accept`}>Accept</Label>
-          <Input
-            id={`action-${index}-accept`}
-            value={operation.accept ?? ""}
-            onChange={(event) => updateOperationField("accept", event.target.value || undefined)}
-            placeholder="application/fhir+json"
-          />
+          <Select
+            value={operation.accept ?? "__none__"}
+            onValueChange={(value) => updateOperationField("accept", value === "__none__" ? undefined : value)}
+          >
+            <SelectTrigger id={`action-${index}-accept`}>
+              <SelectValue placeholder="Select accept type..." />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="__none__">-- None --</SelectItem>
+              {CONTENT_TYPE_OPTIONS.map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
         <div>
           <Label htmlFor={`action-${index}-contentType`}>Content-Type</Label>
-          <Input
-            id={`action-${index}-contentType`}
-            value={operation.contentType ?? ""}
-            onChange={(event) => updateOperationField("contentType", event.target.value || undefined)}
-            placeholder="application/fhir+json"
-          />
-        </div>
-        <div>
-          <Label htmlFor={`action-${index}-params`}>Parameter</Label>
-          <Textarea
-            id={`action-${index}-params`}
-            value={operation.params ?? ""}
-            onChange={(event) => updateOperationField("params", event.target.value || undefined)}
-            rows={2}
-            placeholder="?_id=example"
-          />
+          <Select
+            value={operation.contentType ?? "__none__"}
+            onValueChange={(value) => updateOperationField("contentType", value === "__none__" ? undefined : value)}
+          >
+            <SelectTrigger id={`action-${index}-contentType`}>
+              <SelectValue placeholder="Select content type..." />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="__none__">-- None --</SelectItem>
+              {CONTENT_TYPE_OPTIONS.map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-3 md:grid-cols-4">
+      <div>
+        <Label htmlFor={`action-${index}-params`}>Parameter</Label>
+        <Textarea
+          id={`action-${index}-params`}
+          value={operation.params ?? ""}
+          onChange={(event) => updateOperationField("params", event.target.value || undefined)}
+          rows={2}
+          placeholder="?_id=example"
+        />
+      </div>
+
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-2 lg:grid-cols-4">
         <div>
           <Label htmlFor={`action-${index}-destination`}>Destination</Label>
           <Input
@@ -495,7 +656,7 @@ export default function ActionComponent<TAction extends ScriptAction>({
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
         <div>
           <Label htmlFor={`action-${index}-sourceId`}>Source ID</Label>
           <Input
@@ -511,24 +672,46 @@ export default function ActionComponent<TAction extends ScriptAction>({
         </div>
         <div>
           <Label htmlFor={`action-${index}-targetId`}>Target ID</Label>
-          <Input
-            id={`action-${index}-targetId`}
-            value={operation.targetId ?? ""}
-            onChange={(event) => updateOperationField("targetId", event.target.value || undefined)}
-          />
-        </div>
-        <div className="rounded-md border p-3">
-          <div className="flex items-center justify-between">
-            <div>
-              <Label htmlFor={`action-${index}-encode`}>Encode Request URL</Label>
-              <p className="text-xs text-muted-foreground">Standardmäßig aktiviert.</p>
-            </div>
-            <Switch
-              id={`action-${index}-encode`}
-              checked={operation.encodeRequestUrl ?? true}
-              onCheckedChange={(checked) => updateOperationField("encodeRequestUrl", checked)}
+          {availableFixtures.length > 0 ? (
+            <Select
+              value={operation.targetId ?? "__none__"}
+              onValueChange={(value) => updateOperationField("targetId", value === "__none__" ? undefined : value)}
+            >
+              <SelectTrigger id={`action-${index}-targetId`}>
+                <SelectValue placeholder="Select fixture..." />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="__none__">-- None --</SelectItem>
+                {availableFixtures.map((fixture) => (
+                  <SelectItem key={fixture.id} value={fixture.id}>
+                    {fixture.id}
+                    {fixture.description && ` (${fixture.description})`}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          ) : (
+            <Input
+              id={`action-${index}-targetId`}
+              value={operation.targetId ?? ""}
+              onChange={(event) => updateOperationField("targetId", event.target.value || undefined)}
+              placeholder="Fixture ID"
             />
+          )}
+        </div>
+      </div>
+
+      <div className="rounded-md border p-3">
+        <div className="flex items-center justify-between">
+          <div>
+            <Label htmlFor={`action-${index}-encode`}>Encode Request URL</Label>
+            <p className="text-xs text-muted-foreground">Enabled by default.</p>
           </div>
+          <Switch
+            id={`action-${index}-encode`}
+            checked={operation.encodeRequestUrl ?? true}
+            onCheckedChange={(checked) => updateOperationField("encodeRequestUrl", checked)}
+          />
         </div>
       </div>
 
@@ -537,11 +720,11 @@ export default function ActionComponent<TAction extends ScriptAction>({
           <h5 className="text-sm font-medium">Request Header</h5>
           <Button variant="ghost" size="sm" onClick={addRequestHeader} className="flex items-center gap-1">
             <Plus className="h-4 w-4" />
-            Header hinzufügen
+            Add Header
           </Button>
         </div>
         {requestHeaders.length === 0 ? (
-          <p className="text-xs text-muted-foreground">Keine zusätzlichen Header definiert.</p>
+          <p className="text-xs text-muted-foreground">No additional headers defined.</p>
         ) : (
           <div className="space-y-2">
             {requestHeaders.map((header, headerIdx) => (
@@ -594,7 +777,7 @@ export default function ActionComponent<TAction extends ScriptAction>({
             {!action.assert && (
               <Button variant="outline" size="sm" onClick={addAssertion} className="flex items-center gap-1">
                 <Plus className="h-4 w-4" />
-                Assertion hinzufügen
+                Add Assertion
               </Button>
             )}
           </div>
@@ -611,7 +794,7 @@ export default function ActionComponent<TAction extends ScriptAction>({
             />
           ) : (
             <p className="text-xs text-muted-foreground">
-              Fügt optional Prüfungen hinzu, die auf die vorherige Operation angewendet werden.
+              Optionally add assertions that are applied to the previous operation.
             </p>
           )}
         </div>

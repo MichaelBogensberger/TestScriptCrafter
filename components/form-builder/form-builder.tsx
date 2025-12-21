@@ -28,6 +28,8 @@ import { ProfilesSection } from "./sections/profiles-section"
 import { VariablesSection } from "./sections/variables-section"
 import { ScopeSection } from "./sections/scope-section"
 import { CommonSection } from "./sections/common-section"
+import { useFhirVersion } from "@/lib/fhir-version-context"
+import { useSettings } from "@/lib/settings-context"
 
 type SectionKey =
   | "basic-info"
@@ -43,68 +45,46 @@ type SectionKey =
 
 const SECTION_DETAILS: Record<SectionKey, { title: string; description: string }> = {
   "basic-info": {
-    title: "Grundlegende Informationen",
-    description: "Name, Status und allgemeine Metadaten deines TestScripts.",
+    title: "Basic Information",
+    description: "Name, status and general metadata of your TestScript.",
   },
   metadata: {
-    title: "Metadaten",
-    description: "Capabilities und Links, die dein TestScript voraussetzt.",
+    title: "Metadata",
+    description: "Capabilities and links that your TestScript requires.",
   },
   systems: {
-    title: "Systeme & Endpunkte",
-    description: "Definiere verfügbare Systeme sowie Origin- und Destination-Zuordnungen.",
+    title: "Systems & Endpoints",
+    description: "Define available systems and origin/destination mappings.",
   },
   fixtures: {
-    title: "Fixtures & Profile",
-    description: "Referenzen auf vorbereitete Ressourcen und verwendete Profile.",
+    title: "Fixtures & Profiles",
+    description: "References to prepared resources and used profiles.",
   },
   variables: {
-    title: "Variablen",
-    description: "Parameter, die während der Ausführung ersetzt werden.",
+    title: "Variables",
+    description: "Parameters that will be replaced during execution.",
   },
   scope: {
     title: "Scope",
-    description: "Grenzt die Anwendungsfälle deines TestScripts ein.",
+    description: "Define the use cases of your TestScript.",
   },
   setup: {
     title: "Setup",
-    description: "Vorbereitende Operationen vor den eigentlichen Tests.",
+    description: "Preparatory operations before the actual tests.",
   },
   tests: {
-    title: "Testszenarien",
-    description: "Definiere Testfälle mit Operationen und Assertions.",
+    title: "Test Scenarios",
+    description: "Define test cases with operations and assertions.",
   },
   teardown: {
     title: "Teardown",
-    description: "Aufräumarbeiten nach Abschluss der Tests.",
+    description: "Cleanup operations after test completion.",
   },
   common: {
-    title: "Common Aktionen",
-    description: "Wiederverwendbare Aktionen, die über Schlüssel referenziert werden.",
+    title: "Common Actions",
+    description: "Reusable actions referenced by keys.",
   },
 }
-
-const SECTION_GROUPS: Array<{
-  id: string
-  title: string
-  sections: SectionKey[]
-}> = [
-  {
-    id: "overview",
-    title: "Übersicht",
-    sections: ["basic-info", "metadata"],
-  },
-  {
-    id: "infrastructure",
-    title: "Infrastruktur",
-    sections: ["systems", "fixtures", "variables", "scope"],
-  },
-  {
-    id: "execution",
-    title: "Ausführung",
-    sections: ["setup", "tests", "teardown", "common"],
-  },
-]
 
 interface FormBuilderProps {
   testScript: TestScript
@@ -113,11 +93,59 @@ interface FormBuilderProps {
 }
 
 function FormBuilder({ testScript, updateTestScript, updateSection }: FormBuilderProps) {
+  const { currentVersion } = useFhirVersion()
+  const { settings } = useSettings()
   const [activeSection, setActiveSection] = useState<SectionKey>("basic-info")
   const [activeTestIndex, setActiveTestIndex] = useState(0)
 
+  // Scope ist nur in R5 verfügbar, nicht in R4
+  const isR5 = currentVersion === "R5"
+
+  const SECTION_GROUPS: Array<{
+    id: string
+    title: string
+    sections: SectionKey[]
+  }> = useMemo(() => {
+    const infrastructureSections: SectionKey[] = ["systems", "fixtures", "variables"]
+    if (isR5) {
+      infrastructureSections.push("scope")
+    }
+
+    const overviewSections: SectionKey[] = ["basic-info"]
+    if (settings.showMetadataCapabilities) {
+      overviewSections.push("metadata")
+    }
+
+    return [
+      {
+        id: "overview",
+        title: "Overview",
+        sections: overviewSections,
+      },
+      {
+        id: "infrastructure",
+        title: "Infrastruktur",
+        sections: infrastructureSections,
+      },
+      {
+        id: "execution",
+        title: "Execution",
+        sections: ["setup", "tests", "teardown", "common"],
+      },
+    ]
+  }, [isR5, settings.showMetadataCapabilities])
+
   const metadata = useMemo(() => testScript.metadata ?? { capability: [] }, [testScript.metadata])
   const tests = useMemo(() => testScript.test ?? [], [testScript.test])
+  const availableFixtures = useMemo(() => 
+    (testScript.fixture ?? [])
+      .filter(f => f.id)
+      .map(f => ({
+        id: f.id!,
+        description: f.resource?.display || f.resource?.reference
+      })),
+    [testScript.fixture]
+  )
 
   useEffect(() => {
     if (tests.length === 0) {
@@ -230,6 +258,7 @@ function FormBuilder({ testScript, updateTestScript, updateSection }: FormBuilde
       case "basic-info":
         return <BasicInfoSection testScript={testScript} updateTestScript={updateTestScript} />
       case "metadata":
+        if (!settings.showMetadataCapabilities) return null
         return (
           <MetadataSection
             metadata={metadata}
@@ -272,6 +301,8 @@ function FormBuilder({ testScript, updateTestScript, updateSection }: FormBuilde
           />
         )
       case "scope":
+        // Scope nur in R5 verfügbar
+        if (!isR5) return null
         return (
           <ScopeSection
             scopes={testScript.scope}
@@ -283,6 +314,7 @@ function FormBuilder({ testScript, updateTestScript, updateSection }: FormBuilde
           <SetupSection
             setup={testScript.setup ?? { action: [] }}
             updateSetup={(value) => updateSection("setup", value)}
+            availableFixtures={availableFixtures}
           />
         )
       case "tests":
@@ -294,6 +326,7 @@ function FormBuilder({ testScript, updateTestScript, updateSection }: FormBuilde
             onAddTest={addTestCase}
             onRemoveTest={removeTestCase}
             onUpdateTest={updateTestCase}
+            availableFixtures={availableFixtures}
           />
         )
       case "teardown":
@@ -301,6 +334,7 @@ function FormBuilder({ testScript, updateTestScript, updateSection }: FormBuilde
           <TeardownSection
             teardown={testScript.teardown ?? { action: [] }}
             updateTeardown={(value) => updateSection("teardown", value)}
+            availableFixtures={availableFixtures}
           />
         )
       case "common":
@@ -326,9 +360,9 @@ function FormBuilder({ testScript, updateTestScript, updateSection }: FormBuilde
         <Card className="relative flex flex-col overflow-hidden p-4">
           <div className="relative z-10 space-y-4">
             <div>
-              <h3 className="text-sm font-semibold">Arbeitsbereiche</h3>
+              <h3 className="text-sm font-semibold">Workspaces</h3>
               <p className="text-xs text-muted-foreground">
-                Navigiere durch alle Bereiche des TestScripts. Nur der aktive Bereich wird gerendert, das sorgt für bessere Performance.
+                Navigate through all sections of the TestScript. Only the active section is rendered for better performance.
               </p>
             </div>
 
@@ -413,6 +447,7 @@ interface TestsPanelProps {
   onAddTest: () => void
   onRemoveTest: (index: number) => void
   onUpdateTest: (index: number, test: TestScriptTest) => void
+  availableFixtures?: Array<{ id: string; description?: string }>
 }
 
 const TestsPanel = memo(function TestsPanel({
@@ -422,6 +457,7 @@ const TestsPanel = memo(function TestsPanel({
   onAddTest,
   onRemoveTest,
   onUpdateTest,
+  availableFixtures = [],
 }: TestsPanelProps) {
   const activeTest = tests[activeIndex]
 
@@ -429,14 +465,14 @@ const TestsPanel = memo(function TestsPanel({
     <div className="space-y-4">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h3 className="text-sm font-medium">Testfälle verwalten</h3>
+          <h3 className="text-sm font-medium">Manage Test Cases</h3>
           <p className="text-xs text-muted-foreground">
-            Erstelle neue Testfälle oder wähle einen Eintrag aus der Liste, um ihn zu bearbeiten.
+            Create new test cases or select an entry from the list to edit it.
           </p>
         </div>
         <Button onClick={onAddTest} size="sm" className="inline-flex items-center gap-2">
           <Plus className="h-4 w-4" />
-          Testfall hinzufügen
+          Add Test Case
         </Button>
       </div>
 
@@ -504,6 +540,7 @@ const TestsPanel = memo(function TestsPanel({
                   testIndex={activeIndex}
                   updateTest={(value) => onUpdateTest(activeIndex, value)}
                   removeTest={() => onRemoveTest(activeIndex)}
+                  availableFixtures={availableFixtures}
                 />
               ) : (
                 <p className="text-sm text-muted-foreground">

@@ -40,21 +40,21 @@ export function VariablesSection({ variables, updateVariables }: VariablesSectio
     <div className="space-y-4 p-2">
       <div className="flex items-center justify-between">
         <div>
-          <h4 className="text-sm font-medium">Variablen</h4>
+          <h4 className="text-sm font-medium">Variables</h4>
           <p className="text-xs text-muted-foreground">
-            Platzhalter, die für Ausdrücke, Header oder Pfade verwendet werden können.
+            Placeholders that can be used for expressions, headers or paths.
           </p>
         </div>
         <Button variant="outline" size="sm" onClick={addVariable} className="flex items-center gap-1">
           <Plus className="h-4 w-4" />
-          Variable hinzufügen
+          Add Variable
         </Button>
       </div>
 
       {entries.length === 0 ? (
         <EmptyState
-          title="Noch keine Variablen angelegt."
-          description="Füge Parameter hinzu, die während der Ausführung ersetzt werden."
+          title="No variables created yet."
+          description="Add parameters that will be replaced during execution."
         />
       ) : (
         <div className="space-y-3">
@@ -64,14 +64,16 @@ export function VariablesSection({ variables, updateVariables }: VariablesSectio
                 <div className="flex-1 space-y-3">
                   <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                     <div>
-                      <Label htmlFor={`variable-${idx}-name`}>Name</Label>
+                      <Label htmlFor={`variable-${idx}-name`}>
+                        Name <span className="text-red-500">*</span>
+                      </Label>
                       <Input
                         id={`variable-${idx}-name`}
                         value={variable.name ?? ""}
                         onChange={(event) =>
                           updateVariable(idx, { ...variable, name: event.target.value })
                         }
-                        placeholder="z. B. accessToken"
+                        placeholder="e.g. accessToken"
                         required
                       />
                     </div>
@@ -86,13 +88,13 @@ export function VariablesSection({ variables, updateVariables }: VariablesSectio
                             defaultValue: event.target.value || undefined,
                           })
                         }
-                        placeholder="Optionaler Standardwert"
+                        placeholder="Optional default value"
                       />
                     </div>
                   </div>
 
                   <div>
-                    <Label htmlFor={`variable-${idx}-description`}>Beschreibung</Label>
+                    <Label htmlFor={`variable-${idx}-description`}>Description</Label>
                     <Textarea
                       id={`variable-${idx}-description`}
                       value={variable.description ?? ""}
@@ -174,7 +176,7 @@ export function VariablesSection({ variables, updateVariables }: VariablesSectio
                       onChange={(event) =>
                         updateVariable(idx, { ...variable, hint: event.target.value || undefined })
                       }
-                      placeholder="Hilfetext für Nutzer"
+                      placeholder="Hint text for users"
                     />
                   </div>
                 </div>
@@ -183,7 +185,7 @@ export function VariablesSection({ variables, updateVariables }: VariablesSectio
                   size="icon"
                   className="mt-1 h-8 w-8 text-destructive"
                   onClick={() => removeVariable(idx)}
-                  title="Variable entfernen"
+                  title="Remove variable"
                 >
                   <Trash2 className="h-4 w-4" />
                 </Button>

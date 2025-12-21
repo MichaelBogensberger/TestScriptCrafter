@@ -29,8 +29,8 @@ interface VersionSelectorProps {
 }
 
 /**
- * Version Selector Komponente
- * Ermöglicht die Auswahl der FHIR Version mit Informationen zu jeder Version
+ * Version Selector Component
+ * Allows selection of FHIR version with information about each version
  */
 export function VersionSelector({ 
   onVersionChange,
@@ -93,7 +93,7 @@ export function VersionSelector({
         onValueChange={handleVersionChange}
       >
         <SelectTrigger id="fhir-version-selector" className={compact ? "h-8" : undefined}>
-          <SelectValue placeholder="FHIR Version wählen..." />
+          <SelectValue placeholder="Select FHIR Version..." />
         </SelectTrigger>
         <SelectContent>
           {availableVersions.map(config => {
