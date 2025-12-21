@@ -44,7 +44,7 @@ export function ValidationTab({
   lastRequestPayload,
   lastServerResponse 
 }: ValidationTabProps) {
-  // Hook wurde entfernt - verwende Props stattdessen
+  // Hook was removed - use Props instead
   
   const [showPayload, setShowPayload] = useState(false);
   const [showServerResponse, setShowServerResponse] = useState(false);

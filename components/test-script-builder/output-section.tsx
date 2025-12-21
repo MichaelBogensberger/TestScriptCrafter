@@ -39,7 +39,7 @@ export function OutputSection({ testScript }: OutputSectionProps) {
               Live Update
             </Badge>
             <Badge variant="secondary" className="text-xs">
-              {testCount} Tests • {actionCount} Aktionen
+              {testCount} Tests • {actionCount} Actions
             </Badge>
           </div>
         </div>

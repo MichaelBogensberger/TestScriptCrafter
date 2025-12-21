@@ -153,7 +153,7 @@ function SyntaxHighlightedLine({
   searchTerm?: string
   isClient: boolean
 }) {
-  // Wenn Suchterm vorhanden, verwende innerHTML (nur client-side sicher)
+  // If search term exists, use innerHTML (only safe client-side)
   if (searchTerm && isClient) {
     const highlightedLine = highlightSearchTerm(line, searchTerm);
     return <span dangerouslySetInnerHTML={{ __html: highlightedLine }} />;

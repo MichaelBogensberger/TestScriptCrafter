@@ -215,7 +215,7 @@ const removeAction = (entry: TestScriptCommon, actionIdx: number): TestScriptCom
                                   }),
                                 )
                               }
-                              placeholder="Wert"
+                              placeholder="Value"
                             />
                             <Button
                               variant="ghost"
@@ -236,7 +236,7 @@ const removeAction = (entry: TestScriptCommon, actionIdx: number): TestScriptCom
 
                   <div className="space-y-3">
                     <div className="flex items-center justify-between">
-                      <h5 className="text-sm font-medium">Aktionen</h5>
+                      <h5 className="text-sm font-medium">Actions</h5>
                       <Button
                         variant="ghost"
                         size="sm"
@@ -244,7 +244,7 @@ const removeAction = (entry: TestScriptCommon, actionIdx: number): TestScriptCom
                         className="flex items-center gap-1"
                       >
                         <Plus className="h-4 w-4" />
-                        Aktion
+                        Action
                       </Button>
                     </div>
 

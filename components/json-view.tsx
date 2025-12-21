@@ -94,21 +94,21 @@ export function JsonView({ testScript, validationState }: JsonViewProps) {
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i];
       
-      // Prüfe ob diese Zeile das letzte Feld enthält
+      // Check if this line contains the last field
       const lastFieldRegex = new RegExp(`"${fieldName}"\\s*:`, 'g');
       if (!lastFieldRegex.test(line)) {
         continue;
       }
       
-      // Prüfe ob der Kontext passt - schaue zurück nach den vorherigen Pfad-Teilen
+      // Check if context matches - look back for previous path parts
       let contextMatches = true;
       let foundParts = 0;
       
-      // Gehe rückwärts durch die Zeilen und suche nach den Pfad-Teilen
-      for (let j = i - 1; j >= 0 && j >= i - 50; j--) { // Prüfe max. 50 Zeilen zurück
+      // Go backwards through lines and search for path parts
+      for (let j = i - 1; j >= 0 && j >= i - 50; j--) { // Check max. 50 lines back
         const prevLine = lines[j];
         
-        // Prüfe ob ein Teil des Pfads in dieser Zeile vorkommt (rückwärts durch den Pfad)
+        // Check if part of path occurs in this line (backwards through path)
         for (let k = searchPath.length - 2; k >= foundParts; k--) {
           if (prevLine.includes(searchPath[k])) {
             foundParts = k + 1;
@@ -209,8 +209,8 @@ export function JsonView({ testScript, validationState }: JsonViewProps) {
     const content = formatToJson(testScript)
     try {
       await clientOnly.clipboard.writeText(content)
-      toast.success("In die Zwischenablage kopiert", {
-        description: "TestScript JSON wurde kopiert",
+      toast.success("Copied to clipboard", {
+        description: "TestScript JSON has been copied",
       })
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : String(error)
@@ -226,8 +226,8 @@ export function JsonView({ testScript, validationState }: JsonViewProps) {
 
     clientOnly.download.file(content, filename, "application/json")
     
-    toast.success("Datei heruntergeladen", {
-      description: `${filename} wurde heruntergeladen`,
+    toast.success("File downloaded", {
+      description: `${filename} has been downloaded`,
     })
   }
 
@@ -245,19 +245,19 @@ export function JsonView({ testScript, validationState }: JsonViewProps) {
               {hasErrors ? (
                 <Badge variant="destructive" className="flex items-center gap-1">
                   <AlertCircle className="h-3 w-3" />
-                  {errorCount} Fehler
+                  {errorCount} Errors
                 </Badge>
               ) : (
                 <Badge variant="secondary" className="flex items-center gap-1 text-green-600 dark:text-green-400">
                   <CheckCircle className="h-3 w-3" />
-                  Gültig
+                  Valid
                 </Badge>
               )}
               
               {hasWarnings && (
                 <Badge variant="outline" className="flex items-center gap-1 text-yellow-600 dark:text-yellow-400">
                   <AlertCircle className="h-3 w-3" />
-                  {warningCount} Warnungen
+                  {warningCount} Warnings
                 </Badge>
               )}
             </div>
@@ -272,7 +272,7 @@ export function JsonView({ testScript, validationState }: JsonViewProps) {
 
           <Button variant="outline" size="sm" onClick={downloadContent} className="flex items-center gap-2">
             <Download className="h-4 w-4" />
-            <span>Herunterladen</span>
+            <span>Download</span>
           </Button>
         </div>
       </div>
@@ -291,11 +291,11 @@ export function JsonView({ testScript, validationState }: JsonViewProps) {
       {/* Fehler-Zusammenfassung */}
       {validationResult && (hasErrors || hasWarnings) && (
         <div className="rounded-md border bg-muted/50 p-4">
-          <h4 className="text-sm font-medium mb-2">Validierungsprobleme:</h4>
+          <h4 className="text-sm font-medium mb-2">Validation Issues:</h4>
           <div className="space-y-1 text-sm">
             {validationErrors.slice(0, 5).map((error, idx) => (
               <div key={idx} className="flex items-start gap-2">
-                <span className="text-muted-foreground">Zeile {error.line}:</span>
+                <span className="text-muted-foreground">Line {error.line}:</span>
                 <span className={
                   error.severity === 'error' ? 'text-red-600 dark:text-red-400' :
                   error.severity === 'warning' ? 'text-yellow-600 dark:text-yellow-400' :
@@ -307,7 +307,7 @@ export function JsonView({ testScript, validationState }: JsonViewProps) {
             ))}
             {validationErrors.length > 5 && (
               <div className="text-muted-foreground text-xs">
-                ... und {validationErrors.length - 5} weitere Probleme
+                ... and {validationErrors.length - 5} more issues
               </div>
             )}
           </div>

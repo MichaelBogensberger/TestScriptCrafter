@@ -93,37 +93,26 @@ export function TestCaseSection({
     if (action.assert?.label) return action.assert.label
     if (action.operation?.resource) return `Operation ${action.operation.resource}`
     if (action.assert?.description) return action.assert.description
-    return `Aktion ${index + 1}`
+    return `Action ${index + 1}`
   }
 
   const getActionBadge = (action: TestScriptTestAction) => {
     if (action.operation) return { label: "Operation", variant: "secondary" as const }
     if (action.assert) return { label: "Assertion", variant: "outline" as const }
-    return { label: "Schritt", variant: "default" as const }
+    return { label: "Step", variant: "default" as const }
   }
 
   return (
     <div className="space-y-4 p-2">
       <div className="grid grid-cols-1 gap-3 md:grid-cols-[1fr_auto] md:items-end">
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-          <div>
-            <Label htmlFor={`test-${testIndex}-id`}>Test ID</Label>
-            <Input
-              id={`test-${testIndex}-id`}
-              value={test.id ?? ""}
-              onChange={(event) => updateField("id", event.target.value || undefined)}
-              placeholder="Optional"
-            />
-          </div>
-          <div>
-            <Label htmlFor={`test-${testIndex}-name`}>Name</Label>
-            <Input
-              id={`test-${testIndex}-name`}
-              value={test.name ?? ""}
-              onChange={(event) => updateField("name", event.target.value || undefined)}
-              placeholder="Tracking/Logging Name"
-            />
-          </div>
+        <div>
+          <Label htmlFor={`test-${testIndex}-name`}>Name</Label>
+          <Input
+            id={`test-${testIndex}-name`}
+            value={test.name ?? ""}
+            onChange={(event) => updateField("name", event.target.value || undefined)}
+            placeholder="Tracking/Logging Name"
+          />
         </div>
         <div className="flex justify-end">
           <Button
@@ -195,7 +184,7 @@ export function TestCaseSection({
                           </Badge>
                         </div>
                         <p className="mt-1 text-xs text-muted-foreground line-clamp-2">
-                          {action.operation?.description || action.assert?.description || "Keine Beschreibung"}
+                          {action.operation?.description || action.assert?.description || "No description"}
                         </p>
                       </button>
                     )
@@ -216,10 +205,10 @@ export function TestCaseSection({
                   className="text-destructive"
                   onClick={() => removeAction(activeActionIndex)}
                   disabled={actions.length === 1}
-                  title={actions.length === 1 ? "Mindestens eine Action ist erforderlich" : "Action entfernen"}
+                  title={actions.length === 1 ? "At least one action is required" : "Remove action"}
                 >
                   <Trash2 className="h-4 w-4" />
-                  Entfernen
+                  Remove
                 </Button>
               </div>
 
@@ -230,7 +219,7 @@ export function TestCaseSection({
                   index={activeActionIndex}
                   sectionType="test"
                   updateAction={(updated) => updateAction(activeActionIndex, updated)}
-                  removeAction={() => removeAction(activeActionIndex)}
+                  removeAction={undefined}
                   availableFixtures={availableFixtures}
                 />
               ) : (

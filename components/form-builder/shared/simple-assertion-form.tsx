@@ -49,7 +49,7 @@ export function SimpleAssertionForm({
   return (
     <Card className="space-y-4 p-4">
       <div className="flex items-center justify-between">
-        <h5 className="text-sm font-medium">Assertion Konfiguration</h5>
+        <h5 className="text-sm font-medium">Assertion Configuration</h5>
         <Button
           variant="ghost"
           size="sm"
@@ -57,33 +57,22 @@ export function SimpleAssertionForm({
           className="text-destructive hover:text-destructive"
         >
           <Trash2 className="h-4 w-4 mr-1" />
-          Entfernen
+          Remove
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-        <div>
-          <Label htmlFor="assertion-id">ID</Label>
-          <Input
-            id="assertion-id"
-            value={assertion.id ?? ""}
-            onChange={(e) => updateField("id", e.target.value || undefined)}
-            placeholder="Optional"
-          />
-        </div>
-        <div>
-          <Label htmlFor="assertion-label">Label</Label>
-          <Input
-            id="assertion-label"
-            value={assertion.label ?? ""}
-            onChange={(e) => updateField("label", e.target.value || undefined)}
-            placeholder="Kurzer Name"
-          />
-        </div>
+      <div>
+        <Label htmlFor="assertion-label">Label</Label>
+        <Input
+          id="assertion-label"
+          value={assertion.label ?? ""}
+          onChange={(e) => updateField("label", e.target.value || undefined)}
+          placeholder="Short name for this assertion"
+        />
       </div>
 
       <div>
-        <Label htmlFor="assertion-description">Beschreibung</Label>
+        <Label htmlFor="assertion-description">Description</Label>
         <Textarea
           id="assertion-description"
           value={assertion.description ?? ""}
@@ -98,7 +87,7 @@ export function SimpleAssertionForm({
 
       <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
         <div>
-          <Label htmlFor="assertion-direction">Richtung</Label>
+          <Label htmlFor="assertion-direction">Direction</Label>
           <Select
             value={assertion.direction ?? ""}
             onValueChange={(value) => updateField("direction", value as typeof assertion.direction)}
@@ -117,7 +106,7 @@ export function SimpleAssertionForm({
         </div>
 
         <div>
-          <Label htmlFor="assertion-response">Erwartete Antwort</Label>
+          <Label htmlFor="assertion-response">Expected Response</Label>
           <Select
             value={assertion.response ?? ""}
             onValueChange={(value) => updateField("response", value as typeof assertion.response)}
@@ -145,7 +134,7 @@ export function SimpleAssertionForm({
             onValueChange={(value) => updateField("operator", value as typeof assertion.operator)}
           >
             <SelectTrigger id="assertion-operator">
-              <SelectValue placeholder="Vergleich" />
+              <SelectValue placeholder="Comparison" />
             </SelectTrigger>
             <SelectContent>
               {operatorOptions.map((operator) => (
@@ -160,12 +149,12 @@ export function SimpleAssertionForm({
 
       <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
         <div>
-          <Label htmlFor="assertion-value">Erwarteter Wert</Label>
+          <Label htmlFor="assertion-value">Expected Value</Label>
           <Input
             id="assertion-value"
             value={assertion.value ?? ""}
             onChange={(e) => updateField("value", e.target.value || undefined)}
-            placeholder="z.B. Patient, 200, ..."
+            placeholder="e.g. Patient, 200, ..."
           />
         </div>
         <div>
@@ -174,7 +163,7 @@ export function SimpleAssertionForm({
             id="assertion-expression"
             value={assertion.expression ?? ""}
             onChange={(e) => updateField("expression", e.target.value || undefined)}
-            placeholder="z.B. Bundle.entry.count()"
+            placeholder="e.g. Bundle.entry.count()"
           />
         </div>
       </div>
@@ -187,7 +176,7 @@ export function SimpleAssertionForm({
             onCheckedChange={(checked) => updateField("warningOnly", checked)}
           />
           <Label htmlFor="assertion-warning" className="text-sm">
-            Nur Warnung
+            Warning Only
           </Label>
         </div>
 
@@ -198,7 +187,7 @@ export function SimpleAssertionForm({
             onCheckedChange={(checked) => updateField("stopTestOnFail", checked)}
           />
           <Label htmlFor="assertion-stop" className="text-sm">
-            Bei Fehler stoppen
+            Stop on Failure
           </Label>
         </div>
       </div>

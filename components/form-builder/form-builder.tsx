@@ -124,7 +124,7 @@ function FormBuilder({ testScript, updateTestScript, updateSection }: FormBuilde
       },
       {
         id: "infrastructure",
-        title: "Infrastruktur",
+        title: "Infrastructure",
         sections: infrastructureSections,
       },
       {
@@ -158,7 +158,7 @@ function FormBuilder({ testScript, updateTestScript, updateSection }: FormBuilde
   const addTestCase = useCallback(() => {
     const nextIndex = tests.length
     const newTest: TestScriptTest = {
-      name: `Testfall ${nextIndex + 1}`,
+      name: `Test Case ${nextIndex + 1}`,
       description: "",
       action: [],
     }
@@ -405,7 +405,7 @@ function FormBuilder({ testScript, updateTestScript, updateSection }: FormBuilde
                                         {tests.length} Tests
                                       </Badge>
                                       <Badge variant="secondary" className="text-[10px]">
-                                        {testsActionTotal} Aktionen
+                                        {testsActionTotal} Actions
                                       </Badge>
                                     </div>
                                   ) : null}
@@ -478,7 +478,7 @@ const TestsPanel = memo(function TestsPanel({
 
       {tests.length === 0 ? (
         <Card className="border-dashed p-8 text-center text-sm text-muted-foreground">
-          Noch keine Testfälle definiert. Lege den ersten Testfall an, um Aktionen hinzufügen zu können.
+          No test cases defined yet. Create your first test case to add actions.
         </Card>
       ) : (
         <div className="grid gap-4 lg:grid-cols-[240px_1fr]">
@@ -501,13 +501,13 @@ const TestsPanel = memo(function TestsPanel({
                       )}
                     >
                       <div className="flex items-center justify-between gap-2">
-                        <span className="font-medium">{test.name || `Testfall ${idx + 1}`}</span>
+                        <span className="font-medium">{test.name || `Test Case ${idx + 1}`}</span>
                         <Badge variant={actionCount > 0 ? "default" : "secondary"} className="text-[10px]">
-                          {actionCount} Aktionen
+                          {actionCount} Actions
                         </Badge>
                       </div>
                       <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">
-                        {test.description || "Keine Beschreibung"}
+                        {test.description || "No description"}
                       </p>
                     </button>
                   )
@@ -516,39 +516,21 @@ const TestsPanel = memo(function TestsPanel({
             </ScrollArea>
           </Card>
 
-          <div className="space-y-3">
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <div className="flex items-center gap-2 text-sm font-medium">
-                <TestTube className="h-4 w-4 text-primary" />
-                <span>{activeTest?.name || `Testfall ${activeIndex + 1}`}</span>
-              </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="inline-flex items-center gap-2 text-destructive"
-                onClick={() => onRemoveTest(activeIndex)}
-              >
-                <Trash2 className="h-4 w-4" />
-                Entfernen
-              </Button>
-            </div>
-
-            <Card className="p-4">
-              {activeTest ? (
-                <TestCaseSection
-                  test={activeTest}
-                  testIndex={activeIndex}
-                  updateTest={(value) => onUpdateTest(activeIndex, value)}
-                  removeTest={() => onRemoveTest(activeIndex)}
-                  availableFixtures={availableFixtures}
-                />
-              ) : (
-                <p className="text-sm text-muted-foreground">
-                  Wähle links einen Testfall aus, um seine Aktionen zu bearbeiten.
-                </p>
-              )}
-            </Card>
-          </div>
+          <Card className="p-4">
+            {activeTest ? (
+              <TestCaseSection
+                test={activeTest}
+                testIndex={activeIndex}
+                updateTest={(value) => onUpdateTest(activeIndex, value)}
+                removeTest={() => onRemoveTest(activeIndex)}
+                availableFixtures={availableFixtures}
+              />
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                Select a test case on the left to edit its actions.
+              </p>
+            )}
+          </Card>
         </div>
       )}
     </div>

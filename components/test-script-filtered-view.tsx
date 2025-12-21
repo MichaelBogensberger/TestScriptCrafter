@@ -305,10 +305,10 @@ export function TestScriptFilteredView({ testScript }: TestScriptFilteredViewPro
                     <SelectValue placeholder="Select filter type" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">Alle Felder</SelectItem>
-                    <SelectItem value="name">Namen/Label</SelectItem>
-                    <SelectItem value="description">Beschreibungen</SelectItem>
-                    <SelectItem value="action">Aktionsdetails</SelectItem>
+                    <SelectItem value="all">All Fields</SelectItem>
+                    <SelectItem value="name">Names/Labels</SelectItem>
+                    <SelectItem value="description">Descriptions</SelectItem>
+                    <SelectItem value="action">Action Details</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -322,7 +322,7 @@ export function TestScriptFilteredView({ testScript }: TestScriptFilteredViewPro
                     <SelectValue placeholder="Select section" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">Alle Bereiche</SelectItem>
+                    <SelectItem value="all">All Sections</SelectItem>
                     <SelectItem value="setup">Setup</SelectItem>
                     <SelectItem value="test">Tests</SelectItem>
                     <SelectItem value="teardown">Teardown</SelectItem>
@@ -357,7 +357,7 @@ export function TestScriptFilteredView({ testScript }: TestScriptFilteredViewPro
                 <Check className="h-3 w-3" /> Tests: {counts.tests}
               </Badge>
               <Badge variant="outline" className="flex items-center gap-1">
-                <Check className="h-3 w-3" /> Aktionen: {counts.actions}
+                <Check className="h-3 w-3" /> Actions: {counts.actions}
               </Badge>
               {searchTerm !== "" && (
                 <Badge variant="secondary" className="flex items-center gap-1">
@@ -496,7 +496,7 @@ export function TestScriptFilteredView({ testScript }: TestScriptFilteredViewPro
 
                 {counts.actions === 0 && (
                   <div className="py-8 text-center text-muted-foreground">
-                    Keine Ergebnisse gefunden für die aktuellen Filterkriterien.
+                    No results found for the current filter criteria.
                   </div>
                 )}
               </div>

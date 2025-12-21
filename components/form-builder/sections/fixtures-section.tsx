@@ -30,7 +30,7 @@ export function FixturesSection({ fixtures, updateFixtures }: FixturesSectionPro
       <div>
         <h4 className="text-sm font-medium">Fixtures & Example Instances</h4>
         <p className="text-xs text-muted-foreground">
-          Verwalte Testdaten durch manuelle Eingabe oder automatisches Laden aus Implementation Guides.
+          Manage test data through manual input or automatic loading from Implementation Guides.
         </p>
       </div>
 
@@ -38,8 +38,8 @@ export function FixturesSection({ fixtures, updateFixtures }: FixturesSectionPro
         <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="ig-config" className="flex items-center gap-2">
             <Settings className="h-4 w-4" />
-            <span className="hidden sm:inline">IG Konfiguration</span>
-            <span className="sm:hidden">Konfiguration</span>
+            <span className="hidden sm:inline">IG Configuration</span>
+            <span className="sm:hidden">Configuration</span>
           </TabsTrigger>
           <TabsTrigger value="ig-browser" className="flex items-center gap-2">
             <Database className="h-4 w-4" />
@@ -48,8 +48,8 @@ export function FixturesSection({ fixtures, updateFixtures }: FixturesSectionPro
           </TabsTrigger>
           <TabsTrigger value="manual" className="flex items-center gap-2">
             <FileText className="h-4 w-4" />
-            <span className="hidden sm:inline">Manuelle Fixtures</span>
-            <span className="sm:hidden">Manuell</span>
+            <span className="hidden sm:inline">Manual Fixtures</span>
+            <span className="sm:hidden">Manual</span>
           </TabsTrigger>
         </TabsList>
 

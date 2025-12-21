@@ -98,7 +98,11 @@ export function ScopeSection({ scopes, updateScopes }: ScopeSectionProps) {
                       }
                       placeholder="Canonical URL or reference"
                       required
+                      className={!scope.artifact?.trim() ? "border-red-500" : ""}
                     />
+                    {!scope.artifact?.trim() && (
+                      <p className="text-xs text-red-500 mt-1">Artifact is required</p>
+                    )}
                   </div>
 
                   <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
@@ -141,7 +145,7 @@ export function ScopeSection({ scopes, updateScopes }: ScopeSectionProps) {
                             updateConcept(scope, "conformance", "display", event.target.value),
                           )
                         }
-                        placeholder="Anzeige"
+                        placeholder="Display"
                       />
                     </div>
                   </div>
@@ -180,7 +184,7 @@ export function ScopeSection({ scopes, updateScopes }: ScopeSectionProps) {
                             updateConcept(scope, "phase", "display", event.target.value),
                           )
                         }
-                        placeholder="Anzeige"
+                        placeholder="Display"
                       />
                     </div>
                   </div>

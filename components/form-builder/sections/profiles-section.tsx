@@ -38,9 +38,9 @@ export function ProfilesSection({ profiles, updateProfiles }: ProfilesSectionPro
   return (
     <div className="space-y-4 p-2">
       <div>
-        <h4 className="text-sm font-medium">Profile</h4>
+        <h4 className="text-sm font-medium">Profiles</h4>
         <p className="text-xs text-muted-foreground">
-          Liste von kanonischen Profil-URLs (StructureDefinitions), die dieses TestScript abdeckt.
+          List of canonical profile URLs (StructureDefinitions) that this TestScript covers.
           Format: https://example.org/fhir/StructureDefinition/ProfileName
         </p>
       </div>

@@ -251,13 +251,13 @@ export function FixtureTestPanel({ igConfiguration }: FixtureTestPanelProps) {
                 <h4 className="text-sm font-medium">Select Test Sources</h4>
                 <div className="flex gap-2">
                   <Button variant="ghost" size="sm" onClick={selectEnabledSources}>
-                    Aktivierte
+                    Enabled
                   </Button>
                   <Button variant="ghost" size="sm" onClick={selectAllSources}>
-                    Alle
+                    All
                   </Button>
                   <Button variant="ghost" size="sm" onClick={clearSourceSelection}>
-                    Keine
+                    None
                   </Button>
                 </div>
               </div>
@@ -276,7 +276,7 @@ export function FixtureTestPanel({ igConfiguration }: FixtureTestPanelProps) {
                     >
                       <span>{source.name}</span>
                       <Badge variant={source.enabled ? "default" : "secondary"} className="text-xs">
-                        {source.enabled ? "Aktiviert" : "Deaktiviert"}
+                        {source.enabled ? "Enabled" : "Disabled"}
                       </Badge>
                       {source.type === 'hl7-austria' && (
                         <Badge variant="outline" className="text-xs">🇦🇹</Badge>
@@ -287,8 +287,8 @@ export function FixtureTestPanel({ igConfiguration }: FixtureTestPanelProps) {
               </div>
               
               <div className="text-xs text-muted-foreground">
-                Wähle die IG-Quellen aus, die getestet werden sollen. 
-                Nur ausgewählte Quellen werden in den Tests verwendet.
+                Select the IG sources to be tested. 
+                Only selected sources will be used in tests.
               </div>
             </div>
           </Card>
@@ -304,7 +304,7 @@ export function FixtureTestPanel({ igConfiguration }: FixtureTestPanelProps) {
               {passedTests === totalTests ? (
                 <div className="flex items-center gap-1 text-green-600">
                   <CheckCircle2 className="h-4 w-4" />
-                  <span className="text-sm font-medium">Alle Tests erfolgreich!</span>
+                  <span className="text-sm font-medium">All tests passed!</span>
                 </div>
               ) : (
                 <div className="flex items-center gap-1 text-red-600">

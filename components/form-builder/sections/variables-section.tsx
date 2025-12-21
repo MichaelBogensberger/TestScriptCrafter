@@ -75,7 +75,11 @@ export function VariablesSection({ variables, updateVariables }: VariablesSectio
                         }
                         placeholder="e.g. accessToken"
                         required
+                        className={!variable.name?.trim() ? "border-red-500" : ""}
                       />
+                      {!variable.name?.trim() && (
+                        <p className="text-xs text-red-500 mt-1">Name is required</p>
+                      )}
                     </div>
                     <div>
                       <Label htmlFor={`variable-${idx}-default`}>Default Value</Label>
@@ -105,7 +109,7 @@ export function VariablesSection({ variables, updateVariables }: VariablesSectio
                         })
                       }
                       rows={2}
-                      placeholder="Zweck der Variable"
+                      placeholder="Purpose of the variable"
                     />
                   </div>
 
@@ -121,7 +125,7 @@ export function VariablesSection({ variables, updateVariables }: VariablesSectio
                             expression: event.target.value || undefined,
                           })
                         }
-                        placeholder="FHIRPath oder JSONPath"
+                        placeholder="FHIRPath or JSONPath"
                       />
                     </div>
                     <div>
@@ -132,7 +136,7 @@ export function VariablesSection({ variables, updateVariables }: VariablesSectio
                         onChange={(event) =>
                           updateVariable(idx, { ...variable, path: event.target.value || undefined })
                         }
-                        placeholder="Pfad im Fixture"
+                        placeholder="Path in fixture"
                       />
                     </div>
                   </div>
@@ -163,13 +167,13 @@ export function VariablesSection({ variables, updateVariables }: VariablesSectio
                             sourceId: event.target.value || undefined,
                           })
                         }
-                        placeholder="Fixture- oder Antwort-ID"
+                        placeholder="Fixture or response ID"
                       />
                     </div>
                   </div>
 
                   <div>
-                    <Label htmlFor={`variable-${idx}-hint`}>Hinweis</Label>
+                    <Label htmlFor={`variable-${idx}-hint`}>Hint</Label>
                     <Input
                       id={`variable-${idx}-hint`}
                       value={variable.hint ?? ""}

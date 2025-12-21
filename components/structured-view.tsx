@@ -17,7 +17,7 @@ interface StructuredViewProps {
 }
 
 /**
- * Zeigt ein TestScript in einer strukturierten, benutzerfreundlichen Ansicht an
+ * Displays a TestScript in a structured, user-friendly view
  */
 export function StructuredView({ testScript }: StructuredViewProps) {
   const testCount = testScript.test?.length ?? 0
@@ -29,12 +29,12 @@ export function StructuredView({ testScript }: StructuredViewProps) {
 
   return (
     <div className="space-y-6">
-      {/* Header mit grundlegenden Informationen */}
+      {/* Header with basic information */}
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle className="text-2xl">{testScript.name || "Unbenanntes TestScript"}</CardTitle>
+              <CardTitle className="text-2xl">{testScript.name || "Unnamed TestScript"}</CardTitle>
               <CardDescription className="mt-2">
                 {testScript.description || "No description available"}
               </CardDescription>
@@ -44,7 +44,7 @@ export function StructuredView({ testScript }: StructuredViewProps) {
                 {testScript.status}
               </Badge>
               {testScript.experimental && (
-                <Badge variant="outline">Experimentell</Badge>
+                <Badge variant="outline">Experimental</Badge>
               )}
             </div>
           </div>
@@ -53,21 +53,21 @@ export function StructuredView({ testScript }: StructuredViewProps) {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
             <div>
               <span className="font-medium text-muted-foreground">URL:</span>
-              <p className="font-mono text-xs break-all">{testScript.url || "Nicht gesetzt"}</p>
+              <p className="font-mono text-xs break-all">{testScript.url || "Not set"}</p>
             </div>
             <div>
               <span className="font-medium text-muted-foreground">Version:</span>
-              <p>{testScript.version || "Nicht gesetzt"}</p>
+              <p>{testScript.version || "Not set"}</p>
             </div>
             <div>
               <span className="font-medium text-muted-foreground">Publisher:</span>
-              <p>{testScript.publisher || "Nicht gesetzt"}</p>
+              <p>{testScript.publisher || "Not set"}</p>
             </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* Statistiken */}
+      {/* Statistics */}
       <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
         <Card>
           <CardContent className="p-4">
@@ -96,7 +96,7 @@ export function StructuredView({ testScript }: StructuredViewProps) {
               <span className="text-sm font-medium">Setup Actions</span>
             </div>
             <p className="mt-1 text-2xl font-bold">{setupActionCount}</p>
-            <p className="text-xs text-muted-foreground">Vorbereitungen</p>
+            <p className="text-xs text-muted-foreground">Preparation steps</p>
           </CardContent>
         </Card>
         <Card>
@@ -114,7 +114,7 @@ export function StructuredView({ testScript }: StructuredViewProps) {
         <CardContent className="p-4">
           <div className="flex items-center gap-2">
             <AlertCircle className="h-4 w-4 text-orange-500" />
-            <span className="text-sm font-medium">Gesamtanzahl Aktionen</span>
+            <span className="text-sm font-medium">Total Actions</span>
           </div>
           <p className="mt-1 text-2xl font-bold">{totalActions}</p>
         </CardContent>
@@ -212,9 +212,9 @@ function SetupSection({ setup }: { setup: TestScriptSetup | undefined }) {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Setup-Aktionen</CardTitle>
+        <CardTitle>Setup Actions</CardTitle>
         <CardDescription>
-          {setup.action.length} Aktion{setup.action.length !== 1 ? 'en' : ''} definiert
+          {setup.action.length} Action{setup.action.length !== 1 ? 's' : ''} defined
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -222,15 +222,15 @@ function SetupSection({ setup }: { setup: TestScriptSetup | undefined }) {
           {setup.action.map((action, index) => (
             <div key={index} className="p-4 border rounded-lg">
               <div className="flex items-center justify-between mb-2">
-                <span className="font-medium">Aktion {index + 1}</span>
+                <span className="font-medium">Action {index + 1}</span>
                 <Badge variant="outline">Setup</Badge>
               </div>
               {action.operation && (
                 <div className="space-y-2 text-sm">
-                  <p><span className="font-medium">Methode:</span> {action.operation.method || "Nicht gesetzt"}</p>
-                  <p><span className="font-medium">URL:</span> {action.operation.url || "Nicht gesetzt"}</p>
+                  <p><span className="font-medium">Method:</span> {action.operation.method || "Not set"}</p>
+                  <p><span className="font-medium">URL:</span> {action.operation.url || "Not set"}</p>
                   {action.operation.description && (
-                    <p><span className="font-medium">Beschreibung:</span> {action.operation.description}</p>
+                    <p><span className="font-medium">Description:</span> {action.operation.description}</p>
                   )}
                 </div>
               )}
@@ -262,23 +262,23 @@ function TeardownSection({ teardown }: { teardown: TestScriptTeardown | undefine
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Teardown-Aktionen</CardTitle>
-        <CardDescription>{teardown.action.length} Aktion(en) definiert</CardDescription>
+        <CardTitle>Teardown Actions</CardTitle>
+        <CardDescription>{teardown.action.length} Action(s) defined</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
           {teardown.action.map((action, idx) => (
             <div key={idx} className="rounded-lg border p-4">
               <div className="mb-2 flex items-center justify-between">
-                <span className="font-medium">Aktion {idx + 1}</span>
+                <span className="font-medium">Action {idx + 1}</span>
                 <Badge variant="outline">Teardown</Badge>
               </div>
               <div className="space-y-1 text-sm">
                 <p>
-                  <span className="font-medium">Methode:</span> {action.operation.method || "Nicht gesetzt"}
+                  <span className="font-medium">Method:</span> {action.operation.method || "Not set"}
                 </p>
                 <p>
-                  <span className="font-medium">URL:</span> {action.operation.url || "Nicht gesetzt"}
+                  <span className="font-medium">URL:</span> {action.operation.url || "Not set"}
                 </p>
               </div>
             </div>
@@ -320,7 +320,7 @@ function TestSection({ tests }: { tests: TestScriptTest[] | undefined }) {
                 {test.action.map((action, actionIndex) => (
                   <div key={actionIndex} className="p-3 border rounded-lg">
                     <div className="flex items-center justify-between mb-2">
-                      <span className="font-medium">Aktion {actionIndex + 1}</span>
+                      <span className="font-medium">Action {actionIndex + 1}</span>
                       <div className="flex gap-1">
                         {action.operation && <Badge variant="secondary" className="text-xs">Operation</Badge>}
                         {action.assert && <Badge variant="outline" className="text-xs">Assertion</Badge>}
@@ -328,13 +328,13 @@ function TestSection({ tests }: { tests: TestScriptTest[] | undefined }) {
                     </div>
                     {action.operation && (
                       <div className="space-y-1 text-sm">
-                        <p><span className="font-medium">Methode:</span> {action.operation.method || "Nicht gesetzt"}</p>
-                        <p><span className="font-medium">URL:</span> {action.operation.url || "Nicht gesetzt"}</p>
+                        <p><span className="font-medium">Method:</span> {action.operation.method || "Not set"}</p>
+                        <p><span className="font-medium">URL:</span> {action.operation.url || "Not set"}</p>
                       </div>
                     )}
                     {action.assert && (
                       <div className="mt-2 p-2 bg-muted rounded">
-                        <p className="text-sm"><span className="font-medium">Assertion:</span> {action.assert.description || "Keine Beschreibung"}</p>
+                        <p className="text-sm"><span className="font-medium">Assertion:</span> {action.assert.description || "No description"}</p>
                       </div>
                     )}
                   </div>
@@ -356,7 +356,7 @@ function CommonActionsSection({ common }: { common: TestScriptCommon[] | undefin
       <Card>
         <CardContent className="p-6 text-center">
           <Info className="mx-auto mb-2 h-8 w-8 text-muted-foreground" />
-          <p className="text-muted-foreground">Keine Common-Aktionen definiert</p>
+          <p className="text-muted-foreground">No common actions defined</p>
         </CardContent>
       </Card>
     )
@@ -395,18 +395,18 @@ function CommonActionsSection({ common }: { common: TestScriptCommon[] | undefin
                 {entry.action.map((action, actionIdx) => (
                   <div key={actionIdx} className="rounded-lg border p-3">
                     <div className="mb-2 flex items-center justify-between">
-                      <span className="font-medium">Aktion {actionIdx + 1}</span>
+                      <span className="font-medium">Action {actionIdx + 1}</span>
                       <Badge variant="outline">Common</Badge>
                     </div>
                     {action.operation && (
                       <div className="space-y-1 text-sm">
                         <p>
-                          <span className="font-medium">Methode:</span>{" "}
-                          {action.operation.method || "Nicht gesetzt"}
+                          <span className="font-medium">Method:</span>{" "}
+                          {action.operation.method || "Not set"}
                         </p>
                         <p>
                           <span className="font-medium">URL:</span>{" "}
-                          {action.operation.url || "Nicht gesetzt"}
+                          {action.operation.url || "Not set"}
                         </p>
                       </div>
                     )}
@@ -414,7 +414,7 @@ function CommonActionsSection({ common }: { common: TestScriptCommon[] | undefin
                       <div className="mt-2 rounded bg-muted p-2 text-sm">
                         <p>
                           <span className="font-medium">Assertion:</span>{" "}
-                          {action.assert.description || "Keine Beschreibung"}
+                          {action.assert.description || "No description"}
                         </p>
                       </div>
                     )}
@@ -422,7 +422,7 @@ function CommonActionsSection({ common }: { common: TestScriptCommon[] | undefin
                 ))}
               </div>
             ) : (
-              <p className="text-sm text-muted-foreground">Keine Aktionen in diesem Common-Block.</p>
+              <p className="text-sm text-muted-foreground">No actions in this common block.</p>
             )}
           </CardContent>
         </Card>

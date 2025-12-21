@@ -180,7 +180,7 @@ interface ActionComponentProps<TAction extends ScriptAction> {
   index: number
   sectionType: SectionType
   updateAction: (action: TAction) => void
-  removeAction: () => void
+  removeAction?: () => void
   availableFixtures?: Array<{ id: string; description?: string }>
 }
 
@@ -381,41 +381,27 @@ export default function ActionComponent<TAction extends ScriptAction>({
       <div className="flex items-start justify-between gap-2">
         <div>
           <h4 className="text-sm font-medium">
-            {sectionType.charAt(0).toUpperCase() + sectionType.slice(1)} Aktion {index + 1}
+            {sectionType.charAt(0).toUpperCase() + sectionType.slice(1)} Action {index + 1}
           </h4>
           <p className="text-xs text-muted-foreground">
-            Definiert eine Operation sowie optional eine Assertion.
+            Defines an operation and optionally an assertion.
           </p>
         </div>
-        <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={removeAction}>
-          <Trash2 className="h-4 w-4" />
-        </Button>
+        {removeAction && (
+          <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={removeAction}>
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        )}
       </div>
 
-      <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
-        <div>
-          <Label htmlFor={`action-${index}-id`}>ID</Label>
-          <Input
-            id={`action-${index}-id`}
-            value={action.id ?? ""}
-            onChange={(event) =>
-              updateAction({
-                ...action,
-                id: event.target.value || undefined,
-              } as TAction)
-            }
-            placeholder="Optionaler Identifier"
-          />
-        </div>
-        <div>
-          <Label htmlFor={`action-${index}-label`}>Label</Label>
-          <Input
-            id={`action-${index}-label`}
-            value={operation.label ?? ""}
-            onChange={(event) => updateOperationField("label", event.target.value || undefined)}
-            placeholder="Kurzer Anzeigename"
-          />
-        </div>
+      <div>
+        <Label htmlFor={`action-${index}-label`}>Label</Label>
+        <Input
+          id={`action-${index}-label`}
+          value={operation.label ?? ""}
+          onChange={(event) => updateOperationField("label", event.target.value || undefined)}
+          placeholder="Short display name for this operation"
+        />
       </div>
 
       <div>
@@ -453,7 +439,7 @@ export default function ActionComponent<TAction extends ScriptAction>({
         <Input
           value={operation.type?.display ?? ""}
           onChange={(event) => updateOperationTypeField("display", event.target.value || undefined)}
-          placeholder="Lesbarer Name"
+          placeholder="Human readable name"
         />
       </div>
 
@@ -501,7 +487,7 @@ export default function ActionComponent<TAction extends ScriptAction>({
                 }}
                 className="text-xs"
               >
-                ← Zurück zur Auswahl
+                ← Back to selection
               </Button>
             </div>
           ) : (
@@ -735,17 +721,17 @@ export default function ActionComponent<TAction extends ScriptAction>({
                 <Input
                   value={header.field}
                   onChange={(event) => updateRequestHeader(headerIdx, "field", event.target.value)}
-                  placeholder="Header Feld"
+                  placeholder="Header field"
                   className={cn(
                     operationErrors.requestHeaders?.[headerIdx] &&
-                      operationErrors.requestHeaders[headerIdx].some((msg) => msg.includes("Feld")) &&
+                      operationErrors.requestHeaders[headerIdx].some((msg) => msg.includes("Field")) &&
                       "border-destructive focus-visible:ring-destructive",
                   )}
                 />
                 <Input
                   value={header.value}
                   onChange={(event) => updateRequestHeader(headerIdx, "value", event.target.value)}
-                  placeholder="Header Wert"
+                  placeholder="Header value"
                 />
                 <Button
                   variant="ghost"

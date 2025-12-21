@@ -98,13 +98,13 @@ export function AssertionComponent({
           />
         </div>
         <div>
-          <Label htmlFor="assertion-description">Beschreibung</Label>
+          <Label htmlFor="assertion-description">Description</Label>
           <Textarea
             id="assertion-description"
             value={assertion.description ?? ""}
             onChange={(event) => updateField("description", event.target.value || undefined)}
             rows={2}
-            placeholder="Beschreibung der Assertion"
+            placeholder="Description of the assertion"
             className={cn(errors?.description && "border-destructive focus-visible:ring-destructive")}
             aria-invalid={Boolean(errors?.description)}
           />
@@ -114,7 +114,7 @@ export function AssertionComponent({
 
       <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
         <div>
-          <Label htmlFor="assertion-direction">Richtung</Label>
+          <Label htmlFor="assertion-direction">Direction</Label>
           <Select
             value={assertion.direction ?? ""}
             onValueChange={(value) => updateField("direction", value as typeof assertion.direction)}
@@ -132,7 +132,7 @@ export function AssertionComponent({
           </Select>
         </div>
         <div>
-          <Label htmlFor="assertion-response">Erwartete Antwort</Label>
+          <Label htmlFor="assertion-response">Expected Response</Label>
           <Select
             value={assertion.response ?? ""}
             onValueChange={(value) => updateField("response", value as TestScriptSetupActionAssertResponse)}
@@ -152,12 +152,12 @@ export function AssertionComponent({
           {errors?.response && <p className="text-xs text-destructive">{errors.response}</p>}
         </div>
         <div>
-          <Label htmlFor="assertion-response-code">Erwarteter Statuscode</Label>
+          <Label htmlFor="assertion-response-code">Expected Status Code</Label>
           <Input
             id="assertion-response-code"
             value={assertion.responseCode ?? ""}
             onChange={(event) => updateField("responseCode", event.target.value || undefined)}
-            placeholder="z. B. 200 oder 200,201"
+            placeholder="e.g. 200 or 200,201"
           />
         </div>
       </div>
@@ -205,7 +205,7 @@ export function AssertionComponent({
           </Select>
         </div>
         <div>
-          <Label htmlFor="assertion-request-method">Request Methode</Label>
+          <Label htmlFor="assertion-request-method">Request Method</Label>
           <Select
             value={assertion.requestMethod ?? ""}
             onValueChange={(value) =>
@@ -213,7 +213,7 @@ export function AssertionComponent({
             }
           >
             <SelectTrigger id="assertion-request-method">
-              <SelectValue placeholder="HTTP Methode" />
+              <SelectValue placeholder="HTTP Method" />
             </SelectTrigger>
             <SelectContent>
               {requestMethodOptions.map((option) => (
@@ -241,11 +241,11 @@ export function AssertionComponent({
             id="assertion-resource"
             value={assertion.resource ?? ""}
             onChange={(event) => updateField("resource", event.target.value || undefined)}
-            placeholder="Erwarteter Resource-Typ"
+            placeholder="Expected resource type"
           />
         </div>
         <div>
-          <Label htmlFor="assertion-path">Pfad</Label>
+          <Label htmlFor="assertion-path">Path</Label>
           <Input
             id="assertion-path"
             value={assertion.path ?? ""}
@@ -254,7 +254,7 @@ export function AssertionComponent({
           />
         </div>
         <div>
-          <Label htmlFor="assertion-value">Erwarteter Wert</Label>
+          <Label htmlFor="assertion-value">Expected Value</Label>
           <Input
             id="assertion-value"
             value={assertion.value ?? ""}
@@ -296,15 +296,7 @@ export function AssertionComponent({
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
-        <div>
-          <Label htmlFor="assertion-content-type">Content Type</Label>
-          <Input
-            id="assertion-content-type"
-            value={assertion.contentType ?? ""}
-            onChange={(event) => updateField("contentType", event.target.value || undefined)}
-          />
-        </div>
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
         <div>
           <Label htmlFor="assertion-header-field">Header Field</Label>
           <Input
@@ -388,7 +380,7 @@ export function AssertionComponent({
             <div>
               <Label htmlFor="assertion-warning-only">Warning Only</Label>
               <p className="text-xs text-muted-foreground">
-                Bei Fehlern nur Warnungen ausgeben, Test fortsetzen.
+                Only output warnings on errors, continue test.
               </p>
             </div>
             <Switch

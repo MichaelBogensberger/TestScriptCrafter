@@ -79,21 +79,21 @@ export function TestSystemSection({ testSystems, updateTestSystems }: TestSystem
                       />
                     </div>
                     <div>
-                      <Label htmlFor={`test-system-${idx}-title`}>Titel</Label>
+                      <Label htmlFor={`test-system-${idx}-title`}>Title</Label>
                       <Input
                         id={`test-system-${idx}-title`}
                         value={system.title ?? ""}
                         onChange={(event) =>
                           updateSystem(idx, { ...system, title: event.target.value })
                         }
-                        placeholder="z. B. FHIR Server"
+                        placeholder="e.g. FHIR Server"
                       />
                     </div>
                   </div>
 
                   <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                     <div>
-                      <Label htmlFor={`test-system-${idx}-actors`}>Actor Referenzen</Label>
+                      <Label htmlFor={`test-system-${idx}-actors`}>Actor References</Label>
                       <Input
                         id={`test-system-${idx}-actors`}
                         value={system.actor?.join(", ") ?? ""}
@@ -106,7 +106,7 @@ export function TestSystemSection({ testSystems, updateTestSystems }: TestSystem
                               .filter(Boolean),
                           })
                         }
-                        placeholder="Liste kanonischer URLs, getrennt durch Kommas"
+                        placeholder="List of canonical URLs, comma separated"
                       />
                     </div>
                     <div>
@@ -123,7 +123,7 @@ export function TestSystemSection({ testSystems, updateTestSystems }: TestSystem
                   </div>
 
                   <div>
-                    <Label htmlFor={`test-system-${idx}-description`}>Beschreibung</Label>
+                    <Label htmlFor={`test-system-${idx}-description`}>Description</Label>
                     <Textarea
                       id={`test-system-${idx}-description`}
                       value={system.description ?? ""}
@@ -134,7 +134,7 @@ export function TestSystemSection({ testSystems, updateTestSystems }: TestSystem
                         })
                       }
                       rows={3}
-                      placeholder="Kurze Beschreibung des Systems"
+                      placeholder="Brief description of the system"
                     />
                   </div>
                 </div>

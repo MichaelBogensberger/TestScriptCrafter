@@ -134,11 +134,11 @@ export function IGBrowserTab({ fixtures, updateFixtures, igConfiguration }: IGBr
         const standardFixture = fixtureGenerator.convertToTestScriptFixture(result.data)
         const currentFixtures = fixtures || []
         
-        // Prüfe auf Duplikat-ID
+        // Check for duplicate ID
         const isDuplicate = currentFixtures.some(f => f.id === standardFixture.id)
         if (isDuplicate) {
-          toast.error("Duplikat-Fixture", {
-            description: `Eine Fixture mit der ID "${standardFixture.id}" existiert bereits.`,
+          toast.error("Duplicate Fixture", {
+            description: `A fixture with ID "${standardFixture.id}" already exists.`,
           })
           setAddingFixture(null)
           return
@@ -147,21 +147,21 @@ export function IGBrowserTab({ fixtures, updateFixtures, igConfiguration }: IGBr
         updateFixtures([...currentFixtures, standardFixture])
         
         // Show success feedback
-        toast.success("Fixture erfolgreich hinzugefügt", {
-          description: `${example.title || example.id} wurde als Fixture hinzugefügt.`,
+        toast.success("Fixture added successfully", {
+          description: `${example.title || example.id} has been added as a fixture.`,
         })
         setTimeout(() => setAddingFixture(null), 1000)
       } else {
-        setError(result.error?.message || 'Fehler beim Generieren des Fixtures')
-        toast.error("Fehler beim Hinzufügen", {
-          description: result.error?.message || 'Fehler beim Generieren des Fixtures',
+        setError(result.error?.message || 'Error generating fixture')
+        toast.error("Error adding", {
+          description: result.error?.message || 'Error generating fixture',
         })
         setAddingFixture(null)
       }
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Unbekannter Fehler'
+      const errorMessage = err instanceof Error ? err.message : 'Unknown error'
       setError(errorMessage)
-      toast.error("Fehler beim Hinzufügen", {
+      toast.error("Error adding", {
         description: errorMessage,
       })
       setAddingFixture(null)
@@ -226,10 +226,10 @@ export function IGBrowserTab({ fixtures, updateFixtures, igConfiguration }: IGBr
               <Label htmlFor="resource-type-filter">Resource Type</Label>
               <Select value={selectedResourceType} onValueChange={setSelectedResourceType}>
                 <SelectTrigger id="resource-type-filter">
-                  <SelectValue placeholder="Alle Typen" />
+                  <SelectValue placeholder="All Types" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="__all__">Alle Typen</SelectItem>
+                  <SelectItem value="__all__">All Types</SelectItem>
                   {resourceTypes.map(type => (
                     <SelectItem key={type} value={type}>{type}</SelectItem>
                   ))}
@@ -241,10 +241,10 @@ export function IGBrowserTab({ fixtures, updateFixtures, igConfiguration }: IGBr
               <Label htmlFor="ig-filter">Implementation Guide</Label>
               <Select value={selectedIG} onValueChange={setSelectedIG}>
                 <SelectTrigger id="ig-filter">
-                  <SelectValue placeholder="Alle IGs" />
+                  <SelectValue placeholder="All IGs" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="__all__">Alle IGs</SelectItem>
+                  <SelectItem value="__all__">All IGs</SelectItem>
                   {enabledSources.map(source => (
                     <SelectItem key={source.id} value={source.id}>{source.name}</SelectItem>
                   ))}
@@ -279,7 +279,7 @@ export function IGBrowserTab({ fixtures, updateFixtures, igConfiguration }: IGBr
       {isLoading && (
         <div className="flex items-center justify-center p-8">
           <Loader2 className="h-6 w-6 animate-spin mr-2" />
-          <span className="text-sm text-muted-foreground">Lade Example Instances...</span>
+          <span className="text-sm text-muted-foreground">Loading Example Instances...</span>
         </div>
       )}
 

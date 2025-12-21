@@ -102,7 +102,7 @@ export function IGConfigTab({ onConfigurationChange }: IGConfigTabProps) {
           ...prev,
           [source.id]: {
             success: true,
-            message: `Verbindung erfolgreich. IG: ${result.data?.name || 'Unknown'}`
+            message: `Connection successful. IG: ${result.data?.name || 'Unknown'}`
           }
         }))
       } else {
@@ -169,7 +169,7 @@ export function IGConfigTab({ onConfigurationChange }: IGConfigTabProps) {
         {config.sources.length === 0 ? (
           <div className="rounded-md border border-dashed p-6 text-center">
             <Settings className="mx-auto h-12 w-12 text-muted-foreground" />
-            <h3 className="mt-2 text-sm font-medium">Keine IG-Quellen konfiguriert</h3>
+            <h3 className="mt-2 text-sm font-medium">No IG sources configured</h3>
             <p className="mt-1 text-sm text-muted-foreground">
               Add Implementation Guide sources to load example instances.
             </p>

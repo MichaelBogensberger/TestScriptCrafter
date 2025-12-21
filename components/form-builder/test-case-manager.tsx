@@ -85,11 +85,11 @@ export function TestCaseManager({
               <div className="flex items-center gap-2">
                 {test.action && test.action.length > 0 ? (
                   <Badge variant="default" className="text-xs">
-                    Aktiv
+                    Active
                   </Badge>
                 ) : (
                   <Badge variant="secondary" className="text-xs">
-                    Leer
+                    Empty
                   </Badge>
                 )}
                 <Button
@@ -98,7 +98,7 @@ export function TestCaseManager({
                   onClick={() => onRemoveTest(index)}
                   className="text-destructive hover:text-destructive"
                 >
-                  Entfernen
+                  Remove
                 </Button>
               </div>
             </div>

@@ -37,12 +37,12 @@ export function XmlView({ testScript, validationState }: XmlViewProps) {
     const content = formatToXml(testScript)
     try {
       await clientOnly.clipboard.writeText(content)
-      toast.success("In die Zwischenablage kopiert", {
-        description: "TestScript XML wurde kopiert",
+      toast.success("Copied to clipboard", {
+        description: "TestScript XML has been copied",
       })
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : String(error)
-      toast.error("Fehler beim Kopieren", {
+      toast.error("Error copying", {
         description: message,
       })
     }
@@ -54,8 +54,8 @@ export function XmlView({ testScript, validationState }: XmlViewProps) {
 
     clientOnly.download.file(content, filename, "application/xml")
     
-    toast.success("Datei heruntergeladen", {
-      description: `${filename} wurde heruntergeladen`,
+    toast.success("File downloaded", {
+      description: `${filename} has been downloaded`,
     })
   }
 
@@ -72,12 +72,12 @@ export function XmlView({ testScript, validationState }: XmlViewProps) {
         <div className="flex gap-2">
           <Button variant="outline" size="sm" onClick={copyToClipboard} className="flex items-center gap-2">
             <ClipboardCopy className="h-4 w-4" />
-            <span>Kopieren</span>
+            <span>Copy</span>
           </Button>
 
           <Button variant="outline" size="sm" onClick={downloadContent} className="flex items-center gap-2">
             <Download className="h-4 w-4" />
-            <span>Herunterladen</span>
+            <span>Download</span>
           </Button>
         </div>
       </div>

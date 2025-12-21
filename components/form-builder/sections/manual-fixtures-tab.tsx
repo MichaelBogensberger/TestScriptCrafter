@@ -29,18 +29,18 @@ export function ManualFixturesTab({ fixtures, updateFixtures }: ManualFixturesTa
       autodelete: false,
     }
     updateFixtures([...(entries ?? []), newFixture])
-    toast.success("Fixture hinzugefügt", {
-      description: "Bitte vergessen Sie nicht, eine eindeutige Fixture ID einzugeben.",
+    toast.success("Fixture added", {
+      description: "Please don't forget to enter a unique fixture ID.",
     })
   }
 
   const updateFixture = (idx: number, fixture: TestScriptFixture) => {
-    // Prüfe auf Duplikat-ID wenn eine ID gesetzt wird
+    // Check for duplicate ID when an ID is set
     if (fixture.id && fixture.id.trim()) {
       const isDuplicate = entries.some((f, i) => i !== idx && f.id === fixture.id)
       if (isDuplicate) {
-        toast.error("Duplikat-ID erkannt", {
-          description: `Eine Fixture mit der ID "${fixture.id}" existiert bereits.`,
+        toast.error("Duplicate ID detected", {
+          description: `A fixture with the ID "${fixture.id}" already exists.`,
         })
         return
       }
@@ -108,7 +108,7 @@ export function ManualFixturesTab({ fixtures, updateFixtures }: ManualFixturesTa
                       required
                     />
                     <p className="text-xs text-muted-foreground mt-1">
-                      Eindeutige ID für die Referenzierung in Test-Aktionen (Pflichtfeld)
+                      Unique ID for referencing in test actions (required field)
                     </p>
                   </div>
 
@@ -116,7 +116,7 @@ export function ManualFixturesTab({ fixtures, updateFixtures }: ManualFixturesTa
                   <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                     <div className="flex items-center justify-between gap-3 rounded-md border p-3">
                       <div>
-                        <Label htmlFor={`fixture-${idx}-autocreate`}>Automatisch erstellen</Label>
+                        <Label htmlFor={`fixture-${idx}-autocreate`}>Auto-create</Label>
                         <p className="text-xs text-muted-foreground">
                           Fixture is created during setup.
                         </p>
@@ -168,7 +168,7 @@ export function ManualFixturesTab({ fixtures, updateFixtures }: ManualFixturesTa
                         className="mt-1"
                       />
                       <p className="text-xs text-muted-foreground mt-1">
-                        Format: ResourceType/id oder URL (z.B. .html Datei)
+                        Format: ResourceType/id or URL (e.g. .html file)
                       </p>
                     </div>
                     <div>
@@ -234,8 +234,8 @@ export function ManualFixturesTab({ fixtures, updateFixtures }: ManualFixturesTa
       {entries.length > 0 && (
         <div className="rounded-md bg-muted/50 p-3">
           <p className="text-xs text-muted-foreground">
-            <strong>Tipp:</strong> Fixtures können in Test-Aktionen über ihre ID referenziert werden. 
-            Verwende die Resource Reference in Operations oder als Vergleichswerte in Assertions.
+            <strong>Tip:</strong> Fixtures can be referenced in test actions via their ID. 
+            Use the resource reference in operations or as comparison values in assertions.
           </p>
         </div>
       )}
