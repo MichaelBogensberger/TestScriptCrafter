@@ -22,10 +22,10 @@ interface OutputViewerProps {
  * - Filtered view for specific parts of the TestScript
  * 
  * Features:
- * - Kopieren in die Zwischenablage
- * - Herunterladen als Datei
- * - Anpassung der Einrückung
- * - Ein-/Ausblenden von Zeilennummern
+ * - Copy to clipboard
+ * - Download as file
+ * - Adjust indentation
+ * - Show/hide line numbers
  */
 export function OutputViewer({ testScript }: OutputViewerProps) {
   // Central validation results for ALL tabs (including ValidationTab)

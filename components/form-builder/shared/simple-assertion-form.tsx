@@ -24,8 +24,8 @@ interface SimpleAssertionFormProps {
 }
 
 /**
- * Vereinfachte Assertion-Form ohne verschachtelte Requirements
- * Fokussiert auf die wichtigsten Assertion-Felder
+ * Simplified Assertion Form without nested Requirements
+ * Focused on the most important Assertion fields
  */
 export function SimpleAssertionForm({
   assertion,

@@ -29,8 +29,8 @@ interface XmlViewProps {
 export function XmlView({ testScript, validationState }: XmlViewProps) {
   const { currentVersion } = useFhirVersion()
   
-  // Validierungsfehler werden NICHT in XML angezeigt, da die Zeilennummern nicht übereinstimmen
-  // Die Validierung erfolgt gegen JSON, daher werden Fehler nur in der JSON-Ansicht angezeigt
+  // Validation errors are NOT shown in XML, as line numbers don't match
+  // Validation is performed against JSON, so errors are only shown in JSON view
   const validationErrors: never[] = []
 
   const copyToClipboard = async () => {
@@ -82,7 +82,7 @@ export function XmlView({ testScript, validationState }: XmlViewProps) {
         </div>
       </div>
 
-      {/* XML mit Syntax Highlighting und Fehler-Markierungen */}
+      {/* XML with Syntax Highlighting and Error Markers */}
       <div className="border rounded-md overflow-hidden">
         <SyntaxHighlighter 
           language="xml" 
@@ -92,7 +92,7 @@ export function XmlView({ testScript, validationState }: XmlViewProps) {
         />
       </div>
 
-      {/* Hinweis: Validierungsfehler werden nur in der JSON-Ansicht angezeigt, da die Validierung gegen JSON erfolgt */}
+      {/* Note: Validation errors are only shown in JSON view, as validation is performed against JSON */}
     </div>
   )
 }

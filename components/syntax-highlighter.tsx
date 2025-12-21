@@ -41,7 +41,7 @@ export function SyntaxHighlighter({
   const lines = code.split('\n')
   const lineNumbers = lines.map((_, index) => index + 1)
 
-  // Erstelle Fehler-Map für schnellen Zugriff
+  // Create error map for fast access
   const errorMap = new Map<number, ValidationError[]>()
   validationErrors.forEach(error => {
     const lineErrors = errorMap.get(error.line) || []
@@ -108,7 +108,7 @@ export function SyntaxHighlighter({
                       )}
                     </div>
                     
-                    {/* Fehler-Tooltip */}
+                    {/* Error Tooltip */}
                     {hasError && (
                       <div className="absolute left-full top-0 ml-2 z-10 hidden group-hover:block">
                         <div className="bg-popover border border-border rounded-md shadow-lg p-3 max-w-md">
@@ -252,7 +252,7 @@ function highlightSearchTerm(code: string, searchTerm: string): string {
       match => `<mark class="bg-yellow-200 dark:bg-yellow-800 px-1 rounded">${match}</mark>`
     );
   } catch (error) {
-    // Fehlerbehandlung für ungültige RegEx
+    // Error handling for invalid RegEx
     console.warn("Invalid search expression:", error);
     return code;
   }

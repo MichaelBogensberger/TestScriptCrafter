@@ -140,10 +140,10 @@ export function JsonView({ testScript, validationState }: JsonViewProps) {
     return 1; // Fallback
   };
   
-  // Formatiertes JSON für Zeilennummer-Berechnung
+  // Formatted JSON for line number calculation
   const formattedJson = formatToJson(testScript);
   
-  // Konvertiere Validierungsfehler zu Zeilen-basierten Fehlern für JSON
+  // Convert validation errors to line-based errors for JSON
   const validationErrors = useMemo(() => {
     if (!validationResult?.issue) {
       return []
@@ -193,7 +193,7 @@ export function JsonView({ testScript, validationState }: JsonViewProps) {
         return {
           line,
           column: issue.column || 1,
-          message: issue.details?.text || issue.diagnostics || 'Unbekannter Fehler',
+          message: issue.details?.text || issue.diagnostics || 'Unknown error',
           severity
         };
       })
@@ -277,7 +277,7 @@ export function JsonView({ testScript, validationState }: JsonViewProps) {
         </div>
       </div>
 
-      {/* JSON mit Syntax Highlighting und Fehler-Markierungen */}
+      {/* JSON with Syntax Highlighting and Error Markers */}
       <div className="border rounded-md overflow-hidden">
         <SyntaxHighlighter 
           language="json" 
@@ -288,7 +288,7 @@ export function JsonView({ testScript, validationState }: JsonViewProps) {
       </div>
 
 
-      {/* Fehler-Zusammenfassung */}
+      {/* Error Summary */}
       {validationResult && (hasErrors || hasWarnings) && (
         <div className="rounded-md border bg-muted/50 p-4">
           <h4 className="text-sm font-medium mb-2">Validation Issues:</h4>

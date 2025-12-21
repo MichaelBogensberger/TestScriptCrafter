@@ -98,7 +98,7 @@ function FormBuilder({ testScript, updateTestScript, updateSection }: FormBuilde
   const [activeSection, setActiveSection] = useState<SectionKey>("basic-info")
   const [activeTestIndex, setActiveTestIndex] = useState(0)
 
-  // Scope ist nur in R5 verfügbar, nicht in R4
+  // Scope is only available in R5, not in R4
   const isR5 = currentVersion === "R5"
 
   const SECTION_GROUPS: Array<{

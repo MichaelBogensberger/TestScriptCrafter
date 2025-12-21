@@ -130,11 +130,11 @@ export function FixtureTestPanel({ igConfiguration }: FixtureTestPanelProps) {
 
   const getTestDisplayName = (testKey: string): string => {
     const names: Record<string, string> = {
-      igConfigurationTest: "IG Konfiguration",
-      igLoadingTest: "IG Laden",
+      igConfigurationTest: "IG Configuration",
+      igLoadingTest: "IG Loading",
       exampleParsingTest: "Example Parsing",
-      filteringTest: "Filter-Funktionen",
-      fixtureGenerationTest: "Fixture Generierung",
+      filteringTest: "Filter Functions",
+      fixtureGenerationTest: "Fixture Generation",
       integrationTest: "Full Integration",
       performanceTest: "Performance & Caching"
     }

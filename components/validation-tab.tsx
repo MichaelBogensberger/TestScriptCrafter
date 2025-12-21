@@ -496,9 +496,9 @@ export function ValidationTab({
                 <Server className="h-5 w-5 text-primary" />
               </div>
               <div>
-                <CardTitle className="text-xl">FHIR-Validierung</CardTitle>
+                <CardTitle className="text-xl">FHIR Validation</CardTitle>
                 <p className="text-sm text-muted-foreground mt-1">
-                  Validiere dein TestScript gegen einen FHIR-Server
+                  Validate your TestScript against a FHIR server
                 </p>
               </div>
             </div>
@@ -556,12 +556,12 @@ export function ValidationTab({
                 {isValidating ? (
                   <>
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Validiere...
+                    Validating...
                   </>
                 ) : (
                   <>
                     <CheckCircle2 className="h-4 w-4 mr-2" />
-                    Jetzt validieren
+                    Validate Now
                   </>
                 )}
               </Button>
