@@ -1,6 +1,6 @@
 # TestScript Crafter
 
-Ein modernes Web-Tool zur visuellen Erstellung und Verwaltung von FHIR TestScript-Ressourcen. Ermöglicht die Erstellung komplexer TestScripts ohne manuelle XML/JSON-Bearbeitung.
+Ein modernes Web-Tool zur visuellen Erstellung und Verwaltung von FHIR® TestScript-Ressourcen. Ermöglicht die Erstellung komplexer TestScripts ohne manuelle XML/JSON-Bearbeitung.
 
 ## Inhaltsverzeichnis
 
@@ -10,49 +10,32 @@ Ein modernes Web-Tool zur visuellen Erstellung und Verwaltung von FHIR TestScrip
 - [Projektstatus](#projektstatus)
 - [Funktionalitäten](#funktionalitäten)
 - [Architekturüberblick](#architekturüberblick)
-- [Datenmodell & Schemata](#datenmodell--schemata)
-- [Code, Wo liegt was?](#code--wo-liegt-was)
+- [Codebase Overview](#codebase--overview)
 - [Setup & Installation](#setup--installation)
 - [Konfiguration](#konfiguration)
 - [Ausführen](#ausführen)
-- [Tests & Qualitätssicherung](#tests--qualitätssicherung)
 - [Deployment](#deployment)
 - [Troubleshooting](#troubleshooting)
-- [Leistungskennzahlen](#leistungskennzahlen)
+- [Limitierungen](#limitierungen)
 - [Roadmap](#roadmap)
-- [Lizenz & Danksagung](#lizenz--danksagung)
+- [Externe Quellen](#externe--quellen)
 
 ## Kernfunktionen
 
-- **Visueller TestScript Builder** - Formular-basierte Erstellung von FHIR TestScripts
+- **Visueller TestScript Builder** - Formular-basierte Erstellung von FHIR® TestScripts
 - **Live-Vorschau** - Echtzeit-Anzeige in XML, JSON und strukturierter Form
-- **FHIR R4/R5 Unterstützung** - Version-spezifische Features (z.B. Scope nur in R5)
-- **FHIR R5 Validierung** - Integration mit FHIR-Servern für automatische Validierung
+- **FHIR® R4/R5 Unterstützung** - Version-spezifische Features (z.B. Scope nur in R5)
+- **FHIR® R5 Validierung** - Integration mit FHIR®-Servern für automatische Validierung
 - **Modulare Architektur** - Saubere Trennung von UI, Logik und Services
-- **Type-Safety** - Vollständige TypeScript-Unterstützung mit FHIR-Typen
-- **Common Actions (Custom Feature)** - Wiederverwendbare Actions mit Parametern (nicht im FHIR-Standard)
-
-### Hinweise zu Fixtures
-
-Fixtures in FHIR TestScripts verwenden das `Reference` Element, um auf Test-Ressourcen zu verweisen:
-- **reference**: Kann eine relative Referenz (z.B. `Patient/example`) oder eine URL sein
-- In publizierten Implementation Guides verweisen Fixtures oft auf `.html` Dateien, die die Ressource darstellen
-- **type**: Der FHIR Ressourcentyp (z.B. `Patient`, `Observation`)
-- **display**: Eine menschenlesbare Beschreibung der Ressource
-
-### Hinweise zu Profiles
-
-Die `profile` Eigenschaft in TestScript ist ein Array von kanonischen URLs, die auf StructureDefinition-Profile verweisen:
-- Format: `https://example.org/fhir/StructureDefinition/ProfileName`
-- Diese Profile definieren, welche Konformitätsanforderungen das TestScript testet
-- Profile können versionsspezifisch sein (z.B. `|1.0.0` am Ende der URL)
+- **Type-Safety** - Vollständige TypeScript-Unterstützung mit FHIR®-Typen
+- **Common Actions (Custom Feature)** - Wiederverwendbare Actions mit Parametern (nicht im FHIR®-Standard)
 
 ## Verzeichnisstruktur
 
 ```
 .
 ├─ app/                          # Next.js App Router
-│  ├─ api/validate/              # FHIR-Validierungs-API
+│  ├─ api/validate/              # FHIR®-Validierungs-API
 │  ├─ globals.css               # Globale Styles
 │  ├─ layout.tsx                # Root Layout
 │  └─ page.tsx                   # Hauptseite
@@ -65,10 +48,10 @@ Die `profile` Eigenschaft in TestScript ist ein Array von kanonischen URLs, die 
 │  ├─ ui/                       # shadcn/ui Komponenten
 │  └─ *.tsx                     # Weitere Komponenten
 ├─ hooks/                        # Custom React Hooks
-│  └─ use-fhir-validation.ts    # FHIR-Validierung Hook
+│  └─ use-FHIR®-validation.ts    # FHIR®-Validierung Hook
 ├─ lib/                         # Utilities und Services
 │  ├─ formatters/              # JSON/XML Formatierung
-│  ├─ services/                # FHIR-Validierungs-Service
+│  ├─ services/                # FHIR®-Validierungs-Service
 │  └─ utils.ts                  # Hilfsfunktionen
 ├─ types/                       # TypeScript-Typen
 │  ├─ test-script.ts           # TestScript-spezifische Typen
@@ -79,41 +62,25 @@ Die `profile` Eigenschaft in TestScript ist ein Array von kanonischen URLs, die 
 
 ### Verzeichnis-Zweck
 
-**app/**: Next.js App Router mit Seiten, Layouts und API-Routes. Enthält die Hauptanwendung und FHIR-Validierungs-Endpoint.
+**app/**: Next.js App Router mit Seiten, Layouts und API-Routes. Enthält die Hauptanwendung und FHIR®-Validierungs-Endpoint.
 
 **components/**: Alle React-Komponenten der Anwendung. Form-Builder für TestScript-Erstellung, UI-Komponenten und View-Renderer.
 
-**hooks/**: Custom React Hooks für State-Management und FHIR-Validierung.
+**hooks/**: Custom React Hooks für State-Management und FHIR®-Validierung.
 
-**lib/**: Utility-Funktionen, Services und Formatter. Enthält FHIR-Validierungslogik und Formatierungstools.
+**lib/**: Utility-Funktionen, Services und Formatter. Enthält FHIR®-Validierungslogik und Formatierungstools.
 
 **types/**: TypeScript-Typdefinitionen für TestScripts und Validierung.
 
 ## Einleitung
 
-### Problemstellung
-Die manuelle Erstellung von FHIR TestScripts ist komplex und fehleranfällig. Entwickler müssen komplexe XML/JSON-Strukturen verstehen und korrekt implementieren.
-
 ### Zielsetzung
-TestScript Crafter vereinfacht die Erstellung von FHIR TestScripts durch eine intuitive, visuelle Benutzeroberfläche. Das Tool ermöglicht es Entwicklern, TestScripts ohne tiefe FHIR-Kenntnisse zu erstellen.
-
-### Zielgruppe
-- FHIR-Entwickler und -Architekten
-- Testmanager für Healthcare-Systeme
-- Studierende im Bereich Health IT
-- FHIR-Implementierer
+TestScript Crafter vereinfacht die Erstellung von FHIR® TestScripts durch eine intuitive, visuelle Benutzeroberfläche. Das Tool ermöglicht es Entwicklern, TestScripts ohne tiefe FHIR®-Kenntnisse zu erstellen.
 
 ### Aktuelle Funktionalität
-- Vollständige TestScript-Erstellung mit visuellen Formularen
-- Echtzeit-Validierung gegen FHIR R5 Standards
+- TestScript-Erstellung mit visuellen Formularen
+- Echtzeit-Validierung gegen FHIR® R5 Standards
 - Export in XML und JSON Format
-- Live-Vorschau aller TestScript-Elemente
-
-### Geplante Erweiterungen
-- Erweiterte Assertion-Typen
-- Batch-Import von TestScripts
-- Integration mit FHIR-Test-Frameworks
-- Template-System für häufige TestScript-Patterns
 
 ## Projektstatus
 
@@ -135,30 +102,22 @@ TestScript Crafter vereinfacht die Erstellung von FHIR TestScripts durch eine in
 ## Funktionalitäten
 
 ### TestScript Builder
-**Zweck:** Visuelle Erstellung von FHIR TestScripts über Formulare
-**Eingaben:** Benutzer-Eingaben über Formulare (Name, Status, Actions, Assertions)
-**Ausgaben:** Vollständiges FHIR TestScript in JSON/XML Format
-**Nebenbedingungen:** FHIR R5 Konformität, Validierung gegen FHIR-Server
-
-**Beispielablauf:**
-1. Benutzer öffnet Anwendung
-2. Füllt Grundinformationen aus (Name, Status, URL)
-3. Konfiguriert Metadaten und Capabilities
-4. Erstellt Test-Cases mit Operations und Assertions
-5. Validiert gegen FHIR-Server
-6. Exportiert als XML/JSON
+- **Zweck:** Visuelle Erstellung von FHIR® TestScripts über Formulare
+- **Eingaben:** Benutzer-Eingaben über Formulare (Name, Status, Actions, Assertions)
+- **Ausgaben:** Vollständiges FHIR® TestScript in JSON/XML Format
+- **Nebenbedingungen:** FHIR® R5 Konformität, Validierung gegen FHIR®-Server
 
 ### Live-Vorschau
-**Zweck:** Echtzeit-Anzeige des generierten TestScripts
-**Eingaben:** Aktueller TestScript-State
-**Ausgaben:** Formatierte Darstellung in XML, JSON und strukturierter Form
-**Nebenbedingungen:** Automatische Aktualisierung bei Änderungen
+- **Zweck:** Echtzeit-Anzeige des generierten TestScripts
+- **Eingaben:** Aktueller TestScript-State
+- **Ausgaben:** Formatierte Darstellung in XML, JSON und strukturierter Form
+- **Nebenbedingungen:** Automatische Aktualisierung bei Änderungen
 
-### FHIR-Validierung
-**Zweck:** Automatische Validierung gegen FHIR R5 Standards
+### FHIR®-Validierung
+**Zweck:** Automatische Validierung gegen FHIR® R5 Standards
 **Eingaben:** TestScript-Objekt
 **Ausgaben:** Validierungsergebnisse mit Fehlern und Warnungen
-**Nebenbedingungen:** Verbindung zu FHIR-Server erforderlich
+**Nebenbedingungen:** Verbindung zu FHIR®-Server erforderlich
 
 ## Architekturüberblick
 
@@ -172,9 +131,9 @@ graph TD
     A --> C["View Components"]
     B --> D["State Management"]
     C --> D
-    D --> E["FHIR Validation Service"]
+    D --> E["FHIR® Validation Service"]
     D --> F["XML/JSON Formatters"]
-    E --> G["External FHIR Server"]
+    E --> G["External FHIR® Server"]
     F --> H["Output Views"]
     D --> I["TypeScript Types"]
 ```
@@ -188,12 +147,12 @@ sequenceDiagram
     participant S as "State Management"
     participant V as "Validation Service"
     participant F as Formatters
-    participant FS as "FHIR Server"
+    participant FS as "FHIR® Server"
     
     U->>UI: TestScript bearbeiten
     UI->>S: State aktualisieren
     S->>V: Validierung anfordern
-    V->>FS: FHIR-Validierung
+    V->>FS: FHIR®-Validierung
     FS-->>V: Validierungsergebnis
     V-->>S: Ergebnis zurückgeben
     S->>F: Formatierung anfordern
@@ -248,72 +207,17 @@ classDiagram
 
 ```
 
-## Datenmodell & Schemata
-
-### TestScript JSON Schema
-
-```json
-{
-  "resourceType": "TestScript",
-  "name": "string",
-  "status": "draft|active|retired|unknown",
-  "url": "string",
-  "metadata": {
-    "capability": [
-      {
-        "capabilities": "string",
-        "required": "boolean",
-        "validated": "boolean"
-      }
-    ]
-  },
-  "test": [
-    {
-      "name": "string",
-      "action": [
-        {
-          "operation": {
-            "type": {
-              "system": "string",
-              "code": "string"
-            },
-            "resource": "string",
-            "url": "string"
-          }
-        }
-      ]
-    }
-  ]
-}
-```
-
-### Validierungsschema
-
-```json
-{
-  "valid": "boolean",
-  "issues": [
-    {
-      "severity": "fatal|error|warning|information",
-      "code": "string",
-      "diagnostics": "string",
-      "location": ["string"]
-    }
-  ]
-}
-```
-
-## Code, Wo liegt was?
+## Codebase Overview?
 
 ### app/
-**Zweck:** Next.js App Router mit Seiten und API
+**Zweck:** Next.js App Router mit Seiten und API  
 **Hauptdateien:** 
 - `page.tsx` → Hauptseite mit TestScript Builder
 - `layout.tsx` → Root Layout mit Theme Provider
-- `api/validate/route.ts` → FHIR-Validierungs-API
+- `api/validate/route.ts` → FHIR®-Validierungs-API
 
 ### components/
-**Zweck:** Alle UI-Komponenten der Anwendung
+**Zweck:** Alle UI-Komponenten der Anwendung  
 **Hauptdateien:**
 - `test-script-builder.tsx` → Haupt-Builder-Komponente
 - `form-builder/` → Formular-Komponenten für TestScript-Erstellung
@@ -323,24 +227,24 @@ classDiagram
 - `validation-tab.tsx` → Validierungsergebnisse
 
 ### lib/
-**Zweck:** Geschäftslogik, Services und Utilities
+**Zweck:** Geschäftslogik, Services und Utilities  
 **Hauptdateien:**
-- `services/fhir-validation-service.ts` → FHIR-Server-Validierung
+- `services/FHIR®-validation-service.ts` → FHIR®-Server-Validierung
 - `formatters/xml-formatter.ts` → XML-Generierung
 - `formatters/json-formatter.ts` → JSON-Formatierung
 - `initial-data.ts` → Standard-TestScript-Template
 - `utils.ts` → CSS-Klassen-Hilfsfunktionen
 
 ### types/
-**Zweck:** TypeScript-Typdefinitionen
+**Zweck:** TypeScript-Typdefinitionen  
 **Hauptdateien:**
-- `test-script.ts` → Vollständige FHIR TestScript-Typen
+- `test-script.ts` → Vollständige FHIR® TestScript-Typen
 - `validation.ts` → Validierungs-Ergebnis-Typen
 
 ### hooks/
-**Zweck:** Custom React Hooks für State-Management
+**Zweck:** Custom React Hooks für State-Management  
 **Hauptdateien:**
-- `use-fhir-validation.ts` → FHIR-Validierung mit State-Management
+- `use-FHIR®-validation.ts` → FHIR®-Validierung mit State-Management
 
 ## Setup & Installation
 
@@ -375,7 +279,7 @@ classDiagram
 Erstelle `.env.local` für lokale Konfiguration:
 
 ```bash
-# FHIR Server für Validierung
+# FHIR® Server für Validierung
 NEXT_PUBLIC_FHIR_SERVER_URL=https://hapi.fhir.org/baseR5
 
 # Optional: Custom Validierungs-URL
@@ -385,7 +289,7 @@ NEXT_PUBLIC_VALIDATION_ENDPOINT=/api/validate
 ## Konfiguration
 
 ### Standardwerte
-- FHIR Server: `https://hapi.fhir.org/baseR5`
+- FHIR® Server: `https://hapi.fhir.org/baseR5`
 - Validierungs-Endpoint: `/api/validate`
 - Theme: System (automatische Dark/Light Mode Erkennung)
 
@@ -420,23 +324,6 @@ npm run start        # Produktions-Server
 - Manuelle Validierung über Validierung-Tab
 - Fehler werden in Echtzeit angezeigt
 
-## Tests & Qualitätssicherung
-
-### Linting
-```bash
-npm run lint         # ESLint-Checks
-```
-
-### Code-Qualität
-- TypeScript strict mode aktiviert
-- ESLint-Konfiguration für Next.js
-- Automatische Formatierung mit Prettier
-
-### Test-Abdeckung
-- Unit-Tests für kritische Funktionen (geplant)
-- Integration-Tests für FHIR-Validierung (geplant)
-- E2E-Tests für Benutzer-Workflows (geplant)
-
 ## Deployment
 
 ### Vercel (Empfohlen)
@@ -452,7 +339,7 @@ vercel --prod
 
 ### Health-Checks
 - `/api/validate` Endpoint für Validierung
-- Automatische FHIR-Server-Verbindungstests
+- Automatische FHIR®-Server-Verbindungstests
 
 ## Troubleshooting
 
@@ -462,10 +349,10 @@ vercel --prod
 - `npm install` erneut ausführen
 - Node.js Version prüfen (18+ erforderlich)
 
-**FHIR-Validierung schlägt fehl:**
+**FHIR®-Validierung schlägt fehl:**
 - Internetverbindung prüfen
-- FHIR-Server-URL in Umgebungsvariablen prüfen
-- CORS-Einstellungen des FHIR-Servers prüfen
+- FHIR®-Server-URL in Umgebungsvariablen prüfen
+- CORS-Einstellungen des FHIR®-Servers prüfen
 
 **Build-Fehler:**
 - TypeScript-Fehler in `next.config.ts` deaktiviert
@@ -477,22 +364,14 @@ vercel --prod
 - Terminal für Server-seitige Logs
 - Network-Tab für API-Anfragen
 
-## Leistungskennzahlen
-
-### Metriken
-- **Bundle-Größe:** ~2MB (optimiert mit Code-Splitting)
-- **Ladezeit:** <3s auf Standard-Verbindung
-- **Validierungszeit:** <2s für Standard-TestScripts
-- **Memory-Usage:** <100MB im Browser
-
-### Limitierungen
+## Limitierungen
 - Große TestScripts (>1MB) können Performance-Probleme verursachen
-- Validierung ist abhängig von externen FHIR-Servern
+- Validierung ist abhängig von externen FHIR®-Servern
 - Offline-Modus nicht vollständig unterstützt
 
 ## Roadmap
 
-### Nächste Schritte (Q1 2025)
+### Mögliche Nächste Schritte (Q1 2025)
 1. **Erweiterte Assertion-Typen** - Mehr Validierungsoptionen für komplexe Tests
 2. **Template-System** - Vorgefertigte TestScript-Templates für häufige Use Cases
 3. **Batch-Import** - Import mehrerer TestScripts gleichzeitig
@@ -502,27 +381,17 @@ vercel --prod
 7. **Dokumentation** - Interaktive Tutorials und Beispiele
 
 ### Out-of-Scope
-- FHIR-Server-Implementierung
+- FHIR®-Server-Implementierung
 - Test-Ausführung (nur TestScript-Erstellung)
 - Multi-User-Kollaboration
 - Versionierung von TestScripts
 
-## Lizenz & Danksagung
-
-**Lizenz:** MIT License
-
-**Externe Quellen:**
-- HL7 FHIR - Standards und Spezifikationen
+## Externe Quellen
+- HL7 FHIR® - Standards und Spezifikationen
 - shadcn/ui - UI-Komponenten-Bibliothek
 - Next.js Team - React-Framework
 - Radix UI - Barrierefreie Komponenten
 - Tailwind CSS - Utility-First CSS-Framework
 
-**Danksagung:**
-- FHIR-Community für Standards und Feedback
-- Open-Source-Entwickler für verwendete Bibliotheken
-- FH OÖ - Campus Hagenberg für Projektunterstützung
-
 ---
 
-**Entwickelt für die FHIR-Community**
