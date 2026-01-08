@@ -4,9 +4,9 @@ Ein modernes Web-Tool zur visuellen Erstellung und Verwaltung von FHIR® TestScr
 
 ## Inhaltsverzeichnis
 
+- [Einleitung](#einleitung)
 - [Kernfunktionen](#kernfunktionen)
 - [Verzeichnisstruktur](#verzeichnisstruktur)
-- [Einleitung](#einleitung)
 - [Projektstatus](#projektstatus)
 - [Funktionalitäten](#funktionalitäten)
 - [Architekturüberblick](#architekturüberblick)
