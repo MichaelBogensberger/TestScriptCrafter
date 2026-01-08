@@ -1,4 +1,4 @@
-# TestScript Crafter
+# TestFhiry TinkerTool
 
 Ein modernes Web-Tool zur visuellen Erstellung und Verwaltung von FHIR® TestScript-Ressourcen. Ermöglicht die Erstellung komplexer TestScripts ohne manuelle XML/JSON-Bearbeitung.
 
