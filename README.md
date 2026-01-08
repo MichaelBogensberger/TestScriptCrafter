@@ -20,6 +20,16 @@ Ein modernes Web-Tool zur visuellen Erstellung und Verwaltung von FHIR® TestScr
 - [Roadmap](#roadmap)
 - [Externe Quellen](#externe-quellen)
 
+## Einleitung
+
+### Zielsetzung
+TestScript Crafter vereinfacht die Erstellung von FHIR® TestScripts durch eine intuitive, visuelle Benutzeroberfläche. Das Tool ermöglicht es Entwicklern, TestScripts ohne tiefe FHIR®-Kenntnisse zu erstellen.
+
+### Aktuelle Funktionalität
+- TestScript-Erstellung mit visuellen Formularen
+- Echtzeit-Validierung gegen FHIR® R5 Standards
+- Export in XML und JSON Format
+
 ## Kernfunktionen
 
 - **Visueller TestScript Builder** - Formular-basierte Erstellung von FHIR® TestScripts
@@ -72,15 +82,6 @@ Ein modernes Web-Tool zur visuellen Erstellung und Verwaltung von FHIR® TestScr
 
 **types/**: TypeScript-Typdefinitionen für TestScripts und Validierung.
 
-## Einleitung
-
-### Zielsetzung
-TestScript Crafter vereinfacht die Erstellung von FHIR® TestScripts durch eine intuitive, visuelle Benutzeroberfläche. Das Tool ermöglicht es Entwicklern, TestScripts ohne tiefe FHIR®-Kenntnisse zu erstellen.
-
-### Aktuelle Funktionalität
-- TestScript-Erstellung mit visuellen Formularen
-- Echtzeit-Validierung gegen FHIR® R5 Standards
-- Export in XML und JSON Format
 
 ## Projektstatus
 
