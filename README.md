@@ -23,7 +23,7 @@ Ein modernes Web-Tool zur visuellen Erstellung und Verwaltung von FHIR® TestScr
 ## Einleitung
 
 ### Zielsetzung
-TestScript Crafter vereinfacht die Erstellung von FHIR® TestScripts durch eine intuitive, visuelle Benutzeroberfläche. Das Tool ermöglicht es Entwicklern, TestScripts ohne tiefe FHIR®-Kenntnisse zu erstellen.
+TinkerTool vereinfacht die Erstellung von FHIR® TestScripts durch eine intuitive, visuelle Benutzeroberfläche. Das Tool ermöglicht es Entwicklern, TestScripts ohne tiefe FHIR®-Kenntnisse zu erstellen.
 
 ### Aktuelle Funktionalität
 - TestScript-Erstellung mit visuellen Formularen
