@@ -7,7 +7,6 @@ Ein modernes Web-Tool zur visuellen Erstellung und Verwaltung von FHIR® TestScr
 - [Einleitung](#einleitung)
 - [Kernfunktionen](#kernfunktionen)
 - [Verzeichnisstruktur](#verzeichnisstruktur)
-- [Projektstatus](#projektstatus)
 - [Funktionalitäten](#funktionalitäten)
 - [Architekturüberblick](#architekturüberblick)
 - [Codebase Overview](#codebase-overview)
@@ -81,24 +80,6 @@ TinkerTool vereinfacht die Erstellung von FHIR® TestScripts durch eine intuitiv
 **lib/**: Utility-Funktionen, Services und Formatter. Enthält FHIR®-Validierungslogik und Formatierungstools.
 
 **types/**: TypeScript-Typdefinitionen für TestScripts und Validierung.
-
-
-## Projektstatus
-
-**Status:** Beta (funktionsfähig, aktiv in Entwicklung)
-
-**Unterstützte Plattformen:**
-- Node.js 18+
-- Moderne Browser (Chrome, Firefox, Safari, Edge)
-- Next.js 15 mit React 19
-
-**Wichtige Abhängigkeiten:**
-- Next.js 15.2.4 (Framework)
-- React 19.0.0 (UI-Library)
-- TypeScript 5 (Type-Safety)
-- Tailwind CSS 4 (Styling)
-- Radix UI (Komponenten)
-- xmlbuilder2 (XML-Generierung)
 
 ## Funktionalitäten
 
