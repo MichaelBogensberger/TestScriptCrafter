@@ -10,7 +10,7 @@ Ein modernes Web-Tool zur visuellen Erstellung und Verwaltung von FHIR® TestScr
 - [Projektstatus](#projektstatus)
 - [Funktionalitäten](#funktionalitäten)
 - [Architekturüberblick](#architekturüberblick)
-- [Codebase Overview](#codebase--overview)
+- [Codebase Overview](#codebase-overview)
 - [Setup & Installation](#setup--installation)
 - [Konfiguration](#konfiguration)
 - [Ausführen](#ausführen)
@@ -18,7 +18,7 @@ Ein modernes Web-Tool zur visuellen Erstellung und Verwaltung von FHIR® TestScr
 - [Troubleshooting](#troubleshooting)
 - [Limitierungen](#limitierungen)
 - [Roadmap](#roadmap)
-- [Externe Quellen](#externe--quellen)
+- [Externe Quellen](#externe-quellen)
 
 ## Kernfunktionen
 
