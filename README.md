@@ -229,6 +229,13 @@ classDiagram
 - `use-FHIR®-validation.ts` → FHIR®-Validierung mit State-Management
 
 ## Setup & Installation
+### wichtige Abhängigkeiten:
+- Next.js 15.2.4 (Framework)
+- React 19.0.0 (UI-Library)
+- TypeScript 5 (Type-Safety)
+- Tailwind CSS 4 (Styling)
+- Radix UI (Komponenten)
+- xmlbuilder2 (XML-Generierung)
 
 ### Voraussetzungen
 - Node.js 18 oder höher
