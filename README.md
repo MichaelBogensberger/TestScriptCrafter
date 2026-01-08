@@ -375,6 +375,14 @@ vercel --prod
 - Multi-User-Kollaboration
 - Versionierung von TestScripts
 
+## Projektteam
+* Julia Bodingbauer  
+* Delaram Darehshoori  
+* Magdalena Dorr  
+* Alina Haider  
+* Michael Bogensberger  
+* Laura Ziebermayr
+
 ## Externe Quellen
 - HL7 FHIR® - Standards und Spezifikationen
 - shadcn/ui - UI-Komponenten-Bibliothek
