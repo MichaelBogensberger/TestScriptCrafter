@@ -207,7 +207,7 @@ classDiagram
 
 ```
 
-## Codebase Overview?
+## Codebase Overview
 
 ### app/
 **Zweck:** Next.js App Router mit Seiten und API  
