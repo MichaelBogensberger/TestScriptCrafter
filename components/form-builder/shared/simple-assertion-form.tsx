@@ -149,21 +149,100 @@ export function SimpleAssertionForm({
 
       <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
         <div>
+          <Label htmlFor="assertion-response-code">Response Code</Label>
+          <Input
+            id="assertion-response-code"
+            value={assertion.responseCode ?? ""}
+            onChange={(e) => updateField("responseCode", e.target.value || undefined)}
+            placeholder="z.B. 200 oder 200,201"
+          />
+          <p className="text-xs text-muted-foreground mt-1">
+            Einzelner Code (200) oder mehrere kommagetrennt (200,201)
+          </p>
+        </div>
+
+        <div>
+          <Label htmlFor="assertion-content-type">Content-Type</Label>
+          <Select
+            value={assertion.contentType ?? "__none__"}
+            onValueChange={(value) => updateField("contentType", value === "__none__" ? undefined : value)}
+          >
+            <SelectTrigger id="assertion-content-type">
+              <SelectValue placeholder="Select content type..." />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="__none__">-- Kein --</SelectItem>
+              <SelectItem value="application/fhir+json">application/fhir+json</SelectItem>
+              <SelectItem value="application/fhir+xml">application/fhir+xml</SelectItem>
+              <SelectItem value="application/json+fhir">application/json+fhir</SelectItem>
+              <SelectItem value="application/xml+fhir">application/xml+fhir</SelectItem>
+              <SelectItem value="application/json">application/json</SelectItem>
+              <SelectItem value="application/xml">application/xml</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+        <div>
+          <Label htmlFor="assertion-resource">Resource Type</Label>
+          <Input
+            id="assertion-resource"
+            value={assertion.resource ?? ""}
+            onChange={(e) => updateField("resource", e.target.value || undefined)}
+            placeholder="z.B. Patient, Bundle"
+          />
+        </div>
+        <div>
+          <Label htmlFor="assertion-path">Path (FHIRPath)</Label>
+          <Input
+            id="assertion-path"
+            value={assertion.path ?? ""}
+            onChange={(e) => updateField("path", e.target.value || undefined)}
+            placeholder="z.B. Bundle.entry.count()"
+          />
+        </div>
+        <div>
           <Label htmlFor="assertion-value">Expected Value</Label>
           <Input
             id="assertion-value"
             value={assertion.value ?? ""}
             onChange={(e) => updateField("value", e.target.value || undefined)}
-            placeholder="e.g. Patient, 200, ..."
+            placeholder="Erwarteter Wert"
           />
         </div>
+      </div>
+
+      <div>
+        <Label htmlFor="assertion-expression">Expression (Alternative zu Path)</Label>
+        <Input
+          id="assertion-expression"
+          value={assertion.expression ?? ""}
+          onChange={(e) => updateField("expression", e.target.value || undefined)}
+          placeholder="z.B. Bundle.entry.count() > 0"
+        />
+      </div>
+
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
         <div>
-          <Label htmlFor="assertion-expression">FHIRPath Expression</Label>
+          <Label htmlFor="assertion-validate-profile">Validate Profile ID</Label>
           <Input
-            id="assertion-expression"
-            value={assertion.expression ?? ""}
-            onChange={(e) => updateField("expression", e.target.value || undefined)}
-            placeholder="e.g. Bundle.entry.count()"
+            id="assertion-validate-profile"
+            value={assertion.validateProfileId ?? ""}
+            onChange={(e) => updateField("validateProfileId", e.target.value || undefined)}
+            placeholder="z.B. patient-profile"
+          />
+          <p className="text-xs text-muted-foreground mt-1">
+            Referenziert ein im Profile-Abschnitt definiertes Profil
+          </p>
+        </div>
+        <div>
+          <Label htmlFor="assertion-source-id">Source ID</Label>
+          <Input
+            id="assertion-source-id"
+            value={assertion.sourceId ?? ""}
+            onChange={(e) => updateField("sourceId", e.target.value || undefined)}
+            placeholder="Fixture ID zur Validierung"
           />
         </div>
       </div>

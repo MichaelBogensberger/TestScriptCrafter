@@ -200,6 +200,9 @@ export default function ActionComponent<TAction extends ScriptAction>({
 }: ActionComponentProps<TAction>) {
   const [showCustomResourceType, setShowCustomResourceType] = useState(false)
   
+  // Check if this is an assertion-only action (no operation)
+  const isAssertionOnly = !action.operation && action.assert
+  
   const operation = useMemo<TestScriptSetupActionOperation>(
     () => ({
       encodeRequestUrl: true,
@@ -338,6 +341,12 @@ export default function ActionComponent<TAction extends ScriptAction>({
     updateOperation({ requestHeader: headers.length > 0 ? headers : undefined })
   }
 
+  // Get assertions as array (support both single and multiple assertions)
+  const assertions = useMemo<TestScriptSetupActionAssert[]>(() => {
+    if (!action.assert) return []
+    return Array.isArray(action.assert) ? action.assert : [action.assert]
+  }, [action.assert])
+
   const addAssertion = () => {
     const newAssertion: TestScriptSetupActionAssert = {
       description: "",
@@ -345,24 +354,33 @@ export default function ActionComponent<TAction extends ScriptAction>({
       warningOnly: false,
       stopTestOnFail: true,
     }
+    const updatedAssertions = [...assertions, newAssertion]
     updateAction({
       ...action,
-      assert: newAssertion,
+      assert: updatedAssertions,
     } as TAction)
   }
 
-  const updateAssertion = (assertion: TestScriptSetupActionAssert) => {
+  const updateAssertion = (index: number, assertion: TestScriptSetupActionAssert) => {
+    const updatedAssertions = [...assertions]
+    updatedAssertions[index] = assertion
     updateAction({
       ...action,
-      assert: assertion,
+      assert: updatedAssertions,
     } as TAction)
   }
 
-  const removeAssertion = () => {
-    if ("assert" in action) {
-      const next = { ...action } as ScriptAction & { assert?: TestScriptSetupActionAssert }
+  const removeAssertion = (index: number) => {
+    const updatedAssertions = assertions.filter((_, idx) => idx !== index)
+    if (updatedAssertions.length === 0) {
+      const next = { ...action } as ScriptAction & { assert?: TestScriptSetupActionAssert | TestScriptSetupActionAssert[] }
       delete next.assert
       updateAction(next as TAction)
+    } else {
+      updateAction({
+        ...action,
+        assert: updatedAssertions,
+      } as TAction)
     }
   }
 
@@ -382,9 +400,12 @@ export default function ActionComponent<TAction extends ScriptAction>({
         <div>
           <h4 className="text-sm font-medium">
             {sectionType.charAt(0).toUpperCase() + sectionType.slice(1)} Action {index + 1}
+            {isAssertionOnly && <span className="ml-2 text-xs text-muted-foreground">(Assertion-only)</span>}
           </h4>
           <p className="text-xs text-muted-foreground">
-            Defines an operation and optionally an assertion.
+            {isAssertionOnly 
+              ? "Validiert Ergebnisse ohne neue HTTP-Anfrage"
+              : "Definiert eine Operation und optionale Assertions"}
           </p>
         </div>
         {removeAction && (
@@ -394,15 +415,38 @@ export default function ActionComponent<TAction extends ScriptAction>({
         )}
       </div>
 
-      <div>
-        <Label htmlFor={`action-${index}-label`}>Label</Label>
-        <Input
-          id={`action-${index}-label`}
-          value={operation.label ?? ""}
-          onChange={(event) => updateOperationField("label", event.target.value || undefined)}
-          placeholder="Short display name for this operation"
-        />
-      </div>
+      {isAssertionOnly ? (
+        <div className="rounded-md border border-dashed p-4 text-center">
+          <p className="text-sm text-muted-foreground mb-2">
+            Diese Action enthält nur Assertions, keine HTTP-Operation.
+          </p>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              updateAction({
+                ...action,
+                operation: {
+                  encodeRequestUrl: true,
+                },
+              } as TAction)
+            }}
+          >
+            <Plus className="h-4 w-4 mr-1" />
+            Operation hinzufügen
+          </Button>
+        </div>
+      ) : (
+        <>
+          <div>
+            <Label htmlFor={`action-${index}-label`}>Label</Label>
+            <Input
+              id={`action-${index}-label`}
+              value={operation.label ?? ""}
+              onChange={(event) => updateOperationField("label", event.target.value || undefined)}
+              placeholder="Short display name for this operation"
+            />
+          </div>
 
       <div>
         <Label>Operation Type System</Label>
@@ -755,32 +799,42 @@ export default function ActionComponent<TAction extends ScriptAction>({
           </div>
         )}
       </div>
+        </>
+      )}
 
-      {(sectionType === "test" || sectionType === "common") && (
+      {((sectionType === "test" || sectionType === "common") || isAssertionOnly) && (
         <div className="space-y-3 border-t pt-4">
           <div className="flex items-center justify-between">
-            <h5 className="text-sm font-medium">Assertion</h5>
-            {!action.assert && (
-              <Button variant="outline" size="sm" onClick={addAssertion} className="flex items-center gap-1">
-                <Plus className="h-4 w-4" />
-                Add Assertion
-              </Button>
-            )}
+            <h5 className="text-sm font-medium">
+              Assertions ({assertions.length})
+              {isAssertionOnly && <span className="ml-2 text-xs font-normal text-muted-foreground">(Hauptinhalt dieser Action)</span>}
+            </h5>
+            <Button variant="outline" size="sm" onClick={addAssertion} className="flex items-center gap-1">
+              <Plus className="h-4 w-4" />
+              Assertion hinzufügen
+            </Button>
           </div>
 
-          {action.assert ? (
-            <SimpleAssertionForm
-              assertion={action.assert}
-              updateAssertion={updateAssertion}
-              removeAssertion={removeAssertion}
-              responseOptions={RESPONSE_OPTIONS}
-              directionOptions={ASSERTION_DIRECTIONS}
-              operatorOptions={ASSERTION_OPERATORS}
-              errors={assertionErrors ?? undefined}
-            />
+          {assertions.length > 0 ? (
+            <div className="space-y-3">
+              {assertions.map((assertion, idx) => (
+                <SimpleAssertionForm
+                  key={idx}
+                  assertion={assertion}
+                  updateAssertion={(updated) => updateAssertion(idx, updated)}
+                  removeAssertion={() => removeAssertion(idx)}
+                  responseOptions={RESPONSE_OPTIONS}
+                  directionOptions={ASSERTION_DIRECTIONS}
+                  operatorOptions={ASSERTION_OPERATORS}
+                  errors={assertionErrors ?? undefined}
+                />
+              ))}
+            </div>
           ) : (
             <p className="text-xs text-muted-foreground">
-              Optionally add assertions that are applied to the previous operation.
+              {isAssertionOnly 
+                ? "Keine Assertions definiert. Diese Action sollte mindestens eine Assertion enthalten."
+                : "Keine Assertions definiert. Fügen Sie Assertions hinzu, um die Operation zu validieren."}
             </p>
           )}
         </div>

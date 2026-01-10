@@ -38,7 +38,12 @@ import type { FhirVersion } from "./fhir-config"
 export type TestScriptStatus = NonNullable<FhirTestScript["status"]>;
 
 export type TestScriptTest = FhirTestScriptTest;
-export type TestScriptTestAction = FhirTestScriptTestAction;
+
+// Extended Action types that support multiple assertions
+export type TestScriptTestAction = Omit<FhirTestScriptTestAction, 'assert'> & {
+  assert?: TestScriptSetupActionAssert | TestScriptSetupActionAssert[];
+};
+
 export type TestScriptSetup = FhirTestScriptSetup;
 export type TestScriptSetupAction = FhirTestScriptSetupAction;
 export type TestScriptSetupActionAssert = FhirTestScriptSetupActionAssert;
@@ -73,6 +78,11 @@ export interface TestScriptCommonParameter {
   value?: string;
 }
 
+export interface TestScriptProfile {
+  id: string;
+  reference: string;
+}
+
 export interface TestScriptCommon {
   key: string;
   name?: string;
@@ -84,6 +94,7 @@ export interface TestScriptCommon {
 export type TestScript = FhirTestScript & {
   testSystem?: TestSystem[];
   common?: TestScriptCommon[];
+  profile?: TestScriptProfile[];
 };
 
 export type OperationOutcome = FhirOperationOutcome;

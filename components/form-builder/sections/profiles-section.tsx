@@ -7,26 +7,30 @@ import { EmptyState } from "@/components/ui/empty-state"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Plus, Trash2 } from "lucide-react"
+import type { TestScriptProfile } from "@/types/fhir-enhanced"
 
 interface ProfilesSectionProps {
-  profiles: string[] | undefined
-  updateProfiles: (profiles: string[] | undefined) => void
+  profiles: TestScriptProfile[] | undefined
+  updateProfiles: (profiles: TestScriptProfile[] | undefined) => void
 }
 
 export function ProfilesSection({ profiles, updateProfiles }: ProfilesSectionProps) {
   const entries = useMemo(() => profiles ?? [], [profiles])
-  const [newProfile, setNewProfile] = useState("")
+  const [newProfileId, setNewProfileId] = useState("")
+  const [newProfileRef, setNewProfileRef] = useState("")
 
   const addProfile = () => {
-    const value = newProfile.trim()
-    if (!value) return
-    updateProfiles([...(entries ?? []), value])
-    setNewProfile("")
+    const id = newProfileId.trim()
+    const reference = newProfileRef.trim()
+    if (!id || !reference) return
+    updateProfiles([...(entries ?? []), { id, reference }])
+    setNewProfileId("")
+    setNewProfileRef("")
   }
 
-  const updateProfile = (idx: number, value: string) => {
+  const updateProfile = (idx: number, field: keyof TestScriptProfile, value: string) => {
     const next = [...entries]
-    next[idx] = value
+    next[idx] = { ...next[idx], [field]: value }
     updateProfiles(next)
   }
 
@@ -40,51 +44,79 @@ export function ProfilesSection({ profiles, updateProfiles }: ProfilesSectionPro
       <div>
         <h4 className="text-sm font-medium">Profiles</h4>
         <p className="text-xs text-muted-foreground">
-          List of canonical profile URLs (StructureDefinitions) that this TestScript covers.
-          Format: https://example.org/fhir/StructureDefinition/ProfileName
+          Liste von Profilen (StructureDefinitions), die dieses TestScript abdeckt.
+          Jedes Profil benötigt eine eindeutige ID und eine kanonische Reference URL.
         </p>
       </div>
 
-      <div className="flex flex-col gap-2 sm:flex-row">
-        <Input
-          value={newProfile}
-          onChange={(event) => setNewProfile(event.target.value)}
-          placeholder="https://example.org/fhir/StructureDefinition/MyProfile"
-        />
+      <Card className="p-4 space-y-3">
+        <h5 className="text-sm font-medium">Neues Profil hinzufügen</h5>
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+          <div>
+            <Label htmlFor="new-profile-id">ID (z.B. "patient-profile")</Label>
+            <Input
+              id="new-profile-id"
+              value={newProfileId}
+              onChange={(event) => setNewProfileId(event.target.value)}
+              placeholder="patient-profile"
+            />
+          </div>
+          <div>
+            <Label htmlFor="new-profile-ref">Reference (kanonische URL)</Label>
+            <Input
+              id="new-profile-ref"
+              value={newProfileRef}
+              onChange={(event) => setNewProfileRef(event.target.value)}
+              placeholder="http://hl7.at/fhir/HL7ATCoreProfiles/4.0.1/StructureDefinition/at-core-patient"
+            />
+          </div>
+        </div>
         <Button variant="outline" onClick={addProfile} className="flex items-center gap-1">
           <Plus className="h-4 w-4" />
-          Add
+          Profil hinzufügen
         </Button>
-      </div>
+      </Card>
 
       {entries.length === 0 ? (
         <EmptyState
-          title="No profiles added yet."
-          description="Add canonical profile URLs that this TestScript covers."
+          title="Keine Profile definiert."
+          description="Fügen Sie Profile hinzu, die in Assertions referenziert werden können."
         />
       ) : (
         <div className="space-y-3">
           {entries.map((profile, idx) => (
-            <Card key={`${profile}-${idx}`} className="flex items-center justify-between p-3">
-              <div className="flex-1">
-                <Label htmlFor={`profile-${idx}`} className="sr-only">
-                  Profile {idx + 1}
-                </Label>
-                <Input
-                  id={`profile-${idx}`}
-                  value={profile}
-                  onChange={(event) => updateProfile(idx, event.target.value)}
-                />
+            <Card key={`${profile.id}-${idx}`} className="p-4">
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex-1 grid grid-cols-1 gap-3 md:grid-cols-2">
+                  <div>
+                    <Label htmlFor={`profile-id-${idx}`}>ID</Label>
+                    <Input
+                      id={`profile-id-${idx}`}
+                      value={profile.id}
+                      onChange={(event) => updateProfile(idx, "id", event.target.value)}
+                      placeholder="Eindeutige ID"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor={`profile-ref-${idx}`}>Reference</Label>
+                    <Input
+                      id={`profile-ref-${idx}`}
+                      value={profile.reference}
+                      onChange={(event) => updateProfile(idx, "reference", event.target.value)}
+                      placeholder="Kanonische URL"
+                    />
+                  </div>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 text-destructive"
+                  onClick={() => removeProfile(idx)}
+                  title="Profil entfernen"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
               </div>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="ml-2 h-8 w-8 text-destructive"
-                onClick={() => removeProfile(idx)}
-                title="Remove profile"
-              >
-                <Trash2 className="h-4 w-4" />
-              </Button>
             </Card>
           ))}
         </div>

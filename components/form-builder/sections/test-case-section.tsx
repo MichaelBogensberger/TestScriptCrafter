@@ -204,8 +204,7 @@ export function TestCaseSection({
                   size="sm"
                   className="text-destructive"
                   onClick={() => removeAction(activeActionIndex)}
-                  disabled={actions.length === 1}
-                  title={actions.length === 1 ? "At least one action is required" : "Remove action"}
+                  title="Remove action"
                 >
                   <Trash2 className="h-4 w-4" />
                   Remove
